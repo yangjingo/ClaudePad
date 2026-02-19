@@ -33,6 +33,11 @@ async def health():
     return {"status": "ok"}
 
 
-if __name__ == "__main__":
+def run_server():
+    """Entry point for uv run claudpad."""
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
+
+
+if __name__ == "__main__":
+    run_server()
