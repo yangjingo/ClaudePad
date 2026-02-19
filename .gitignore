@@ -4,7 +4,6 @@ __pycache__/
 *$py.class
 *.so
 .Python
-venv/
 .venv/
 ENV/
 
@@ -23,3 +22,6 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude
+CLAUDE
