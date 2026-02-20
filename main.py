@@ -45,6 +45,40 @@ def write_json_file(file_path: Path, data):
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
+# Terminal history
+TERMINAL_HISTORY_FILE = DATA_DIR / "terminal_history.json"
+
+
+def get_terminal_history():
+    """Get terminal command history."""
+    history = read_json_file(TERMINAL_HISTORY_FILE)
+    if not history:
+        return {"commands": [], "last_updated": None}
+    return history
+
+
+def add_to_terminal_history(command: str):
+    """Add command to history (deduplicated)."""
+    history = get_terminal_history()
+    commands = history["commands"]
+
+    # Remove duplicate if exists
+    if command in commands:
+        commands.remove(command)
+
+    # Add to front
+    commands.insert(0, command)
+
+    # Keep only last 1000 commands
+    commands = commands[:1000]
+
+    from datetime import datetime
+    write_json_file(TERMINAL_HISTORY_FILE, {
+        "commands": commands,
+        "last_updated": datetime.now().isoformat()
+    })
+
+
 # Terminal session management
 terminal_sessions: Dict[str, dict] = {}
 
@@ -409,6 +443,23 @@ async def terminal_websocket(websocket: WebSocket):
         session.stop()
         if session_id in terminal_sessions:
             del terminal_sessions[session_id]
+
+
+@app.get("/api/terminal/history")
+async def get_history():
+    """Get command history."""
+    history = get_terminal_history()
+    return history
+
+
+@app.post("/api/terminal/history")
+async def add_history(request: Request):
+    """Add command to history."""
+    data = await request.json()
+    command = data.get("command", "").strip()
+    if command:
+        add_to_terminal_history(command)
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":
