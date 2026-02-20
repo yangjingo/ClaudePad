@@ -22,29 +22,45 @@ class TerminalProcess:
 
     async def start(self, output_callback: Optional[Callable] = None):
         """Start the pseudo-terminal with the shell."""
+        # Validate shell exists and is executable before forking
+        if not os.path.exists(self.shell):
+            raise FileNotFoundError(f"Shell not found: {self.shell}")
+        if not os.access(self.shell, os.X_OK):
+            raise PermissionError(f"Shell is not executable: {self.shell}")
+
         self._output_callback = output_callback
 
-        # Create pseudo-terminal
-        self.master_fd, slave_fd = pty.openpty()
+        # Use try-finally to ensure slave_fd is always closed
+        slave_fd = None
+        try:
+            # Create pseudo-terminal
+            self.master_fd, slave_fd = pty.openpty()
 
-        # Start the shell in the pseudo-terminal
-        self.pid = os.fork()
-        if self.pid == 0:  # Child process
-            os.setsid()
-            os.dup2(slave_fd, 0)  # stdin
-            os.dup2(slave_fd, 1)  # stdout
-            os.dup2(slave_fd, 2)  # stderr
-            os.close(slave_fd)
-            os.close(self.master_fd)
+            # Start the shell in the pseudo-terminal
+            self.pid = os.fork()
+            if self.pid == 0:  # Child process
+                os.setsid()
+                os.dup2(slave_fd, 0)  # stdin
+                os.dup2(slave_fd, 1)  # stdout
+                os.dup2(slave_fd, 2)  # stderr
+                os.close(slave_fd)
+                os.close(self.master_fd)
 
-            # Start shell with Claude Code available
-            env = os.environ.copy()
-            env["TERM"] = "xterm-256color"
-            os.execvp(self.shell, [self.shell])
-        else:  # Parent process
-            os.close(slave_fd)
-            # Start reading output
-            self._read_task = asyncio.create_task(self._read_output())
+                # Start shell with Claude Code available
+                env = os.environ.copy()
+                env["TERM"] = "xterm-256color"
+                os.execvp(self.shell, [self.shell])
+            else:  # Parent process
+                # Start reading output
+                self._read_task = asyncio.create_task(self._read_output())
+        finally:
+            # Ensure slave_fd is closed even if fork fails
+            # This prevents resource leak in parent process
+            if slave_fd is not None:
+                try:
+                    os.close(slave_fd)
+                except OSError:
+                    pass
 
     async def _read_output(self):
         """Continuously read output from the pseudo-terminal."""
@@ -112,6 +128,8 @@ class TerminalProcess:
 
     async def stop(self):
         """Stop the terminal process."""
+        # Wait for read_task to complete before closing master_fd
+        # This prevents race condition where read_task tries to use closed fd
         if self._read_task:
             self._read_task.cancel()
             try:
@@ -125,6 +143,7 @@ class TerminalProcess:
             except OSError:
                 pass
 
+        # Now safe to close master_fd after read_task has fully stopped
         if self.master_fd is not None:
             os.close(self.master_fd)
             self.master_fd = None
