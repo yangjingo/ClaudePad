@@ -1,5 +1,6 @@
 import json
 import asyncio
+import uuid
 from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -58,25 +59,42 @@ class TerminalSession:
         self.pid = None
         self.rows = 24
         self.cols = 80
+        self.shell = "/bin/bash"
 
     def start(self):
         """Start the pseudo-terminal."""
-        self.master_fd, slave_fd = pty.openpty()
-        self.pid = os.fork()
+        # Validate shell exists and is executable before forking
+        if not os.path.exists(self.shell):
+            raise FileNotFoundError(f"Shell not found: {self.shell}")
+        if not os.access(self.shell, os.X_OK):
+            raise PermissionError(f"Shell is not executable: {self.shell}")
 
-        if self.pid == 0:  # Child
-            os.setsid()
-            os.dup2(slave_fd, 0)
-            os.dup2(slave_fd, 1)
-            os.dup2(slave_fd, 2)
-            os.close(slave_fd)
-            os.close(self.master_fd)
+        # Use try-finally to ensure slave_fd is always closed
+        slave_fd = None
+        try:
+            self.master_fd, slave_fd = pty.openpty()
+            self.pid = os.fork()
 
-            env = os.environ.copy()
-            env["TERM"] = "xterm-256color"
-            os.execvp("/bin/bash", ["/bin/bash"])
-        else:  # Parent
-            os.close(slave_fd)
+            if self.pid == 0:  # Child
+                os.setsid()
+                os.dup2(slave_fd, 0)
+                os.dup2(slave_fd, 1)
+                os.dup2(slave_fd, 2)
+                os.close(slave_fd)
+                os.close(self.master_fd)
+
+                env = os.environ.copy()
+                env["TERM"] = "xterm-256color"
+                os.execvp(self.shell, [self.shell])
+            else:  # Parent
+                os.close(slave_fd)
+        finally:
+            # Ensure slave_fd is closed even if fork fails
+            if slave_fd is not None:
+                try:
+                    os.close(slave_fd)
+                except OSError:
+                    pass
 
     def write(self, data: str):
         """Write to terminal."""
@@ -121,12 +139,23 @@ class TerminalSession:
         """Stop the terminal."""
         if self.pid:
             try:
-                os.kill(self.pid, 9)
+                os.kill(self.pid, 9)  # SIGKILL
+                # Reap zombie process to prevent resource leak
+                try:
+                    os.waitpid(self.pid, 0)
+                except ChildProcessError:
+                    pass  # Child already reaped
             except OSError:
                 pass
+
+        # Use try/finally to ensure master_fd = None always executes
         if self.master_fd:
-            os.close(self.master_fd)
-            self.master_fd = None
+            try:
+                os.close(self.master_fd)
+            except OSError:
+                pass
+            finally:
+                self.master_fd = None
 
 
 @app.get("/")
@@ -313,7 +342,6 @@ async def terminal_websocket(websocket: WebSocket):
     """WebSocket endpoint for terminal I/O."""
     await websocket.accept()
 
-    import uuid
     session_id = str(uuid.uuid4())
     session = TerminalSession(session_id)
     session.start()
@@ -335,7 +363,6 @@ async def terminal_websocket(websocket: WebSocket):
                     websocket.receive_text(),
                     timeout=0.05
                 )
-                import json
                 data = json.loads(message)
 
                 if data["type"] == "input":
