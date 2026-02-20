@@ -1,9 +1,19 @@
 import json
+import asyncio
 from pathlib import Path
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
+from fastapi import WebSocket
+from fastapi.responses import HTMLResponse
+from fastapi.websocket import WebSocketState
+import fcntl
+import struct
+import pty
+import select
+import os
+from typing import Dict
 
 app = FastAPI(title="ClaudePad")
 
@@ -33,6 +43,90 @@ def write_json_file(file_path: Path, data):
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+# Terminal session management
+terminal_sessions: Dict[str, dict] = {}
+
+
+class TerminalSession:
+    """Manages a terminal session with PTY."""
+
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+        self.master_fd = None
+        self.pid = None
+        self.rows = 24
+        self.cols = 80
+
+    def start(self):
+        """Start the pseudo-terminal."""
+        self.master_fd, slave_fd = pty.openpty()
+        self.pid = os.fork()
+
+        if self.pid == 0:  # Child
+            os.setsid()
+            os.dup2(slave_fd, 0)
+            os.dup2(slave_fd, 1)
+            os.dup2(slave_fd, 2)
+            os.close(slave_fd)
+            os.close(self.master_fd)
+
+            env = os.environ.copy()
+            env["TERM"] = "xterm-256color"
+            os.execvp("/bin/bash", ["/bin/bash"])
+        else:  # Parent
+            os.close(slave_fd)
+
+    def write(self, data: str):
+        """Write to terminal."""
+        if self.master_fd:
+            os.write(self.master_fd, data.encode())
+
+    def resize(self, rows: int, cols: int):
+        """Resize terminal."""
+        if self.master_fd:
+            fcntl.ioctl(
+                self.master_fd,
+                pty.TIOCSWINSZ,
+                struct.pack("HHHH", rows, cols, 0, 0)
+            )
+            self.rows = rows
+            self.cols = cols
+
+    def read(self) -> str:
+        """Read from terminal (non-blocking)."""
+        if not self.master_fd:
+            return ""
+
+        try:
+            r, _, _ = select.select([self.master_fd], [], [], 0)
+            if r:
+                return os.read(self.master_fd, 4096).decode('utf-8', errors='ignore')
+        except OSError:
+            pass
+        return ""
+
+    def is_running(self) -> bool:
+        """Check if process is running."""
+        if self.pid is None:
+            return False
+        try:
+            os.kill(self.pid, 0)
+            return True
+        except OSError:
+            return False
+
+    def stop(self):
+        """Stop the terminal."""
+        if self.pid:
+            try:
+                os.kill(self.pid, 9)
+            except OSError:
+                pass
+        if self.master_fd:
+            os.close(self.master_fd)
+            self.master_fd = None
 
 
 @app.get("/")
@@ -212,6 +306,70 @@ def run_server():
     """Entry point for uv run claudpad."""
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8080)
+
+
+@app.websocket("/ws/terminal")
+async def terminal_websocket(websocket: WebSocket):
+    """WebSocket endpoint for terminal I/O."""
+    await websocket.accept()
+
+    import uuid
+    session_id = str(uuid.uuid4())
+    session = TerminalSession(session_id)
+    session.start()
+    terminal_sessions[session_id] = session
+
+    try:
+        # Send initial connection message
+        await websocket.send_json({
+            "type": "status",
+            "state": "connected",
+            "session_id": session_id
+        })
+
+        # Main terminal loop
+        while True:
+            # Check for incoming messages from client
+            try:
+                message = await asyncio.wait_for(
+                    websocket.receive_text(),
+                    timeout=0.05
+                )
+                import json
+                data = json.loads(message)
+
+                if data["type"] == "input":
+                    session.write(data["data"])
+                elif data["type"] == "resize":
+                    session.resize(data["rows"], data["cols"])
+
+            except asyncio.TimeoutError:
+                pass  # No message from client, check for terminal output
+
+            # Read and send terminal output
+            output = session.read()
+            if output:
+                await websocket.send_json({
+                    "type": "output",
+                    "data": output
+                })
+
+            # Check if process is still running
+            if not session.is_running():
+                await websocket.send_json({
+                    "type": "status",
+                    "state": "disconnected"
+                })
+                break
+
+            await asyncio.sleep(0.01)
+
+    except Exception as e:
+        print(f"Terminal error: {e}")
+    finally:
+        session.stop()
+        if session_id in terminal_sessions:
+            del terminal_sessions[session_id]
 
 
 if __name__ == "__main__":
