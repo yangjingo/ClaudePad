@@ -8,7 +8,6 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from fastapi import WebSocket
 from fastapi.responses import HTMLResponse
-from fastapi.websocket import WebSocketState
 import fcntl
 import struct
 import pty
@@ -182,6 +181,12 @@ async def index(request: Request):
 async def health():
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@app.get("/terminal")
+async def terminal_page(request: Request):
+    """Terminal page."""
+    return templates.TemplateResponse("terminal.html", {"request": request})
 
 
 # ============ API Routes ============
