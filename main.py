@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import JSONResponse
 from fastapi import WebSocket
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, Response
 import fcntl
 import struct
 import pty
@@ -204,11 +204,15 @@ async def index(request: Request):
         if tasks_data:
             tasks = tasks_data.get("tasks", [])
 
-    return templates.TemplateResponse("index.html", {
+    response = templates.TemplateResponse("index.html", {
         "request": request,
         "project": project,
         "tasks": tasks
     })
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.get("/health")
@@ -450,6 +454,16 @@ async def get_history():
     """Get command history."""
     history = get_terminal_history()
     return history
+
+
+@app.get("/api/terminal/status")
+async def terminal_status():
+    """Get terminal service status."""
+    return {
+        "status": "running",
+        "session_count": len(terminal_sessions),
+        "sessions": list(terminal_sessions.keys())[:10]  # First 10 session IDs
+    }
 
 
 @app.post("/api/terminal/history")
