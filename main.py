@@ -398,6 +398,13 @@ async def terminal_websocket(websocket: WebSocket):
 
     except Exception as e:
         print(f"Terminal error: {e}")
+        try:
+            await websocket.send_json({
+                "type": "error",
+                "message": str(e)
+            })
+        except:
+            pass  # WebSocket already closed
     finally:
         session.stop()
         if session_id in terminal_sessions:
