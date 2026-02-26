@@ -1,183 +1,78 @@
-# 📋 ClaudePad
+# ClaudePad
 
-> Web-based Task Manager for Claude Code
+Web-based task manager for Claude Code with a Sheikah Slate aesthetic.
 
-## 简介
+![Tasks Screenshot](docs/images/tasks-screenshot.png)
+*Task board with project selector and status columns*
 
-**ClaudePad** 是一个为 [Claude Code](https://claude.ai/code) 设计的 Web 任务管理界面，将终端工具转化为移动端友好的看板系统。
+![Terminal Screenshot](docs/images/terminal-screenshot.png)
+*Built-in terminal with SSE streaming*
 
-### 解决的痛点
+## Features
 
-- 🐌 **终端卡顿** - SSH 连接下的终端刷新延迟
-- 📱 **屏幕太小** - 手机上操作 tmux 困难
-- 🔄 **任务混乱** - 无法直观管理多个并行任务
+- **Zero dependencies** - Pure Node.js, no runtime packages
+- **Sheikah Slate UI** - Ancient-tech aesthetic with bronze/cyan theme
+- **Kanban board** - Vertical task columns (pending/active/review/done)
+- **Built-in terminal** - Browser-based bash via Server-Sent Events
+- **JSON storage** - Simple file-based data, no database needed
+- **Mobile-first** - Works on phones, tablets, desktop
 
-### 核心价值
-
-> ClaudePad = Claude Code 的 Web 化任务管理器 + 移动端看板 + Git 自动集成
-
----
-
-## 功能特性
-
-| 功能 | 描述 | 状态 |
-|------|------|------|
-| 📋 多项目管理 | 自动检测 Git 仓库，支持多项目切换 | 🔲 待开发 |
-| 📊 垂直看板 | 移动端优先的垂直堆叠任务视图 | 🔲 待开发 |
-| 💬 交互式执行 | WebSocket 实时通信，支持 Claude 交互 | 🔲 待开发 |
-| 🔀 Git 集成 | 自动创建分支、提交、回滚 | 🔲 待开发 |
-| 📱 PWA 支持 | 可安装为手机应用，离线访问 | 🔲 待开发 |
-| 📎 附件上传 | 支持截图、文件附件 | 🔲 待开发 |
-
----
-
-## 技术架构
-
-| 层级 | 技术选型 | 说明 |
-|------|----------|------|
-| 前端 | HTML5 + TailwindCSS + Alpine.js | 零构建，原生开发 |
-| 后端 | FastAPI (Python) | 异步支持，WebSocket |
-| 存储 | 本地 JSON 文件 | 简单，可手动编辑 |
-| 部署 | Uvicorn (0.0.0.0) | 局域网内手机可访问 |
-| 集成 | Claude CLI + Git | 子进程调用 |
-
----
-
-## 开发进度
-
-### MVP 阶段 (当前)
-
-- [x] 项目结构搭建
-- [x] TailwindCSS 配置 (自托管)
-- [x] Alpine.js 集成 (自托管)
-- [x] FastAPI 基础框架
-- [x] 基础模板和路由
-- [ ] 数据存储层 (JSON)
-- [ ] REST API 端点
-- [ ] WebSocket 桥接
-- [ ] 看板 UI 实现
-
-### v0.2 计划
-
-- [ ] 多项目支持
-- [ ] Git 自动集成
-- [ ] 附件上传
-
-### v0.3 计划
-
-- [ ] PWA 支持
-- [ ] 拖拽排序
-- [ ] 任务模板
-
----
-
-## 快速开始
-
-### 安装依赖
+## Quick Start
 
 ```bash
-# 使用 uv (推荐)
-uv sync
+# Start server
+node server.js
 
-# 或使用 pip
-pip install fastapi uvicorn aiofiles pyyaml jinja2
+# Or dev mode with hot reload
+npm install  # only devDependencies
+npm run dev
 ```
 
-### 启动服务
+Open http://localhost:8080
 
-```bash
-# 使用 uv
-uv run python main.py
+## Tech Stack
 
-# 或直接运行
-python main.py
-```
+| Layer | Technology |
+|-------|------------|
+| Backend | TypeScript + native Node.js HTTP |
+| Frontend | Alpine.js + vanilla CSS |
+| Terminal | xterm.js + SSE |
+| Storage | JSON files |
 
-### 访问应用
-
-- 本机: http://localhost:8080
-- 局域网: http://你的IP:8080
-
-```bash
-# 查看本机 IP
-hostname -I | awk '{print $1}'
-```
-
----
-
-## 项目结构
+## API Endpoints
 
 ```
-ClaudePad/
-├── main.py                 # FastAPI 入口
-├── pyproject.toml          # 项目配置 (uv)
-├── config.yaml             # 应用配置
+GET  /api/projects              # List projects
+POST /api/projects              # Create project
+GET  /api/:project/tasks        # List tasks
+POST /api/:project/tasks        # Create task
+POST /api/:project/tasks/:id/status  # Update status
+GET  /terminal/stream           # Terminal SSE stream
+POST /terminal/input            # Send input to terminal
+```
+
+## Project Structure
+
+```
+├── server.ts          # TypeScript source
+├── server.js          # Compiled output
 ├── static/
-│   ├── css/
-│   │   ├── input.css       # TailwindCSS 源文件
-│   │   └── tailwind.css    # 生成的 CSS
-│   ├── js/
-│   │   ├── alpine.min.js   # Alpine.js (自托管)
-│   │   └── app.js          # 应用逻辑
-│   └── icons/              # SVG 图标
+│   ├── css/sheikah.css    # Sheikah Slate theme
+│   └── js/lib/xterm.*     # Terminal libs
 ├── templates/
-│   ├── base.html           # 基础模板
-│   └── index.html          # 看板页面
-└── data/                   # 数据存储 (不提交)
-    ├── projects.json
-    └── projects/
-        └── {project}/
-            ├── tasks.json
-            └── outputs/
+│   ├── index.html      # Task board
+│   └── terminal.html   # Terminal page
+└── data/               # JSON storage (gitignored)
 ```
 
----
+## Design Philosophy
 
-## 任务状态流转
+**Sheikah Slate aesthetic**: Ancient Hyrule technology meets modern interface.
+- Deep blue-black backgrounds (`#0a0a0f`)
+- Bronze/copper accents (`#8B7355`)
+- Cyan energy glows (`#00d4ff`)
+- Clean monospace typography
 
-```
-创建 → 待开发 → 开发中 → 待 Review → 已完成
-                    ↓         ↓
-                  失败      已取消
-```
+## License
 
----
-
-## 配置说明
-
-`config.yaml`:
-
-```yaml
-server:
-  host: "0.0.0.0"    # 监听地址
-  port: 8080         # 端口
-
-claude:
-  command: "claude"  # Claude CLI 命令
-  timeout: 300       # 超时时间 (秒)
-
-git:
-  auto_commit: true  # 自动提交
-  commit_prefix: "claude"
-
-app:
-  default_mode: "interactive"
-  max_attachment_size: 5242880  # 5MB
-```
-
----
-
-## 相关文档
-
-- [PRD.md](./PRD.md) - 完整产品需求文档
-- [CLAUDE.md](./CLAUDE.md) - Claude Code 开发指南
-
----
-
-## 许可证
-
-MIT License
-
----
-
-> Built with ❤️ for Claude Code users
+MIT
