@@ -2,11 +2,8 @@
 
 Web-based task manager for Claude Code with a Sheikah Slate aesthetic.
 
-![Tasks Screenshot](docs/images/tasks-screenshot.png)
-*Task board with project selector and status columns*
-
-![Terminal Screenshot](docs/images/terminal-screenshot.png)
-*Built-in terminal with SSE streaming*
+![ClaudePad Screenshot](asserts/claudepad.png)
+*Task board with Sheikah Slate theme - bronze/cyan interface*
 
 ## Features
 
