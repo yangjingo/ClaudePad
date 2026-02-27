@@ -2,13 +2,9 @@
 
 Claude Code Session Monitor with xterm.js Web Terminal.
 
-## Screenshot
-
-asserts/claudepad-v0227.png
-
 ## Update
 
-- V0227, `.asserts/claudepad-v0227.png`
+- **v0.2.27** - Pure HTML frontend with Sheikah Slate theme. Session monitoring with real-time status, token count, and duration display. Zero framework dependencies.
 
 ## Features
 
