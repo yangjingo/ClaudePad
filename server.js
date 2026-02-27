@@ -3,14 +3,16 @@
  * Minimal TypeScript server - zero runtime dependencies
  */
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, access } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, dirname, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
+import { homedir } from 'node:os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = 8080;
 const DATA_DIR = join(__dirname, 'data');
+const CLAUDE_DIR = join(homedir(), '.claude');
 // MIME types
 const MIME = {
     '.html': 'text/html',
@@ -23,6 +25,88 @@ const MIME = {
 };
 // Terminal sessions
 const sessions = new Map();
+
+// Parse history.jsonl and get session info
+async function parseHistoryFile() {
+    const historyPath = join(CLAUDE_DIR, 'history.jsonl');
+    const sessions = new Map();
+    try {
+        const content = await readFile(historyPath, 'utf-8');
+        const lines = content.trim().split('\n').filter(line => line.trim());
+        for (let i = lines.length - 1; i >= 0; i--) {
+            try {
+                const line = lines[i];
+                const data = JSON.parse(line);
+                const sessionId = data.sessionId;
+                if (sessionId && !sessions.has(sessionId)) {
+                    sessions.set(sessionId, {
+                        name: data.display?.slice(0, 50).replace(/\n/g, ' ') || 'Session',
+                        timestamp: data.timestamp,
+                        project: data.project || '',
+                    });
+                }
+            }
+            catch {
+                // Ignore parse errors
+            }
+        }
+    }
+    catch (error) {
+        console.error('Failed to parse history:', error);
+    }
+    return sessions;
+}
+
+// Get all Claude sessions from disk
+async function getSessions() {
+    try {
+        const sessionEnvDir = join(CLAUDE_DIR, 'session-env');
+        const sessionIds = await readdir(sessionEnvDir);
+        const historySessions = await parseHistoryFile();
+        const sessions = await Promise.all(sessionIds.map(async (id) => {
+            try {
+                const sessionDir = join(sessionEnvDir, id);
+                const history = historySessions.get(id);
+                const files = await readdir(sessionDir);
+                const name = history?.name || id.slice(0, 8);
+                const timestamp = history?.timestamp || Date.now();
+                const project = history?.project || '';
+                const startTime = new Date(timestamp).toISOString();
+                const oneHourAgo = Date.now() - 60 * 60 * 1000;
+                const status = timestamp > oneHourAgo ? 'running' : 'completed';
+                let tokenCount = 0;
+                for (const file of files) {
+                    try {
+                        const content = await readFile(join(sessionDir, file), 'utf-8');
+                        tokenCount += Math.floor(content.length / 4);
+                    }
+                    catch {
+                        // Ignore
+                    }
+                }
+                return {
+                    id,
+                    name: name || `Session ${id.slice(0, 8)}`,
+                    status,
+                    tokenCount,
+                    startTime,
+                    projectPath: project || process.cwd(),
+                    lastActivity: new Date(timestamp).toISOString(),
+                };
+            }
+            catch {
+                return null;
+            }
+        }));
+        return sessions
+            .filter((s) => s !== null)
+            .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+    }
+    catch (error) {
+        console.error('Failed to get sessions:', error);
+        return [];
+    }
+}
 // Simple JSON response helper
 const json = (res, data, status = 200) => {
     res.writeHead(status, { 'Content-Type': 'application/json' });
@@ -47,6 +131,13 @@ async function writeJson(path, data) {
 const routes = {
     // Health check
     'GET /health': async (_, res) => json(res, { status: 'ok' }),
+
+    // Get Claude Code sessions
+    'GET /api/sessions': async (_, res) => {
+        const sessions = await getSessions();
+        json(res, { sessions });
+    },
+
     // Get projects
     'GET /api/projects': async (_, res) => {
         const data = await readJson(join(DATA_DIR, 'projects.json'), { projects: [], current_project: null });

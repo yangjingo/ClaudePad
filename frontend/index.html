@@ -6,107 +6,76 @@
   <title>希卡之石 // Sheikah Slate</title>
   <style>
     /* ============================================
-     * CSS Variables - Design System
-     * Based on docs/UI.md
+     * SHEIKAH SLATE THEME
+     * Ancient Futurism - Bronze & Cyan
      * ============================================ */
     :root {
-      /* Background Colors */
-      --bg-primary: #0d1117;
-      --bg-secondary: #161b22;
-      --bg-tertiary: #21262d;
-      --bg-elevated: #30363d;
+      /* Background - Sheikah Slate colors */
+      --slate-bg: #0a0a0f;
+      --slate-bg-light: #111118;
+      --slate-bg-lighter: #1a1a24;
+      --slate-panel: #13131a;
 
-      /* Border Colors */
-      --border-default: #30363d;
-      --border-muted: #21262d;
-      --border-emphasis: #58a6ff;
+      /* Bronze/Copper Ancient Metal */
+      --bronze: #8B7355;
+      --bronze-light: #A0826D;
+      --bronze-dark: #6b5b4f;
+      --bronze-dim: #4a3f37;
 
-      /* Text Colors */
-      --text-primary: #c9d1d9;
-      --text-secondary: #8b949e;
-      --text-muted: #6e7681;
-      --text-inverse: #0d1117;
+      /* Cyan Glow - Tech Energy */
+      --cyan: #00d4ff;
+      --cyan-bright: #00f0ff;
+      --cyan-dim: #00a8cc;
+      --cyan-glow: rgba(0, 212, 255, 0.3);
 
-      /* Function Colors */
-      --accent-blue: #58a6ff;
-      --accent-blue-hover: #79c0ff;
-      --success-green: #2ea043;
-      --success-green-hover: #3fb950;
-      --warning-yellow: #d29922;
-      --warning-yellow-hover: #e3a328;
-      --danger-red: #da3633;
-      --danger-red-hover: #f85149;
+      /* Text */
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --text-dark: #666;
 
-      /* Overlays */
-      --overlay-black: rgba(0, 0, 0, 0.8);
+      /* Status Colors */
+      --status-active: #00d4ff;
+      --status-done: #4ade80;
+      --status-error: #ef4444;
+      --status-pending: #666;
 
       /* Typography */
-      --font-mono: 'SF Mono', 'Fira Code', 'Fira Mono', 'Cascadia Code', monospace;
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-      /* Font Sizes */
-      --text-xs: 0.75rem;
-      --text-sm: 0.875rem;
-      --text-base: 1rem;
-      --text-lg: 1.125rem;
-      --text-xl: 1.25rem;
-      --text-2xl: 1.5rem;
-
-      /* Font Weights */
-      --font-normal: 400;
-      --font-medium: 500;
-      --font-semibold: 600;
-      --font-bold: 700;
-
       /* Spacing */
-      --space-1: 0.25rem;
-      --space-2: 0.5rem;
-      --space-3: 0.75rem;
-      --space-4: 1rem;
-      --space-5: 1.25rem;
-      --space-6: 1.5rem;
-      --space-8: 2rem;
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
 
       /* Border Radius */
-      --radius-sm: 0.25rem;
-      --radius-md: 0.375rem;
-      --radius-lg: 0.5rem;
-      --radius-xl: 0.75rem;
-      --radius-2xl: 1rem;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
       --radius-full: 9999px;
-
-      /* Shadows */
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-      --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
-      --glow-blue: 0 0 20px rgba(88, 166, 255, 0.4);
-
-      /* Transitions */
-      --duration-fast: 100ms;
-      --duration-normal: 200ms;
-      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* ============================================
-     * Reset & Base Styles
+     * Reset & Base
      * ============================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: var(--font-mono);
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: var(--font-sans);
+      background: var(--slate-bg);
+      color: var(--text);
       min-height: 100vh;
       line-height: 1.5;
     }
 
     /* ============================================
-     * Layout Components
+     * Header / Navigation
      * ============================================ */
     .header {
-      background: var(--bg-secondary);
-      border-bottom: 1px solid var(--border-default);
-      padding: var(--space-4) var(--space-6);
+      background: var(--slate-bg-light);
+      border-bottom: 1px solid var(--bronze-dim);
+      padding: 12px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -118,89 +87,157 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: 10px;
     }
 
     .logo-icon {
-      color: var(--accent-blue);
-      font-size: var(--text-xl);
+      color: var(--cyan);
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px var(--cyan-glow);
     }
 
     .logo-text {
-      font-size: var(--text-lg);
-      font-weight: var(--font-semibold);
-      background: linear-gradient(135deg, var(--accent-blue), #8b949e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: var(--space-6);
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--bronze-light);
+      text-decoration: none;
     }
 
     /* ============================================
-     * Panel Components
+     * CC Tips Button
+     * ============================================ */
+    .btn-cc-tips {
+      margin-left: 12px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan-dim);
+      color: var(--cyan);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cc-tips:hover {
+      background: var(--cyan-glow);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    /* ============================================
+     * Buttons
+     * ============================================ */
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan-glow);
+      box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--bronze-light);
+      box-shadow: inset 0 0 0 1px var(--bronze-dim);
+    }
+
+    .btn-ghost:hover {
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    /* ============================================
+     * Main Container
+     * ============================================ */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ============================================
+     * Sheikah Panel
      * ============================================ */
     .panel {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
       border-radius: var(--radius-lg);
       overflow: hidden;
-      margin-bottom: var(--space-6);
+      margin-bottom: 24px;
     }
 
     .panel-header {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      padding: var(--space-4) var(--space-5);
-      background: var(--bg-tertiary);
-      border-bottom: 1px solid var(--border-default);
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: var(--slate-bg-lighter);
+      border-bottom: 1px solid var(--bronze-dim);
     }
 
     .panel-title {
-      font-size: var(--text-sm);
-      font-weight: var(--font-semibold);
-      color: var(--accent-blue);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--bronze-light);
       text-transform: uppercase;
       letter-spacing: 0.1em;
       display: flex;
       align-items: center;
-      gap: var(--space-2);
+      gap: 8px;
     }
 
     .panel-count {
-      font-size: var(--text-xs);
-      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
     }
 
     /* ============================================
-     * Session Cards
+     * Session List & Cards
      * ============================================ */
     .session-list {
-      padding: var(--space-2);
+      padding: 8px;
     }
 
     .session-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      padding: var(--space-4) var(--space-5);
-      margin: var(--space-2) var(--space-2);
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
-      transition: all var(--duration-normal) var(--ease-in-out);
     }
 
     .session-card:hover {
-      border-color: var(--accent-blue);
-      background: var(--bg-tertiary);
-      box-shadow: var(--glow-blue);
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
     }
 
     .session-info {
@@ -210,8 +247,8 @@
     .session-header {
       display: flex;
       align-items: center;
-      gap: var(--space-3);
-      margin-bottom: var(--space-2);
+      gap: 12px;
+      margin-bottom: 8px;
     }
 
     .session-status {
@@ -223,132 +260,38 @@
     }
 
     .session-status.running {
-      background: var(--accent-blue);
-      animation: pulse 2s var(--ease-in-out) infinite;
+      background: var(--cyan);
+      box-shadow: 0 0 8px var(--cyan);
+      animation: pulse 2s ease-in-out infinite;
     }
 
     .session-status.completed {
-      background: var(--success-green);
+      background: var(--status-done);
     }
 
     .session-status.stopped {
-      background: var(--danger-red);
+      background: var(--status-error);
     }
 
     .session-id {
-      font-size: var(--text-xs);
-      color: var(--text-secondary);
       font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--bronze);
+      margin-bottom: 4px;
     }
 
     .session-name {
-      font-size: var(--text-sm);
-      color: var(--text-primary);
-      margin-bottom: var(--space-2);
-      font-weight: var(--font-medium);
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 8px;
     }
 
     .session-meta {
       display: flex;
-      gap: var(--space-6);
-      font-size: var(--text-xs);
-      color: var(--text-secondary);
-    }
-
-    .session-meta-item {
-      display: flex;
-      align-items: center;
-      gap: var(--space-1);
-    }
-
-    .session-meta-label {
+      gap: 24px;
+      font-size: 0.85rem;
       color: var(--text-muted);
-    }
-
-    .session-meta-value {
-      color: var(--text-secondary);
-    }
-
-    /* ============================================
-     * Buttons
-     * ============================================ */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-2);
-      padding: var(--space-2) var(--space-4);
-      font-family: var(--font-mono);
-      font-size: var(--text-sm);
-      font-weight: var(--font-medium);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-default);
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: all var(--duration-normal) var(--ease-in-out);
-      text-decoration: none;
-    }
-
-    .btn:hover {
-      background: var(--bg-elevated);
-      border-color: var(--text-secondary);
-    }
-
-    .btn-primary {
-      background: var(--accent-blue);
-      border-color: transparent;
-      color: var(--text-inverse);
-    }
-
-    .btn-primary:hover {
-      background: var(--accent-blue-hover);
-    }
-
-    .btn-success {
-      background: var(--success-green);
-      border-color: transparent;
-      color: var(--text-inverse);
-    }
-
-    .btn-success:hover {
-      background: var(--success-green-hover);
-    }
-
-    .btn-sm {
-      padding: var(--space-1) var(--space-3);
-      font-size: var(--text-xs);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border-color: var(--border-default);
-    }
-
-    .btn-ghost:hover {
-      background: var(--bg-tertiary);
-    }
-
-    /* ============================================
-     * CC Tips Button (Header)
-     * ============================================ */
-    .btn-cc-tips {
-      margin-left: var(--space-3);
-      padding: var(--space-1) var(--space-3);
-      font-size: var(--text-xs);
-      background: rgba(88, 166, 255, 0.1);
-      border: 1px solid var(--accent-blue);
-      color: var(--accent-blue);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all var(--duration-normal) var(--ease-in-out);
-      font-family: var(--font-mono);
-    }
-
-    .btn-cc-tips:hover {
-      background: var(--accent-blue);
-      color: var(--text-inverse);
-      box-shadow: var(--glow-blue);
     }
 
     /* ============================================
@@ -356,175 +299,25 @@
      * ============================================ */
     .loading, .empty {
       text-align: center;
-      padding: var(--space-10);
-      color: var(--text-secondary);
+      padding: 60px 20px;
+      color: var(--text-muted);
     }
 
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid var(--border-default);
-      border-top-color: var(--accent-blue);
+      border: 3px solid var(--bronze-dim);
+      border-top-color: var(--cyan);
       border-radius: var(--radius-full);
       animation: spin 1s linear infinite;
-      margin: 0 auto var(--space-4);
+      margin: 0 auto 16px;
     }
 
     .empty-icon {
-      font-size: var(--text-3xl);
-      color: var(--text-muted);
-      margin-bottom: var(--space-4);
+      font-size: 2rem;
+      color: var(--bronze);
+      margin-bottom: 16px;
       opacity: 0.5;
-    }
-
-    /* ============================================
-     * Modal Components
-     * ============================================ */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--overlay-black);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-2xl);
-      padding: var(--space-6);
-      width: 100%;
-      max-width: 450px;
-      box-shadow: var(--shadow-lg);
-      animation: scaleIn 0.2s var(--ease-in-out);
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: var(--space-5);
-      padding-bottom: var(--space-4);
-      border-bottom: 1px solid var(--border-default);
-    }
-
-    .modal-title {
-      font-size: var(--text-sm);
-      font-weight: var(--font-semibold);
-      color: var(--accent-blue);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .modal-close {
-      background: transparent;
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      cursor: pointer;
-      font-size: var(--text-xs);
-      padding: var(--space-1) var(--space-2);
-      border-radius: var(--radius-sm);
-      transition: all var(--duration-fast);
-      font-family: var(--font-mono);
-    }
-
-    .modal-close:hover {
-      border-color: var(--accent-blue);
-      color: var(--accent-blue);
-    }
-
-    /* ============================================
-     * Tips Modal Specific
-     * ============================================ */
-    .tip-card {
-      background: var(--bg-tertiary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      padding: var(--space-5);
-    }
-
-    .tip-category {
-      display: inline-block;
-      padding: var(--space-1) var(--space-2);
-      background: rgba(88, 166, 255, 0.1);
-      border: 1px solid var(--accent-blue);
-      border-radius: var(--radius-full);
-      font-size: var(--text-xs);
-      color: var(--accent-blue);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: var(--space-3);
-    }
-
-    .tip-title {
-      font-size: var(--text-base);
-      color: var(--accent-blue);
-      margin-bottom: var(--space-3);
-      font-weight: var(--font-semibold);
-    }
-
-    .tip-content {
-      font-size: var(--text-sm);
-      color: var(--text-primary);
-      line-height: 1.7;
-      margin-bottom: var(--space-4);
-    }
-
-    .tip-source {
-      font-size: var(--text-xs);
-      color: var(--text-muted);
-      text-align: right;
-      padding-top: var(--space-3);
-      border-top: 1px solid var(--border-default);
-    }
-
-    .modal-footer {
-      margin-top: var(--space-5);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .tip-count {
-      font-size: var(--text-xs);
-      color: var(--text-muted);
-    }
-
-    .btn-next-tip {
-      padding: var(--space-1) var(--space-3);
-      font-size: var(--text-xs);
-      background: rgba(88, 166, 255, 0.1);
-      border: 1px solid var(--accent-blue);
-      color: var(--accent-blue);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all var(--duration-normal);
-      font-family: var(--font-mono);
-    }
-
-    .btn-next-tip:hover {
-      background: var(--accent-blue);
-      color: var(--text-inverse);
-    }
-
-    .empty-tip {
-      text-align: center;
-      padding: var(--space-8) var(--space-4);
-      color: var(--text-secondary);
-    }
-
-    .empty-tip-icon {
-      font-size: var(--text-2xl);
-      color: var(--accent-blue);
-      margin-bottom: var(--space-3);
-      opacity: 0.7;
     }
 
     /* ============================================
@@ -550,9 +343,156 @@
       }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    /* ============================================
+     * Modal
+     * ============================================ */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 450px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: scaleIn 0.2s ease-out;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bronze-dim);
+    }
+
+    .modal-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid var(--bronze-dim);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    /* ============================================
+     * Tips Modal Specific
+     * ============================================ */
+    .tip-card {
+      background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 20px;
+    }
+
+    .tip-category {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan-dim);
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .tip-title {
+      font-size: 1rem;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .tip-content {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .tip-source {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      padding-top: 12px;
+      border-top: 1px solid var(--bronze-dim);
+    }
+
+    .modal-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tip-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .btn-next-tip {
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan-dim);
+      color: var(--cyan);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .btn-next-tip:hover {
+      background: var(--cyan-glow);
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .empty-tip {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-tip-icon {
+      font-size: 2rem;
+      color: var(--bronze);
+      margin-bottom: 12px;
+      opacity: 0.7;
     }
 
     /* ============================================
@@ -563,33 +503,17 @@
     }
 
     ::-webkit-scrollbar-track {
-      background: var(--bg-primary);
+      background: var(--slate-bg);
     }
 
     ::-webkit-scrollbar-thumb {
-      background: var(--border-default);
+      background: var(--bronze-dim);
       border-radius: var(--radius-full);
     }
 
     ::-webkit-scrollbar-thumb:hover {
-      background: var(--accent-blue);
+      background: var(--bronze);
     }
-
-    /* ============================================
-     * Utility Classes
-     * ============================================ */
-    .flex { display: flex; }
-    .flex-col { flex-direction: column; }
-    .items-center { align-items: center; }
-    .justify-between { justify-content: space-between; }
-    .gap-2 { gap: var(--space-2); }
-    .gap-4 { gap: var(--space-4); }
-    .text-primary { color: var(--text-primary); }
-    .text-secondary { color: var(--text-secondary); }
-    .text-muted { color: var(--text-muted); }
-    .text-xs { font-size: var(--text-xs); }
-    .text-sm { font-size: var(--text-sm); }
-    .font-medium { font-weight: var(--font-medium); }
   </style>
 </head>
 <body>
@@ -600,7 +524,7 @@
       <span class="logo-text">希卡之石</span>
       <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Claude Code Tip">CC Tips</button>
     </div>
-    <div class="flex items-center gap-4">
+    <div style="display: flex; gap: 12px;">
       <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
       <a href="/terminal" class="btn btn-primary btn-sm">⌘ Terminal</a>
     </div>
@@ -729,7 +653,7 @@
             <div class="empty">
               <div class="empty-icon">◈</div>
               <p>No active sessions found</p>
-              <p class="text-xs" style="margin-top: 8px; color: var(--text-muted);">
+              <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">
                 Run "claude" in your terminal to start a session
               </p>
             </div>
