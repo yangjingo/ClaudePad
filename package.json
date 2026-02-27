@@ -1,13 +1,19 @@
 {
-  "name": "claudpad",
+  "name": "claudepad",
   "version": "0.2.0",
   "type": "module",
   "scripts": {
+    "build": "tsc",
     "dev": "tsx watch server.ts",
     "start": "node server.js"
   },
+  "dependencies": {
+    "node-pty": "^1.0.0",
+    "ws": "^8.19.0"
+  },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/ws": "^8.18.1",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }

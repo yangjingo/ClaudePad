@@ -1,440 +1,200 @@
 /**
- * ClaudePad - Sheikah Slate Edition
- * Minimal TypeScript server - zero runtime dependencies
+ * ClaudePad - Claude Code Session Monitor
+ * Web-based terminal using xterm.js + node-pty
  */
 import { createServer } from 'node:http';
-import { readFile, writeFile, mkdir, access, readdir } from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
-import { join, dirname, extname } from 'node:path';
+import { readFile, writeFile, readdir } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
-import { homedir } from 'node:os';
+import { WebSocketServer, WebSocket } from 'ws';
+import * as pty from 'node-pty';
+import { homedir, userInfo, networkInterfaces } from 'node:os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PORT = 8080;
-const DATA_DIR = join(__dirname, 'data');
+const PORT = parseInt(process.env.PORT || '8080');
 const CLAUDE_DIR = join(homedir(), '.claude');
-// MIME types
-const MIME = {
-    '.html': 'text/html',
-    '.css': 'text/css',
-    '.js': 'application/javascript',
-    '.json': 'application/json',
-    '.png': 'image/png',
-    '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon',
-};
-// Terminal sessions
-const sessions = new Map();
-
-// Parse history.jsonl and get session info
-async function parseHistoryFile() {
-    const historyPath = join(CLAUDE_DIR, 'history.jsonl');
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript' };
+const terminals = new Map();
+async function parseHistory() {
     const sessions = new Map();
     try {
-        const content = await readFile(historyPath, 'utf-8');
-        const lines = content.trim().split('\n').filter(line => line.trim());
-
-        // Track timestamps for each session
-        const sessionData = new Map();
-
-        for (const line of lines) {
-            try {
-                const data = JSON.parse(line);
-                const sessionId = data.sessionId;
-                const timestamp = data.timestamp;
-                if (!sessionId || !timestamp) continue;
-
-                if (!sessionData.has(sessionId)) {
-                    sessionData.set(sessionId, {
-                        name: data.display?.slice(0, 50).replace(/\n/g, ' ') || 'Session',
-                        project: data.project || '',
-                        messageCount: 0,
-                        minTime: timestamp,
-                        maxTime: timestamp
-                    });
-                }
-
-                const session = sessionData.get(sessionId);
-                session.messageCount++;
-                if (timestamp < session.minTime) session.minTime = timestamp;
-                if (timestamp > session.maxTime) session.maxTime = timestamp;
-
+        const content = await readFile(join(CLAUDE_DIR, 'history.jsonl'), 'utf-8');
+        content.trim().split('\n').filter(l => l).forEach(line => {
+            const { sessionId, display, timestamp, project } = JSON.parse(line);
+            if (sessionId && !sessions.has(sessionId)) {
+                sessions.set(sessionId, { name: display?.slice(0, 50) || 'Session', timestamp, project });
             }
-            catch (e) {
-                console.error('Parse error:', e);
-            }
-        }
-
-        // Convert to sessions map with proper structure
-        for (const [id, data] of sessionData) {
-            sessions.set(id, {
-                name: data.name,
-                project: data.project,
-                messageCount: data.messageCount,
-                startTime: data.minTime,
-                lastActivity: data.maxTime,
-                duration: Math.floor((data.maxTime - data.minTime) / 1000)
-            });
-        }
+        });
     }
-    catch (error) {
-        console.error('Failed to parse history:', error);
+    catch (e) {
+        console.error('History parse error:', e.message);
     }
     return sessions;
 }
-
-// Get all Claude sessions from disk
 async function getSessions() {
     try {
-        const historySessions = await parseHistoryFile();
-        const sessions = [];
-        const oneHourAgo = Date.now() - 60 * 60 * 1000;
-
-        for (const [id, h] of historySessions) {
-            try {
-                // Filter out sessions without valid data
-                if (!h.messageCount || h.messageCount === 0) continue;
-                if (!h.startTime || !h.lastActivity) continue;
-
-                sessions.push({
-                    id,
-                    name: h.name || `Session ${id.slice(0, 8)}`,
-                    status: h.lastActivity > oneHourAgo ? 'running' : 'completed',
-                    tokenCount: h.messageCount * 100,
-                    startTime: new Date(h.startTime).toISOString(),
-                    lastActivity: new Date(h.lastActivity).toISOString(),
-                    duration: h.duration || 0,
-                    projectPath: h.project || process.cwd(),
-                    messageCount: h.messageCount || 0,
-                });
-            }
-            catch {
-                // Ignore
-            }
-        }
-
-        return sessions.sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+        const dir = join(CLAUDE_DIR, 'session-env');
+        const ids = await readdir(dir);
+        const history = await parseHistory();
+        return (await Promise.all(ids.map(async (id) => {
+            const h = history.get(id);
+            const ts = h?.timestamp || Date.now();
+            const status = ts > Date.now() - 3600000 ? 'running' : 'completed';
+            return { id, name: h?.name || id.slice(0, 8), lastPrompt: h?.name || id.slice(0, 8), status, startTime: new Date(ts).toISOString(), projectPath: h?.project || process.cwd(), lastActivity: new Date(ts).toISOString() };
+        }))).filter(s => s).sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
     }
-    catch (error) {
-        console.error('Failed to get sessions:', error);
+    catch (e) {
+        console.error(e);
         return [];
     }
 }
-// Simple JSON response helper
-const json = (res, data, status = 200) => {
-    res.writeHead(status, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(data));
-};
-// Read JSON file
-async function readJson(path, fallback) {
+const json = (res, data, status = 200) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); };
+async function getConfig() {
+    const settingsPath = join(homedir(), '.claude', 'settings.json');
+    let settings = {};
     try {
-        const data = await readFile(path, 'utf-8');
-        return JSON.parse(data);
+        const content = await readFile(settingsPath, 'utf-8');
+        settings = JSON.parse(content);
     }
-    catch {
-        return fallback;
+    catch (e) {
+        console.error('Settings parse error:', e.message);
     }
-}
-// Write JSON file
-async function writeJson(path, data) {
-    await mkdir(dirname(path), { recursive: true });
-    await writeFile(path, JSON.stringify(data, null, 2));
-}
-// API Routes
-const routes = {
-    // Health check
-    'GET /health': async (_, res) => json(res, { status: 'ok' }),
-
-    // Get Claude Code sessions
-    'GET /api/sessions': async (_, res) => {
-        const sessions = await getSessions();
-        json(res, { sessions });
-    },
-
-    // Get projects
-    'GET /api/projects': async (_, res) => {
-        const data = await readJson(join(DATA_DIR, 'projects.json'), { projects: [], current_project: null });
-        json(res, data);
-    },
-    // Create project
-    'POST /api/projects': async (req, res, body) => {
-        const { name, path: projectPath = '' } = (body || {});
-        if (!name)
-            return json(res, { error: 'Name required' }, 400);
-        const data = await readJson(join(DATA_DIR, 'projects.json'), { projects: [], current_project: null });
-        if (data.projects.find((p) => p.name === name)) {
-            return json(res, { error: 'Project exists' }, 400);
-        }
-        data.projects.push({ name, path: projectPath, created_at: new Date().toISOString() });
-        if (data.projects.length === 1)
-            data.current_project = name;
-        await writeJson(join(DATA_DIR, 'projects.json'), data);
-        await writeJson(join(DATA_DIR, 'projects', name, 'tasks.json'), { tasks: [] });
-        json(res, { name, path: projectPath });
-    },
-    // Switch project
-    'PUT /api/projects/:name/switch': async (req, res) => {
-        const name = req.url?.split('/')[3];
-        const data = await readJson(join(DATA_DIR, 'projects.json'), { projects: [], current_project: null });
-        if (!data.projects.find((p) => p.name === name)) {
-            return json(res, { error: 'Project not found' }, 404);
-        }
-        data.current_project = name || null;
-        await writeJson(join(DATA_DIR, 'projects.json'), data);
-        json(res, { current_project: name });
-    },
-    // Get tasks
-    'GET /api/:project/tasks': async (req, res) => {
-        const project = req.url?.split('/')[2];
-        const data = await readJson(join(DATA_DIR, 'projects', project, 'tasks.json'), { tasks: [] });
-        json(res, data.tasks);
-    },
-    // Create task
-    'POST /api/:project/tasks': async (req, res, body) => {
-        const project = req.url?.split('/')[2];
-        const data = await readJson(join(DATA_DIR, 'projects', project, 'tasks.json'), { tasks: [] });
-        const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const existing = data.tasks.filter((t) => t.id.startsWith(today));
-        const id = `${today}-${String(existing.length + 1).padStart(3, '0')}`;
-        const task = {
-            id,
-            title: body?.title || '',
-            description: body?.description || '',
-            status: 'pending',
-            is_plan: body?.is_plan || false,
-            prompt: body?.prompt || '',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-        };
-        data.tasks.push(task);
-        await writeJson(join(DATA_DIR, 'projects', project, 'tasks.json'), data);
-        json(res, task);
-    },
-    // Update task status
-    'POST /api/:project/tasks/:id/status': async (req, res, body) => {
-        const parts = req.url?.split('/') || [];
-        const project = parts[2];
-        const id = parts[4];
-        const data = await readJson(join(DATA_DIR, 'projects', project, 'tasks.json'), { tasks: [] });
-        const task = data.tasks.find((t) => t.id === id);
-        if (!task)
-            return json(res, { error: 'Task not found' }, 404);
-        task.status = body?.status || task.status;
-        task.updated_at = new Date().toISOString();
-        await writeJson(join(DATA_DIR, 'projects', project, 'tasks.json'), data);
-        json(res, task);
-    },
-    // Get terminal history
-    'GET /api/terminal/history': async (_, res) => {
-        const data = await readJson(join(DATA_DIR, 'terminal_history.json'), { commands: [] });
-        json(res, data);
-    },
-    // Add to terminal history
-    'POST /api/terminal/history': async (_, res, body) => {
-        const cmd = body?.command?.trim();
-        if (!cmd)
-            return json(res, { ok: true });
-        const data = await readJson(join(DATA_DIR, 'terminal_history.json'), { commands: [], last_updated: null });
-        data.commands = data.commands.filter((c) => c !== cmd);
-        data.commands.unshift(cmd);
-        if (data.commands.length > 1000)
-            data.commands = data.commands.slice(0, 1000);
-        data.last_updated = new Date().toISOString();
-        await writeJson(join(DATA_DIR, 'terminal_history.json'), data);
-        json(res, { ok: true });
-    },
-    // Terminal status
-    'GET /api/terminal/status': async (_, res) => {
-        json(res, {
-            status: 'running',
-            session_count: sessions.size,
-            sessions: Array.from(sessions.keys()).slice(0, 10),
-        });
-    },
-};
-// Parse body
-async function parseBody(req) {
-    return new Promise((resolve) => {
-        let data = '';
-        req.on('data', chunk => data += chunk);
-        req.on('end', () => {
-            try {
-                resolve(JSON.parse(data));
-            }
-            catch {
-                resolve({});
-            }
-        });
-    });
-}
-// Match route
-function matchRoute(method, url) {
-    // Direct match
-    const key = `${method} ${url}`;
-    if (routes[key])
-        return { handler: routes[key], params: {} };
-    // Pattern match
-    for (const [pattern, handler] of Object.entries(routes)) {
-        const [pMethod, pPath] = pattern.split(' ');
-        if (pMethod !== method)
-            continue;
-        const pParts = pPath.split('/');
-        const uParts = url.split('/');
-        if (pParts.length !== uParts.length)
-            continue;
-        const params = {};
-        let match = true;
-        for (let i = 0; i < pParts.length; i++) {
-            if (pParts[i].startsWith(':')) {
-                params[pParts[i].slice(1)] = uParts[i];
-            }
-            else if (pParts[i] !== uParts[i]) {
-                match = false;
+    const nics = networkInterfaces();
+    let ip = '127.0.0.1';
+    for (const nic of Object.values(nics)) {
+        for (const addr of (nic || [])) {
+            if (addr.family === 'IPv4' && !addr.internal) {
+                ip = addr.address;
                 break;
             }
         }
-        if (match)
-            return { handler, params };
+        if (ip !== '127.0.0.1')
+            break;
     }
-    return null;
+    return {
+        claudePath: CLAUDE_DIR,
+        model: settings.model || 'unknown',
+        apiUrl: settings.env?.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
+        apiKey: settings.env?.ANTHROPIC_AUTH_TOKEN ?
+            settings.env.ANTHROPIC_AUTH_TOKEN.slice(0, 8) + '...' + settings.env.ANTHROPIC_AUTH_TOKEN.slice(-4) : 'not set',
+        ip: ip,
+        user: userInfo().username || process.env.USER || 'unknown',
+        port: PORT
+    };
 }
-// Serve static file
-async function serveStatic(res, url) {
-    const filePath = join(__dirname, 'static', url.replace('/static/', ''));
-    const ext = extname(filePath);
-    const mime = MIME[ext] || 'application/octet-stream';
+async function saveConfig(newConfig) {
+    const settingsPath = join(homedir(), '.claude', 'settings.json');
+    let settings = {};
     try {
-        await access(filePath);
-        res.writeHead(200, { 'Content-Type': mime });
-        createReadStream(filePath).pipe(res);
+        const content = await readFile(settingsPath, 'utf-8');
+        settings = JSON.parse(content);
     }
-    catch {
-        res.writeHead(404);
-        res.end('Not found');
+    catch (e) {
+        console.error('Settings parse error:', e.message);
     }
-}
-// Terminal SSE
-function handleTerminalStream(req, res) {
-    const url = new URL(req.url || '', `http://localhost:${PORT}`);
-    const sessionId = url.searchParams.get('id') || `term_${Date.now()}`;
-    res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-    });
-    // Get or create session
-    let session = sessions.get(sessionId);
-    if (!session) {
-        const proc = spawn('bash', [], { env: { ...process.env, TERM: 'xterm-256color' } });
-        session = { process: proc, clients: new Set() };
-        sessions.set(sessionId, session);
-        proc.stdout.on('data', (data) => {
-            session.clients.forEach(client => {
-                client.write(`data: ${JSON.stringify({ type: 'output', data: data.toString() })}\n\n`);
-            });
-        });
-        proc.stderr.on('data', (data) => {
-            session.clients.forEach(client => {
-                client.write(`data: ${JSON.stringify({ type: 'output', data: data.toString() })}\n\n`);
-            });
-        });
-        proc.on('close', () => {
-            session.clients.forEach(client => {
-                client.write(`data: ${JSON.stringify({ type: 'status', state: 'disconnected' })}\n\n`);
-                client.end();
-            });
-            sessions.delete(sessionId);
-        });
+    if (newConfig.model)
+        settings.model = newConfig.model;
+    if (!settings.env)
+        settings.env = {};
+    if (newConfig.apiUrl)
+        settings.env.ANTHROPIC_BASE_URL = newConfig.apiUrl;
+    if (newConfig.apiKey && newConfig.apiKey !== 'not set' && !newConfig.apiKey.includes('...')) {
+        settings.env.ANTHROPIC_AUTH_TOKEN = newConfig.apiKey;
     }
-    session.clients.add(res);
-    res.write(`data: ${JSON.stringify({ type: 'status', state: 'connected', session_id: sessionId })}\n\n`);
-    req.on('close', () => {
-        session.clients.delete(res);
-    });
+    await writeFile(settingsPath, JSON.stringify(settings, null, 2), 'utf-8');
+    return getConfig();
 }
-// Terminal input (POST)
-async function handleTerminalInput(req, res, body) {
-    const { session_id, data } = body;
-    if (!session_id || !data)
-        return json(res, { error: 'Missing params' }, 400);
-    const session = sessions.get(session_id);
-    if (!session)
-        return json(res, { error: 'Session not found' }, 404);
-    session.process.stdin?.write(data);
-    json(res, { ok: true });
-}
-// Main server
 const server = createServer(async (req, res) => {
-    const url = req.url || '/';
-    const method = req.method || 'GET';
-    // CORS headers
+    const url = req.url || '/', method = req.method || 'GET';
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     if (method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
         return;
     }
-    // Static files
-    if (url.startsWith('/static/')) {
-        return serveStatic(res, url);
-    }
-
-    // Serve docs/cc-tips/tips.json
-    if (url.startsWith('/docs/')) {
-        const relativePath = url.replace('/docs/', '');
-        const filePath = join(__dirname, 'docs', relativePath);
-        const ext = extname(filePath);
-        const mime = MIME[ext] || 'application/octet-stream';
+    if (url === '/api/config' && method === 'GET')
+        return json(res, await getConfig());
+    if (url === '/api/config' && method === 'POST') {
         try {
-            await access(filePath);
-            res.writeHead(200, { 'Content-Type': mime });
-            createReadStream(filePath).pipe(res);
+            const body = await new Promise((resolve, reject) => {
+                let data = '';
+                req.on('data', chunk => data += chunk);
+                req.on('end', () => { try {
+                    resolve(JSON.parse(data));
+                }
+                catch {
+                    reject(new Error('Invalid JSON'));
+                } });
+                req.on('error', reject);
+            });
+            return json(res, await saveConfig(body));
+        }
+        catch (e) {
+            res.writeHead(400);
+            res.end(e.message);
             return;
         }
-        catch {
-            res.writeHead(404);
-            res.end('Not found');
-            return;
-        }
     }
-
-    // Terminal SSE
-    if (url.startsWith('/terminal/stream')) {
-        return handleTerminalStream(req, res);
+    if (url === '/api/sessions' && method === 'GET')
+        return json(res, { sessions: await getSessions() });
+    const m = url.match(/^\/api\/sessions\/([^\/]+)/);
+    if (m && method === 'GET') {
+        const s = (await getSessions()).find(x => x.id === m[1]);
+        return s ? json(res, s) : json(res, { error: 'Not found' }, 404);
     }
-    // Terminal input
-    if (url === '/terminal/input' && method === 'POST') {
-        return handleTerminalInput(req, res, await parseBody(req));
+    if (m && method === 'POST' && url.includes('/terminal')) {
+        if (terminals.has(m[1]))
+            return json(res, { error: 'Running' }, 400);
+        const proc = pty.spawn(process.env.SHELL || 'bash', ['-c', `unset CLAUDECODE && claude --resume ${m[1]}`], { name: 'xterm-256color', cols: 120, rows: 30, cwd: process.cwd(), env: { ...process.env, TERM: 'xterm-256color', CLAUDECODE: undefined } });
+        terminals.set(m[1], { pty: proc });
+        proc.onData(data => { const t = terminals.get(m[1]); if (t?.ws?.readyState === WebSocket.OPEN)
+            t.ws.send(JSON.stringify({ type: 'output', data })); });
+        proc.onExit(() => terminals.delete(m[1]));
+        return json(res, { status: 'started' });
     }
-    // Pages
     if (url === '/' || url === '/index.html') {
-        const html = await readFile(join(__dirname, 'frontend', 'index.html'), 'utf-8').catch(() => null);
+        const html = await readFile(join(__dirname, 'frontend', 'index.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
             return;
         }
     }
-    if (url === '/terminal') {
-        const html = await readFile(join(__dirname, 'frontend', 'terminal.html'), 'utf-8').catch(() => null);
+    const tm = url.match(/^\/terminal\/([^\/]+)/);
+    if (tm) {
+        const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
             return;
         }
     }
-    // API routes
-    const match = matchRoute(method, url);
-    if (match) {
-        const body = method === 'POST' || method === 'PUT' ? await parseBody(req) : undefined;
-        return match.handler(req, res, body);
-    }
-    // 404
     res.writeHead(404);
     res.end('Not found');
 });
-server.listen(PORT, '0.0.0.0', () => {
-    console.log(`🗡️  ClaudePad (Sheikah Slate Edition) running on http://0.0.0.0:${PORT}`);
+const wss = new WebSocketServer({ server });
+wss.on('connection', (ws, req) => {
+    const m = (req.url || '').match(/^\/ws\/terminal\/([^\/]+)/);
+    if (!m) {
+        ws.close();
+        return;
+    }
+    const term = terminals.get(m[1]);
+    if (!term) {
+        ws.send(JSON.stringify({ type: 'error', data: 'Not found' }));
+        ws.close();
+        return;
+    }
+    term.ws = ws;
+    ws.on('message', data => { try {
+        const { type, data: input } = JSON.parse(data.toString());
+        if (type === 'input')
+            term.pty.write(input);
+    }
+    catch {
+        term.pty.write(data.toString());
+    } });
+    ws.on('close', () => { const t = terminals.get(m[1]); if (t)
+        t.ws = undefined; });
 });
+server.listen(PORT, '0.0.0.0', () => { console.log(`🗡️ ClaudePad running on http://0.0.0.0:${PORT}`); getSessions().then(s => console.log(`📚 Sessions: ${s.length}`)); });

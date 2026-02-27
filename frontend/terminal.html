@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudePad // Terminal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/css/xterm.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/lib/xterm.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.8.0/lib/addon-fit.min.js"></script>
+  <style>
+    :root { --bg: #0a0a0f; --panel: #111118; --cyan: #00d4ff; --green: #22c55e; --border: rgba(0,212,255,0.2); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'SF Mono', monospace; background: var(--bg); height: 100vh; overflow: hidden; }
+    .header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
+    .back { color: var(--cyan); text-decoration: none; }
+    .status { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #78716c; }
+    .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .overlay { position: fixed; inset: 0; background: rgba(10,10,15,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <a href="/" class="back">← Back</a>
+    <span id="title">Terminal</span>
+    <div class="status"><span class="dot" id="dot"></span><span id="status">Connecting...</span></div>
+  </div>
+  <div id="terminal" style="height: calc(100vh - 50px); padding: 16px;"></div>
+  <div class="overlay" id="overlay"><div class="spinner"></div></div>
+  <script>
+    const id = location.pathname.split('/').pop();
+    document.getElementById('title').textContent = `Terminal: ${id.slice(0, 8)}`;
+    const term = new Terminal({ cursorBlink: true, fontSize: 14, theme: { background: '#0a0a0f', foreground: '#e0e0e0', cursor: '#00d4ff' } });
+    const fit = new FitAddon.FitAddon(); term.loadAddon(fit); term.open(document.getElementById('terminal')); fit.fit();
+    window.addEventListener('resize', () => fit.fit());
+    term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
+    term.writeln('\x1b[90mConnecting...\x1b[0m\r\n');
+    fetch(`/api/sessions/${id}/terminal`, { method: 'POST' }).then(async r => {
+      if (!r.ok) throw new Error(await r.text());
+      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/terminal/${id}`);
+      ws.onopen = () => { document.getElementById('dot').className = 'dot connected'; document.getElementById('status').textContent = 'Connected'; document.getElementById('overlay').classList.add('hidden'); term.writeln('\x1b[32m✓ Connected\x1b[0m\r\n'); term.focus(); };
+      ws.onmessage = e => { const { type, data } = JSON.parse(e.data); if (type === 'output') term.write(data); };
+      ws.onclose = () => { document.getElementById('dot').className = 'dot'; document.getElementById('status').textContent = 'Disconnected'; term.writeln('\r\n\x1b[31m✗ Disconnected\x1b[0m'); };
+      term.onData(data => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'input', data })); });
+    }).catch(err => { document.getElementById('overlay').innerHTML = `<div style="color:#ef4444;text-align:center">Error: ${err.message}<br><br><button class="btn" onclick="location.reload()">Retry</button></div>`; });
+  </script>
+</body>
+</html>

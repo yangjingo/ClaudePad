@@ -528,6 +528,232 @@
     ::-webkit-scrollbar-thumb:hover {
       background: var(--bronze);
     }
+
+    /* ============================================
+     * Config Bar - New UI Area
+     * ============================================ */
+    .config-bar {
+      background: var(--slate-bg-lighter);
+      border-bottom: 1px solid var(--bronze-dim);
+      padding: 12px 20px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .config-label {
+      font-size: 0.65rem;
+      color: var(--bronze);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: var(--font-mono);
+    }
+
+    .config-value {
+      font-size: 0.8rem;
+      color: var(--text);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .config-value .icon {
+      color: var(--cyan);
+      font-size: 0.9rem;
+    }
+
+    .config-value code {
+      background: rgba(0, 212, 255, 0.1);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--bronze-dim);
+    }
+
+    /* ============================================
+     * Model Config - Enhanced Design
+     * ============================================ */
+    .config-model-container {
+      position: relative;
+    }
+
+    .config-model-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .config-model-row .item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm);
+    }
+
+    .config-model-row .item:hover {
+      border-color: var(--cyan-dim);
+      background: rgba(0, 212, 255, 0.12);
+    }
+
+    .config-model-row .icon {
+      color: var(--cyan);
+      font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+
+    .config-model-row code {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      padding: 0;
+    }
+
+    .config-model-row .divider {
+      color: var(--bronze);
+      font-size: 0.8rem;
+      opacity: 0.5;
+    }
+
+    .btn-edit-model {
+      background: transparent;
+      border: 1px solid var(--bronze-dim);
+      color: var(--bronze-light);
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-edit-model:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* ============================================
+     * Edit Modal
+     * ============================================ */
+    .edit-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .edit-modal-overlay.active {
+      display: flex;
+    }
+
+    .edit-modal {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: scaleIn 0.2s ease-out;
+    }
+
+    .edit-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--bronze-dim);
+    }
+
+    .edit-modal-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .edit-modal-close {
+      background: transparent;
+      border: 1px solid var(--bronze-dim);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      transition: all 0.2s;
+    }
+
+    .edit-modal-close:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .edit-modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .edit-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .edit-form-label {
+      font-size: 0.7rem;
+      color: var(--bronze);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-family: var(--font-mono);
+    }
+
+    .edit-form-input {
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .edit-form-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .edit-modal-footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--bronze-dim);
+    }
   </style>
 </head>
 <body>
@@ -536,10 +762,63 @@
     <div class="logo">
       <span class="logo-icon">◈</span>
       <span class="logo-text">ClaudePad</span>
-      <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Tip">CC Tips</button>
     </div>
-    <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Tip">CC Tips</button>
+      <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
+    </div>
   </header>
+
+  <!-- Config Bar - New UI Area -->
+  <div class="config-bar" id="config-bar">
+    <div class="config-item">
+      <span class="config-label">◈ Claude Path</span>
+      <span class="config-value" id="config-path"><span class="icon">⟳</span> Loading...</span>
+    </div>
+    <div class="config-item config-model-container">
+      <span class="config-label">Model</span>
+      <div class="config-model-row">
+        <div class="item">
+          <span class="icon">◈</span>
+          <code id="config-model">-</code>
+        </div>
+        <span class="divider">|</span>
+        <button class="btn-edit-model" onclick="openEditModal()" title="Edit Model Configuration">✎ Edit</button>
+      </div>
+    </div>
+    <div class="config-item">
+      <span class="config-label">Host / User</span>
+      <span class="config-value" id="config-host-user"><span class="icon">◉</span> <code id="config-host">-</code> <span style="color: var(--bronze);">|</span> <span class="icon">◈</span> <code id="config-user">-</code></span>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="edit-modal-overlay" id="edit-modal-overlay" onclick="if(event.target === this) closeEditModal()">
+    <div class="edit-modal">
+      <div class="edit-modal-header">
+        <span class="edit-modal-title">◈ Edit Model Configuration</span>
+        <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
+      </div>
+      <div class="edit-modal-form">
+        <div class="edit-form-group">
+          <label class="edit-form-label">Model</label>
+          <input type="text" class="edit-form-input" id="edit-model" placeholder="e.g. opus[1m]">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">API URL</label>
+          <input type="text" class="edit-form-input" id="edit-apiurl" placeholder="e.g. https://api.anthropic.com">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">API Key</label>
+          <input type="password" class="edit-form-input" id="edit-apikey" placeholder="sk-...">
+        </div>
+      </div>
+      <div class="edit-modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveConfig()">Save Changes</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Content -->
   <main class="container">
@@ -584,6 +863,63 @@
     // ============================================
     let tipsData = [];
     let isTipsModalOpen = false;
+    let currentConfig = {};
+
+    // ============================================
+    // Config Functions
+    // ============================================
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/config');
+        const config = await response.json();
+        currentConfig = config;
+
+        document.getElementById('config-path').innerHTML = `<span class="icon">◈</span> <code>${escapeHtml(config.claudePath)}</code>`;
+        document.getElementById('config-model').textContent = escapeHtml(config.model);
+        document.getElementById('config-host').textContent = `${escapeHtml(config.ip)}:${config.port}`;
+        document.getElementById('config-user').textContent = escapeHtml(config.user);
+      } catch (error) {
+        console.error('Failed to load config:', error);
+        document.getElementById('config-path').textContent = 'Failed to load';
+      }
+    }
+
+    function openEditModal() {
+      document.getElementById('edit-model').value = currentConfig.model || '';
+      document.getElementById('edit-apiurl').value = currentConfig.apiUrl || '';
+      document.getElementById('edit-apikey').value = '';
+      document.getElementById('edit-modal-overlay').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('edit-modal-overlay').classList.remove('active');
+    }
+
+    async function saveConfig() {
+      const newConfig = {
+        model: document.getElementById('edit-model').value,
+        apiUrl: document.getElementById('edit-apiurl').value,
+        apiKey: document.getElementById('edit-apikey').value
+      };
+
+      try {
+        const response = await fetch('/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newConfig)
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        closeEditModal();
+        loadConfig();
+        alert('Configuration saved successfully!');
+      } catch (error) {
+        alert('Failed to save configuration: ' + error.message);
+      }
+    }
 
     // ============================================
     // CC Tips Functions
@@ -747,9 +1083,16 @@
     }
 
     function viewSession(id) {
-      const msg = `Session: ${id}\n\nTo resume in terminal:\nclaude --resume ${id}`;
-      navigator.clipboard?.writeText(`claude --resume ${id}`);
-      alert(msg + '\n\n(Session ID copied to clipboard)');
+      // 调用终端 API 启动 session
+      fetch(`/api/sessions/${id}/terminal`, { method: 'POST' })
+        .then(r => {
+          if (!r.ok) throw new Error(r.statusText);
+          // 跳转到 terminal 页面
+          window.location.href = `/terminal/${id}`;
+        })
+        .catch(err => {
+          alert('Failed to start terminal: ' + err.message);
+        });
     }
 
     // ============================================
@@ -764,6 +1107,7 @@
     // ============================================
     // Initialization
     // ============================================
+    loadConfig();
     loadTips();
     load();
 
