@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudePad // CC Ideas</title>
+  <style>
+    /* ============================================
+     * SHEIKAH SLATE THEME
+     * Ancient Futurism - Bronze & Cyan
+     * ============================================ */
+    :root {
+      --slate-bg: #0a0a0f;
+      --slate-bg-light: #111118;
+      --slate-bg-lighter: #1a1a24;
+      --slate-panel: #13131a;
+      --bronze: #8B7355;
+      --bronze-light: #A0826D;
+      --bronze-dark: #6b5b4f;
+      --bronze-dim: #4a3f37;
+      --cyan: #00d4ff;
+      --cyan-bright: #00f0ff;
+      --cyan-dim: #00a8cc;
+      --cyan-glow: rgba(0, 212, 255, 0.3);
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --text-dark: #666;
+      --status-new: #f59e0b;
+      --status-progress: #3b82f6;
+      --status-done: #4ade80;
+      --status-archived: #8B7355;
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-full: 9999px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--slate-bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ============================================
+     * Header
+     * ============================================ */
+    .header {
+      background: var(--slate-bg-light);
+      border-bottom: 1px solid var(--bronze-dim);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      color: var(--cyan);
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--bronze-light);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--cyan);
+      background: var(--cyan-glow);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+    }
+
+    /* ============================================
+     * Buttons
+     * ============================================ */
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan-glow);
+      box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--bronze-light);
+      box-shadow: inset 0 0 0 1px var(--bronze-dim);
+    }
+
+    .btn-ghost:hover {
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-icon {
+      padding: 6px;
+      min-width: 32px;
+      justify-content: center;
+    }
+
+    .btn-danger {
+      color: #ef4444;
+      box-shadow: inset 0 0 0 1px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: #ef4444;
+    }
+
+    /* ============================================
+     * Main Container
+     * ============================================ */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ============================================
+     * Add Idea Form
+     * ============================================ */
+    .add-idea-form {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .form-title {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--bronze-light);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-input, .form-textarea {
+      width: 100%;
+      padding: 12px;
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      resize: vertical;
+      transition: all 0.2s;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .form-textarea {
+      min-height: 100px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* ============================================
+     * Search Bar
+     * ============================================ */
+    .search-bar {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+     * Ideas List
+     * ============================================ */
+    .ideas-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .ideas-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--bronze-light);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .ideas-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .ideas-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .idea-card {
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      transition: all 0.2s;
+      position: relative;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .idea-card:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+    }
+
+    .idea-status-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .idea-status-badge.new {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.5);
+      color: var(--status-new);
+    }
+
+    .idea-status-badge.progress {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      color: var(--status-progress);
+    }
+
+    .idea-status-badge.done {
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid rgba(74, 222, 128, 0.5);
+      color: var(--status-done);
+    }
+
+    .idea-status-badge.archived {
+      background: rgba(139, 115, 85, 0.15);
+      border: 1px solid rgba(139, 115, 85, 0.5);
+      color: var(--bronze-light);
+    }
+
+    .idea-content {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .idea-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--bronze-dim);
+    }
+
+    .idea-timestamp {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .idea-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .idea-status-select {
+      padding: 4px 10px;
+      background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .idea-status-select:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    /* ============================================
+     * Empty State
+     * ============================================ */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 2.5rem;
+      color: var(--bronze);
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+
+    .empty-text {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-hint {
+      font-size: 0.85rem;
+      color: var(--text-dark);
+    }
+
+    /* ============================================
+     * Toast Notification
+     * ============================================ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--slate-panel);
+      border: 1px solid var(--cyan-dim);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      color: var(--cyan);
+      font-size: 1.2rem;
+    }
+
+    .toast-message {
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    /* ============================================
+     * Animations
+     * ============================================ */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ============================================
+     * Responsive
+     * ============================================ */
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .form-actions, .form-row {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+
+      .idea-meta {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+    }
+
+    /* ============================================
+     * Scrollbar
+     * ============================================ */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--slate-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bronze-dim);
+      border-radius: var(--radius-full);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--bronze);
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">ClaudePad</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link">Sessions</a>
+      <a href="/terminal.html" class="nav-link">Terminal</a>
+      <a href="/idea.html" class="nav-link active">Ideas</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Add Idea Form -->
+    <section class="add-idea-form">
+      <h2 class="form-title">◈ Capture Idea</h2>
+      <div class="form-group">
+        <textarea
+          id="idea-input"
+          class="form-textarea"
+          placeholder="What's on your mind? Capture your inspiration... (Ctrl+Enter to save)"
+          maxlength="2000"
+        ></textarea>
+      </div>
+      <div class="form-row">
+        <select id="status-select" class="form-input" style="max-width: 200px;">
+          <option value="new">✨ New</option>
+          <option value="progress">🔄 In Progress</option>
+          <option value="done">✅ Done</option>
+          <option value="archived">🗄️ Archived</option>
+        </select>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+        <button class="btn btn-primary" onclick="addIdea()">+ Save Idea</button>
+      </div>
+    </section>
+
+    <!-- Search Bar -->
+    <section class="search-bar">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search ideas... (Ctrl+K to focus)"
+      />
+    </section>
+
+    <!-- Ideas List -->
+    <section>
+      <div class="ideas-header">
+        <h2 class="ideas-title">◈ Ideas</h2>
+        <span class="ideas-count"><span id="idea-count">0</span> ideas</span>
+      </div>
+      <div id="ideas-list" class="ideas-list">
+        <!-- Ideas will be rendered here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message">Idea saved!</span>
+  </div>
+
+  <script>
+    // ============================================
+    // Constants
+    // ============================================
+    const STORAGE_KEY = 'claudepad_ideas';
+
+    // ============================================
+    // State
+    // ============================================
+    let ideas = [];
+    let filteredIdeas = [];
+
+    // ============================================
+    // Storage Functions
+    // ============================================
+    function loadIdeas() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        ideas = stored ? JSON.parse(stored) : [];
+        ideas.forEach(idea => {
+          if (!idea.status) idea.status = 'new';
+        });
+        ideas.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        filteredIdeas = [...ideas];
+      } catch (error) {
+        console.error('Failed to load ideas:', error);
+        ideas = [];
+        filteredIdeas = [];
+      }
+    }
+
+    function saveIdeas() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(ideas));
+      } catch (error) {
+        console.error('Failed to save ideas:', error);
+        showToast('Failed to save idea', 'error');
+      }
+    }
+
+    // ============================================
+    // Idea Management Functions
+    // ============================================
+    function addIdea() {
+      const input = document.getElementById('idea-input');
+      const statusSelect = document.getElementById('status-select');
+      const content = input.value.trim();
+
+      if (!content) {
+        showToast('Please enter an idea', 'error');
+        input.focus();
+        return;
+      }
+
+      const newIdea = {
+        id: generateId(),
+        content: content,
+        timestamp: new Date().toISOString(),
+        status: statusSelect.value
+      };
+
+      ideas.unshift(newIdea);
+      filteredIdeas = [...ideas];
+      saveIdeas();
+      renderIdeas();
+      clearForm();
+      showToast('Idea saved!');
+    }
+
+    function deleteIdea(id) {
+      if (!confirm('Are you sure you want to delete this idea?')) {
+        return;
+      }
+
+      ideas = ideas.filter(idea => idea.id !== id);
+      filteredIdeas = [...ideas];
+      saveIdeas();
+      renderIdeas();
+      showToast('Idea deleted');
+    }
+
+    function copyIdea(id) {
+      const idea = ideas.find(i => i.id === id);
+      if (idea) {
+        navigator.clipboard.writeText(idea.content).then(() => {
+          showToast('Copied to clipboard!');
+        }).catch(() => {
+          showToast('Failed to copy', 'error');
+        });
+      }
+    }
+
+    function updateIdeaStatus(id, newStatus) {
+      const idea = ideas.find(i => i.id === id);
+      if (idea) {
+        idea.status = newStatus;
+        saveIdeas();
+        renderIdeas();
+        showToast('Status updated');
+      }
+    }
+
+    function clearForm() {
+      document.getElementById('idea-input').value = '';
+      document.getElementById('status-select').value = 'new';
+      document.getElementById('idea-input').focus();
+    }
+
+    // ============================================
+    // Search/Filter Functions
+    // ============================================
+    function filterIdeas() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+
+      if (!query) {
+        filteredIdeas = [...ideas];
+      } else {
+        filteredIdeas = ideas.filter(idea =>
+          idea.content.toLowerCase().includes(query)
+        );
+      }
+
+      renderIdeas();
+    }
+
+    // ============================================
+    // Render Functions
+    // ============================================
+    function renderIdeas() {
+      const list = document.getElementById('ideas-list');
+      const count = document.getElementById('idea-count');
+
+      count.textContent = filteredIdeas.length;
+
+      if (filteredIdeas.length === 0) {
+        const hasQuery = document.getElementById('search-input').value.trim();
+
+        if (hasQuery) {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🔍</div>
+              <p class="empty-text">No ideas found</p>
+              <p class="empty-hint">Try a different search term</p>
+            </div>
+          `;
+        } else {
+          list.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">◈</div>
+              <p class="empty-text">No ideas yet</p>
+              <p class="empty-hint">Capture your first inspiration above</p>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      list.innerHTML = filteredIdeas.map(idea => `
+        <div class="idea-card" data-id="${escapeHtml(idea.id)}">
+          <span class="idea-status-badge ${idea.status}">${getStatusLabel(idea.status)}</span>
+          <div class="idea-content">${escapeHtml(idea.content)}</div>
+          <div class="idea-meta">
+            <span class="idea-timestamp">${formatTimestamp(idea.timestamp)}</span>
+            <div class="idea-actions">
+              <select class="idea-status-select" onchange="updateIdeaStatus('${escapeHtml(idea.id)}', this.value)">
+                <option value="new" ${idea.status === 'new' ? 'selected' : ''}>✨ New</option>
+                <option value="progress" ${idea.status === 'progress' ? 'selected' : ''}>🔄 In Progress</option>
+                <option value="done" ${idea.status === 'done' ? 'selected' : ''}>✅ Done</option>
+                <option value="archived" ${idea.status === 'archived' ? 'selected' : ''}>🗄️ Archived</option>
+              </select>
+              <button class="btn btn-ghost btn-sm btn-icon" onclick="copyIdea('${escapeHtml(idea.id)}')" title="Copy">
+                📋
+              </button>
+              <button class="btn btn-danger btn-sm btn-icon" onclick="deleteIdea('${escapeHtml(idea.id)}')" title="Delete">
+                ✕
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // Toast Notification
+    // ============================================
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastIcon = toast.querySelector('.toast-icon');
+      const toastMessage = toast.querySelector('.toast-message');
+
+      toastIcon.textContent = type === 'error' ? '⚠' : '✓';
+      toastIcon.style.color = type === 'error' ? '#ef4444' : 'var(--cyan)';
+      toastMessage.textContent = message;
+
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // ============================================
+    // Utilities
+    // ============================================
+    function generateId() {
+      return 'idea_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+
+      if (diff < 60 * 1000) return 'Just now';
+      if (diff < 60 * 60 * 1000) {
+        const minutes = Math.floor(diff / (60 * 1000));
+        return `${minutes}m ago`;
+      }
+      if (diff < 24 * 60 * 60 * 1000) {
+        const hours = Math.floor(diff / (60 * 60 * 1000));
+        return `${hours}h ago`;
+      }
+      if (diff < 7 * 24 * 60 * 60 * 1000) {
+        const days = Math.floor(diff / (24 * 60 * 60 * 1000));
+        return `${days}d ago`;
+      }
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function getStatusLabel(status) {
+      const labels = {
+        'new': 'New',
+        'progress': 'In Progress',
+        'done': 'Done',
+        'archived': 'Archived'
+      };
+      return labels[status] || 'New';
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ============================================
+    // Keyboard Shortcuts
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        const input = document.getElementById('idea-input');
+        if (document.activeElement === input) {
+          addIdea();
+        }
+      }
+
+      if (e.key === 'Escape') {
+        const input = document.getElementById('idea-input');
+        if (document.activeElement === input) {
+          clearForm();
+        }
+        const search = document.getElementById('search-input');
+        if (document.activeElement === search && search.value) {
+          search.value = '';
+          filterIdeas();
+        }
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-input').focus();
+      }
+    });
+
+    // ============================================
+    // Initialization
+    // ============================================
+    loadIdeas();
+    renderIdeas();
+    document.getElementById('idea-input').focus();
+  </script>
+</body>
+</html>

@@ -160,6 +160,22 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
+    if (url === '/idea.html' || url === '/idea') {
+        const html = await readFile(join(__dirname, 'frontend', 'idea.html')).catch(() => null);
+        if (html) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
+        }
+    }
+    if (url === '/terminal.html' || url === '/terminal') {
+        const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
+        if (html) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
+        }
+    }
     const tm = url.match(/^\/terminal\/([^\/]+)/);
     if (tm) {
         const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
