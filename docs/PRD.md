@@ -1,345 +1,430 @@
-好的！以下是 **ClaudePad** 的完整 PRD 文档，已整理为可直接使用的 Markdown 格式：
+# 希卡之石 (Sheikah Slate) - Claude Code 监控系统
 
----
+## 产品需求文档 (PRD)
 
-```markdown
-# ClaudePad PRD (Product Requirements Document)
-
-> 将 Claude Code 变为移动端友好的 Web 任务管理中心  
-> 版本: v1.0  
-> 日期: 2025-01-15
+**版本：** 2.0
+**日期：** 2026-02-27
+**状态：** 草案
 
 ---
 
 ## 1. 产品概述
 
-### 1.1 核心价值
-解决 Claude Code 在 SSH 终端下的使用痛点：
-- 终端刷新卡顿
-- 手机屏幕太小，tmux 操作困难
-- 无法直观管理多个任务
+### 1.1 产品名称
+**希卡之石 (Sheikah Slate)** - Claude Code 会话监控系统
 
-### 1.2 一句话描述
-**ClaudePad** = Claude Code 的 Web 化任务管理器 + 移动端看板 + Git 自动集成
+### 1.2 产品定位
+一个简洁的 Web 面板，用于监控和管理 Claude Code 会话，灵感来自《塞尔达传说》中的希卡之石。
 
-### 1.3 目标用户
-- 使用 Claude Code 进行日常开发的工程师
-- 需要在手机/iPad 上随时查看任务进度的用户
-- 管理多个 Git 项目的开发者
+### 1.3 核心价值
+- **实时监控**：查看 Claude Code 会话状态（运行中、已完成、Token 消耗、运行时间）
+- **会话管理**：浏览、恢复、管理历史会话
+- **终端集成**：Web 终端直接连接 Claude Code 会话
+- **零配置**：自动扫描 `~/.claude` 目录，无需手动配置
 
 ---
 
-## 2. 技术架构
+## 2. 设计原则
 
-| 层级 | 技术 | 说明 |
-|:---|:---|:---|
-| 前端 | HTML5 + TailwindCSS + Alpine.js | 零构建，原生开发 |
-| 后端 | FastAPI (Python) | 异步支持，WebSocket |
-| 存储 | 本地 JSON 文件 | 简单，可手动编辑 |
-| 部署 | Uvicorn (0.0.0.0) | 局域网内手机可访问 |
-| 集成 | Claude CLI + Git | 子进程调用 |
+### 2.1 简洁 (Simplicity)
+- 前后端交互逻辑保持简单、一致
+- 单一 HTML 文件实现前端逻辑
+- RESTful API 设计，端点数量最小化
 
----
+### 2.2 前端 (Frontend)
+- 单个 HTML 文件包含所有逻辑
+- 使用原生 JavaScript，无框架依赖
+- 内联 CSS，保持样式一致
+- 模块化代码结构（函数分离、职责单一）
 
-## 3. 核心功能
-
-### 3.1 多 Git 项目管理
-
-**自动检测：**
-- 启动时检测当前目录是否为 Git 仓库
-- 非仓库时弹出配置向导，提示输入项目路径
-- 支持动态添加/删除/切换项目
-
-**数据隔离：**
-```
-data/
-├── projects.json              # 项目列表 & 当前项目
-├── projects/
-│   ├── project-a/
-│   │   ├── tasks.json         # 任务数据
-│   │   ├── outputs/           # Claude 输出日志
-│   │   └── attachments/       # 附件
-│   └── project-b/
-│       └── ...
-└── archive/                   # 已删除任务的日志归档
-```
+### 2.3 后端 (Backend)
+- Node.js 原生模块，零运行时依赖
+- SSE (Server-Sent Events) 实现终端流式输出
+- 自动认证：首次启动时处理服务器密码
+- 直接调用 `claude` CLI 命令
 
 ---
 
-### 3.2 任务管理
+## 3. 功能需求
 
-**任务编号：** `YYYYMMDD-NNN`（如 `20250115-001`）
+### 第一阶段：会话监控面板
 
+#### 3.1.1 会话列表
+**功能描述**：展示所有 Claude Code 会话的基本信息
+
+**显示内容**：
 | 字段 | 说明 |
-|:---|:---|
-| id | 唯一编号 |
-| title | 任务标题 |
-| description | 详细描述 |
-| status | 待开发 / 开发中 / 待 Review / 已完成 / 失败 / 已取消 |
-| is_plan | 是否为 Plan 模式（标记）|
-| prompt | 发送给 Claude 的完整指令 |
-| attachments | 附件列表 |
-| git_branch | 自动创建的分支名 |
-| git_commits | 执行过程中的 commit 列表 |
-| git_parent_commit | 任务开始时的 commit |
-| output_file | 日志文件路径 |
-| deleted | 软删除标记 |
+|------|------|
+| 会话 ID | Claude Code 会话唯一标识（前 8 位） |
+| 状态 | 运行中 (Running) / 已完成 (Completed) / 已停止 (Stopped) |
+| Token 消耗 | 当前会话消耗的 Token 总数 |
+| 运行时间 | 会话启动至今的时间 |
+| 最后活动 | 最后一次交互时间 |
 
-**状态流转：**
+**数据来源**：
+- 扫描 `~/.claude/session-env/` 目录
+- 解析 `~/.claude/history.jsonl` 获取会话元数据
+
+#### 3.1.2 状态指示器
+- **运行中**：青色 pulsing 圆点
+- **已完成**：绿色圆点
+- **已停止**：红色圆点
+
+#### 3.1.3 自动刷新
+- 每 10 秒自动刷新会话列表
+- 手动刷新按钮
+
+---
+
+### 第二阶段：会话详情与终端集成
+
+#### 3.2.1 会话选择
+- 点击会话卡片进入详情
+- 显示完整会话信息
+- 提供操作按钮（恢复、停止、查看历史）
+
+#### 3.2.2 Web 终端
+**功能描述**：在浏览器中直接操作 Claude Code 会话
+
+**技术实现**：
+- 使用 xterm.js 作为终端模拟器
+- SSE 接收后端输出流
+- POST 发送用户输入到后端
+
+**操作流程**：
+1. 用户点击「终端」按钮
+2. 后端执行 `claude --resume <session-id>`
+3. 建立 SSE 连接，流式输出终端内容
+4. 用户输入通过 POST 发送到后端
+5. 后端写入 claude 进程的 stdin
+
+#### 3.2.3 会话操作
+| 操作 | CLI 命令 | 说明 |
+|------|---------|------|
+| 恢复会话 | `claude --resume <id>` | 连接到现有会话 |
+| 停止会话 | `kill <pid>` | 终止会话进程 |
+| 重命名 | `claude --rename` | 重命名会话 |
+| 查看历史 | `claude --history` | 查看会话历史 |
+
+---
+
+## 4. 技术架构
+
+### 4.1 系统架构图
+
 ```
-创建 → 待开发 → 开发中 → 待 Review → 已完成
-                    ↓         ↓
-                  失败      已取消
+┌─────────────────────────────────────────────────────────────┐
+│                     Browser (Frontend)                       │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │  Sessions   │  │   Session   │  │     Web Terminal    │  │
+│  │    List     │  │   Detail    │  │     (xterm.js)      │  │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
+│         │                │                     │             │
+│         │ GET /api/      │ GET /api/           │ SSE / POST  │
+│         │ sessions       │ sessions/:id        │ /terminal/* │
+│         └────────────────┴─────────────────────┘             │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Node.js Server (Backend)                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐  │
+│  │   Session   │  │   Session   │  │    Terminal Proxy   │  │
+│  │    Scanner  │  │   Manager   │  │   (SSE + stdin)     │  │
+│  └──────┬──────┘  └──────┬──────┘  └──────────┬──────────┘  │
+│         │                │                     │             │
+│         ▼                ▼                     ▼             │
+│  ┌─────────────────────────────────────────────────────────┐ │
+│  │              Claude CLI Commands                         │ │
+│  │  claude --resume   claude --list   claude --history     │ │
+│  └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    File System Access                        │
+│  ~/.claude/session-env/   ~/.claude/history.jsonl           │
+│  ~/.claude/skills/        ~/.claude/settings.json           │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 4.2 数据流
+
+#### 4.2.1 会话列表获取
+```
+User Click Refresh
+       ↓
+Frontend: GET /api/sessions
+       ↓
+Backend: Scan ~/.claude/session-env/
+       ↓
+Backend: Parse history.jsonl
+       ↓
+Backend: Return JSON [{id, status, tokens, duration}]
+       ↓
+Frontend: Render Session Cards
+```
+
+#### 4.2.2 终端连接
+```
+User Click Terminal
+       ↓
+Frontend: Open SSE /terminal/stream?id=xxx
+       ↓
+Backend: Spawn `claude --resume <id>`
+       ↓
+Backend: Pipe stdout → SSE clients
+       ↓
+Frontend: xterm.js write(output)
+       ↓
+User Input → POST /terminal/input
+       ↓
+Backend: Write to claude stdin
 ```
 
 ---
 
-### 3.3 移动端看板 (垂直堆叠)
+## 5. API 设计
 
-**布局：**
-- 6 个状态区块垂直排列
-- 每个区块可折叠/展开
-- 显示任务数量徽章
-- 点击标题展开任务列表
+### 5.1 会话 API
 
-**交互：**
-- 移动端：下拉菜单变更状态（替代拖拽）
-- 桌面端：支持拖拽排序
-- 点击卡片进入任务详情
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/sessions` | 获取所有会话列表 |
+| GET | `/api/sessions/:id` | 获取单个会话详情 |
+| POST | `/api/sessions/:id/resume` | 恢复指定会话 |
+| POST | `/api/sessions/:id/stop` | 停止指定会话 |
+
+### 5.2 终端 API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/terminal/stream?id=xxx` | SSE 终端输出流 |
+| POST | `/terminal/input` | 发送用户输入 |
+
+### 5.3 系统 API
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | 健康检查 |
+| GET | `/api/skills` | 获取已安装 Skills |
+| GET | `/api/settings` | 获取 Claude 设置 |
 
 ---
 
-### 3.4 交互式 Claude 执行 (默认模式)
+## 6. 数据结构
 
-**WebSocket 实时通信：**
+### 6.1 Session 对象
+```json
+{
+  "id": "abc12345-6789-40ab-cdef-123456789012",
+  "name": "Fix login bug",
+  "status": "running",
+  "tokenCount": 15000,
+  "startTime": "2026-02-27T10:30:00Z",
+  "lastActivity": "2026-02-27T11:45:00Z",
+  "projectPath": "/home/user/project"
+}
+```
 
+### 6.2 Terminal Output
+```json
+{
+  "type": "output",
+  "data": "Claude is thinking...\n"
+}
+```
+
+### 6.3 Terminal Input
+```json
+{
+  "session_id": "abc12345",
+  "data": "Hello, Claude!"
+}
+```
+
+---
+
+## 7. 前端结构
+
+### 7.1 单文件组织
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>希卡之石 // Claude Code Monitor</title>
+  <style>
+    /* CSS Variables */
+    :root { --colors... }
+
+    /* Global Styles */
+    * { reset... }
+
+    /* Layout Components */
+    .header { ... }
+    .container { ... }
+    .panel { ... }
+
+    /* Session Components */
+    .session-card { ... }
+    .session-status { ... }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>...</header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Sessions Panel -->
+    <section id="sessions">...</section>
+
+    <!-- Terminal Panel (hidden by default) -->
+    <section id="terminal" style="display:none">...</section>
+  </main>
+
+  <script>
+    // State
+    let sessions = [];
+    let currentSession = null;
+
+    // API Functions
+    async function fetchSessions() { ... }
+    async function resumeSession(id) { ... }
+
+    // UI Functions
+    function renderSessions() { ... }
+    function showTerminal() { ... }
+
+    // Terminal Functions
+    function initTerminal() { ... }
+    function streamOutput() { ... }
+
+    // Event Handlers
+    function init() { ... }
+  </script>
+</body>
+</html>
+```
+
+---
+
+## 8. 后端结构
+
+### 8.1 服务器模块
 ```javascript
-// 连接
-WS /ws/{project}/tasks/{task_id}
+// server.js
+import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 
-// 发送用户输入
-→ {"type": "input", "content": "yes"}
+// Routes
+const routes = {
+  'GET /health': healthCheck,
+  'GET /api/sessions': getSessions,
+  'GET /api/sessions/:id': getSession,
+  'POST /api/sessions/:id/resume': resumeSession,
+  'GET /terminal/stream': terminalStream,
+  'POST /terminal/input': terminalInput,
+};
 
-// 接收 Claude 输出
-← {"type": "output", "content": "...", "requires_input": true}
+// Main Server
+const server = createServer(async (req, res) => {
+  // Route matching
+  // CORS headers
+  // Response handling
+});
 
-// 任务完成
-← {"type": "complete", "git_commit": "abc123"}
+// Session Scanner
+async function scanSessions() {
+  // Read ~/.claude/session-env/
+  // Parse history.jsonl
+  // Return session list
+}
 
-// 错误
-← {"type": "error", "message": "..."}
-```
-
-**界面：**
-- 聊天式界面（类似微信）
-- 底部固定输入框
-- 显示"等待输入"状态提示
-- 支持发送文件/截图
-
-**输入检测：**
-- 正则匹配常见提示符：`(Y/n)`, `[Enter]`, `?` 等
-- 超时检测（10秒无输出）
-
----
-
-### 3.5 Git 自动集成
-
-| 时机 | 操作 |
-|:---|:---|
-| 创建任务 | `git checkout -b claude/{task_id}`，记录 parent_commit |
-| Claude 修改代码 | 用户触发或自动检测 → `git add -A` → `git commit` |
-| 任务完成 | 最终 commit，可选 checkout 回原分支 |
-
-**提交信息格式：**
-```
-claude(20250115-001): {自动描述或用户输入}
+// Terminal Manager
+function spawnClaude(sessionId) {
+  // Spawn `claude --resume <id>`
+  // Pipe stdout to SSE
+  // Handle stdin from POST
+}
 ```
 
 ---
 
-## 4. API 设计
+## 9. 安全考虑
 
-### 4.1 REST API
+### 9.1 服务器认证
+- 首次启动时生成随机密码
+- 密码保存在 `~/.claudepad/token`
+- 前端首次访问时提示输入密码
+- 认证成功后保存 token 到 localStorage
 
-```
-# 项目管理
-GET    /api/projects
-POST   /api/projects                    # {name, path}
-PUT    /api/projects/{name}/switch
-DELETE /api/projects/{name}
-
-# 任务管理
-GET    /api/{project}/tasks             # ?status=developing&keyword=xxx
-POST   /api/{project}/tasks             # 创建任务
-GET    /api/{project}/tasks/{id}
-PUT    /api/{project}/tasks/{id}        # 更新信息
-DELETE /api/{project}/tasks/{id}        # 软删除
-POST   /api/{project}/tasks/{id}/status # 变更状态
-
-# Claude 执行
-POST   /api/{project}/tasks/{id}/start  # ?mode=interactive|batch
-POST   /api/{project}/tasks/{id}/cancel
-
-# 文件
-GET    /api/{project}/tasks/{id}/output # 流式读取日志
-POST   /api/upload                      # 上传附件
-```
-
-### 4.2 WebSocket API
-
-```
-WS /ws/{project}/tasks/{id}
-```
-
-**消息类型：**
-
-| 方向 | 类型 | 说明 |
-|:---|:---|:---|
-| C→S | `input` | 用户输入文本 |
-| C→S | `file` | 用户上传文件 |
-| S→C | `output` | Claude 标准输出 |
-| S→C | `stderr` | Claude 错误输出 |
-| S→C | `requires_input` | 需要用户输入 |
-| S→C | `git_commit` | 新的 commit 记录 |
-| S→C | `complete` | 任务完成 |
-| S→C | `error` | 执行错误 |
-| S→C | `cancelled` | 任务已取消 |
+### 9.2 命令执行安全
+- 仅允许执行 `claude` CLI 命令
+- 不暴露任意命令执行接口
+- 会话 ID 验证防止未授权访问
 
 ---
 
-## 5. 页面结构
+## 10. 性能要求
 
-```
-/
-├── /                              # 重定向到当前项目看板
-├── /project/{name}                # 项目看板（垂直堆叠）
-├── /project/{name}/task/{id}      # 任务详情（交互式终端）
-├── /project/{name}/new            # 新建任务
-├── /settings                      # 项目配置、Git 设置
-└── /help                          # 使用说明
-```
+| 指标 | 目标 |
+|------|------|
+| 会话列表加载时间 | < 500ms |
+| 终端输出延迟 | < 100ms |
+| 页面首屏渲染 | < 1s |
+| 自动刷新间隔 | 10s |
 
 ---
 
-## 6. 界面设计
+## 11. 开发路线图
 
-### 6.1 配色方案
+### Phase 1 (MVP) - 会话监控
+- [ ] 后端：扫描会话目录
+- [ ] 后端：`/api/sessions` 端点
+- [ ] 前端：会话列表 UI
+- [ ] 前端：状态指示器
+- [ ] 前端：自动刷新
 
-| 用途 | 颜色 |
-|:---|:---|
-| 背景 | `#f5f5f4` (stone-100) |
-| 卡片 | `#ffffff` |
-| 主文字 | `#1c1917` (stone-900) |
-| 次要文字 | `#78716c` (stone-500) |
-| 边框 | `#e7e5e4` (stone-200) |
+### Phase 2 - 终端集成
+- [ ] 后端：SSE 终端流
+- [ ] 后端：`/terminal/input` 端点
+- [ ] 前端：xterm.js 集成
+- [ ] 前端：终端 UI 面板
+- [ ] 前端：会话切换
 
-**状态标签色：**
-- 待开发: `bg-gray-100 text-gray-700`
-- 开发中: `bg-blue-100 text-blue-700`
-- 待 Review: `bg-purple-100 text-purple-700`
-- 已完成: `bg-green-100 text-green-700`
-- 失败: `bg-red-100 text-red-700`
-- 已取消: `bg-yellow-100 text-yellow-700`
-
-### 6.2 移动端适配
-
-- 视口: `width=device-width, initial-scale=1.0`
-- 触摸目标最小 44px
-- 支持 PWA (manifest.json + service worker)
-- 底部安全区适配 (env(safe-area-inset-bottom))
+### Phase 3 - 增强功能
+- [ ] Skills 管理
+- [ ] 会话搜索
+- [ ] Token 统计图表
+- [ ] 会话导出
 
 ---
 
-## 7. 配置
+## 12. 参考资源
 
-**config.yaml:**
-
-```yaml
-server:
-  host: "0.0.0.0"
-  port: 8080
-  
-claude:
-  command: "claude"           # 假设在 PATH 中
-  timeout: 300                # 默认超时 5 分钟
-  
-git:
-  auto_commit: true           # 自动提交修改
-  commit_prefix: "claude"     # 提交信息前缀
-  
-app:
-  default_mode: "interactive" # 默认交互式
-  max_attachment_size: 5242880 # 5MB
-  log_retention: "forever"    # 日志保留策略
-```
-
----
-
-## 8. 开发里程碑
-
-| 阶段 | 功能 | 预计时间 |
-|:---|:---|:---|
-| **MVP** | 单项目、任务 CRUD、交互式执行、垂直看板 | 3 天 |
-| **v0.2** | 多项目管理、Git 自动集成、附件上传 | +2 天 |
-| **v0.3** | PWA 支持、状态拖拽、任务模板 | +2 天 |
-| **v1.0** | 性能优化、完善错误处理、文档 | +3 天 |
-
----
-
-## 9. 命名规范
-
-| 类型 | 规范 |
-|:---|:---|
-| 项目目录 | 使用项目名（Git 仓库文件夹名）|
-| 分支名 | `claude/{task_id}` 如 `claude/20250115-001` |
-| 提交信息 | `claude({task_id}): {description}` |
-| 日志文件 | `{task_id}.log` |
-| API 路径 | 小写，连字符分隔 |
-
----
-
-## 10. 后续扩展 (Backlog)
-
-- [ ] 任务模板（常用 prompt）
-- [ ] 定时任务 / 批处理模式
-- [ ] 多语言支持
-- [ ] 团队协作（多用户）
-- [ ] 与 GitHub/GitLab PR 集成
-- [ ] 任务统计与导出
-
----
-
-## 附录
-
-### A. 快速启动
-
+### 12.1 Claude CLI 命令
 ```bash
-# 安装
-pip install fastapi uvicorn aiofiles
-
-# 启动
-python main.py
-
-# 手机访问（同一局域网）
-http://{电脑IP}:8080
+claude --list           # 列出所有会话
+claude --resume <id>    # 恢复会话
+claude --rename         # 重命名会话
+claude --help           # 查看帮助
 ```
 
-### B. 技术参考
+### 12.2 数据目录
+```
+~/.claude/
+├── session-env/        # 会话环境文件
+├── history.jsonl       # 会话历史
+├── skills/             # 安装的 Skills
+└── settings.json       # 用户设置
+```
 
-- FastAPI: https://fastapi.tiangolo.com/
-- Alpine.js: https://alpinejs.dev/
-- TailwindCSS: https://tailwindcss.com/
+### 12.3 技术栈
+- **前端**：原生 HTML/CSS/JS + xterm.js
+- **后端**：Node.js 原生模块
+- **通信**：REST API + SSE
 
 ---
 
-> Built with ❤️ for Claude Code users
-```
-
----
-
-已保存为 PRD 格式，你可以：
-1. 复制到项目根目录的 `PRD.md`
-2. 让 Claude Code 直接读取并基于此开发
-3. 开发过程中随时调整，保持文档同步
-
-需要我直接开始写代码框架吗？
+*文档结束*
