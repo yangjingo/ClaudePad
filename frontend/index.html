@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>希卡之石 // Sheikah Slate</title>
+  <title>希卡之石 // Claude Code 监控系统</title>
   <style>
     /* ============================================
      * SHEIKAH SLATE THEME
@@ -102,6 +102,13 @@
       font-weight: 600;
       color: var(--bronze-light);
       text-decoration: none;
+    }
+
+    .logo-subtitle {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-left: 8px;
     }
 
     /* ============================================
@@ -232,7 +239,7 @@
       transition: all 0.2s;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
     }
 
     .session-card:hover {
@@ -277,21 +284,35 @@
       font-family: var(--font-mono);
       font-size: 0.75rem;
       color: var(--bronze);
-      margin-bottom: 4px;
     }
 
     .session-name {
       font-size: 1rem;
       font-weight: 500;
       color: var(--text);
-      margin-bottom: 8px;
+      margin: 8px 0;
     }
 
     .session-meta {
       display: flex;
-      gap: 24px;
-      font-size: 0.85rem;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.8rem;
       color: var(--text-muted);
+    }
+
+    .session-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .session-meta-label {
+      color: var(--bronze-light);
+    }
+
+    .session-meta-value {
+      color: var(--text);
     }
 
     /* ============================================
@@ -521,12 +542,14 @@
   <header class="header">
     <div class="logo">
       <span class="logo-icon">◈</span>
-      <span class="logo-text">希卡之石</span>
-      <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Claude Code Tip">CC Tips</button>
+      <div>
+        <span class="logo-text">希卡之石</span>
+        <span class="logo-subtitle">| Claude Code 监控系统</span>
+      </div>
+      <button class="btn-cc-tips" onclick="showRandomTip()" title="随机学习一个技巧">CC Tips</button>
     </div>
     <div style="display: flex; gap: 12px;">
-      <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
-      <a href="/terminal" class="btn btn-primary btn-sm">⌘ Terminal</a>
+      <button class="btn btn-ghost btn-sm" onclick="load()">↻ 刷新</button>
     </div>
   </header>
 
@@ -535,14 +558,27 @@
     <!-- Sessions Panel -->
     <section class="panel">
       <div class="panel-header">
-        <span class="panel-title">◈ Active Sessions</span>
+        <span class="panel-title">◈ 运行中的会话</span>
         <span id="count" class="panel-count">-</span>
       </div>
       <div id="list" class="session-list">
         <div class="loading">
           <div class="spinner"></div>
-          <div>Fetching Claude sessions...</div>
+          <div>正在获取 Claude 会话...</div>
         </div>
+      </div>
+    </section>
+
+    <!-- Info Panel -->
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">◈ 使用说明</span>
+      </div>
+      <div style="padding: 20px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.8;">
+        <p style="margin-bottom: 12px;"><strong style="color: var(--bronze-light);">实时监控：</strong>自动扫描 <code style="background: var(--slate-bg-lighter); padding: 2px 6px; border-radius: 4px;">~/.claude/</code> 目录，显示所有会话状态</p>
+        <p style="margin-bottom: 12px;"><strong style="color: var(--bronze-light);">会话状态：</strong><span style="color: var(--cyan);">●</span> 运行中 / <span style="color: var(--status-done);">●</span> 已完成 / <span style="color: var(--status-error);">●</span> 已停止</p>
+        <p style="margin-bottom: 12px;"><strong style="color: var(--bronze-light);">恢复会话：</strong>点击会话卡片查看对话，或使用 <code style="background: var(--slate-bg-lighter); padding: 2px 6px; border-radius: 4px;">claude --resume &lt;session-id&gt;</code> 在终端恢复</p>
+        <p><strong style="color: var(--bronze-light);">自动刷新：</strong>每 10 秒自动更新会话列表</p>
       </div>
     </section>
   </main>
@@ -551,18 +587,18 @@
   <div id="tips-modal" class="modal-overlay" onclick="if(event.target === this) hideRandomTip()">
     <div class="modal">
       <div class="modal-header">
-        <span class="modal-title">◈ CC Tips</span>
+        <span class="modal-title">◈ CC Tips - 技巧</span>
         <button class="modal-close" onclick="hideRandomTip()">✕</button>
       </div>
       <div id="tip-display">
         <div class="empty-tip">
           <div class="empty-tip-icon">◈</div>
-          <p>Click "Next Tip" to learn a random tip</p>
+          <p>点击 "Next Tip" 随机学习一个 Claude Code 技巧</p>
         </div>
       </div>
       <div class="modal-footer">
-        <span class="tip-count">Total: <span id="tip-count">0</span> tips</span>
-        <button class="btn-next-tip" onclick="showRandomTip()">Next Tip →</button>
+        <span class="tip-count">共 <span id="tip-count">0</span> 个技巧</span>
+        <button class="btn-next-tip" onclick="showRandomTip()">下一个 →</button>
       </div>
     </div>
   </div>
@@ -597,7 +633,7 @@
         document.getElementById('tip-display').innerHTML = `
           <div class="empty-tip">
             <div class="empty-tip-icon">◈</div>
-            <p>Loading tips...</p>
+            <p>加载中...</p>
           </div>
         `;
         return;
@@ -611,7 +647,7 @@
           <span class="tip-category">${escapeHtml(tip.category)}</span>
           <div class="tip-title">${escapeHtml(tip.title)}</div>
           <div class="tip-content">${escapeHtml(tip.content)}</div>
-          <div class="tip-source">Source: ${escapeHtml(tip.source)}</div>
+          <div class="tip-source">来源：${escapeHtml(tip.source)}</div>
         </div>
       `;
     }
@@ -637,7 +673,7 @@
       list.innerHTML = `
         <div class="loading">
           <div class="spinner"></div>
-          <div>Fetching sessions...</div>
+          <div>正在获取会话列表...</div>
         </div>
       `;
 
@@ -646,15 +682,15 @@
         const data = await response.json();
         const sessions = data.sessions || [];
 
-        count.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
+        count.textContent = `共 ${sessions.length} 个会话`;
 
         if (sessions.length === 0) {
           list.innerHTML = `
             <div class="empty">
               <div class="empty-icon">◈</div>
-              <p>No active sessions found</p>
+              <p>暂无运行中的会话</p>
               <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">
-                Run "claude" in your terminal to start a session
+                在终端运行 <code style="background: var(--slate-bg-lighter); padding: 2px 6px;">claude</code> 开始新会话
               </p>
             </div>
           `;
@@ -666,42 +702,71 @@
             <div class="session-info">
               <div class="session-header">
                 <span class="session-status ${session.status || ''}"></span>
-                <span class="session-id">${escapeHtml(session.id.slice(0, 8))}</span>
+                <span class="session-id">${escapeHtml(session.id)}</span>
               </div>
               <div class="session-name">${escapeHtml(session.name || 'Session')}</div>
               <div class="session-meta">
                 <div class="session-meta-item">
-                  <span class="session-meta-label">Status:</span>
-                  <span class="session-meta-value">${session.status || 'unknown'}</span>
+                  <span class="session-meta-label">状态:</span>
+                  <span class="session-meta-value">${getStatusText(session.status)}</span>
                 </div>
                 <div class="session-meta-item">
-                  <span class="session-meta-label">Started:</span>
-                  <span class="session-meta-value">${new Date(session.startTime).toLocaleString()}</span>
+                  <span class="session-meta-label">开始时间:</span>
+                  <span class="session-meta-value">${new Date(session.startTime).toLocaleString('zh-CN')}</span>
+                </div>
+                <div class="session-meta-item">
+                  <span class="session-meta-label">Token:</span>
+                  <span class="session-meta-value">${formatTokenCount(session.tokenCount)}</span>
+                </div>
+                <div class="session-meta-item">
+                  <span class="session-meta-label">运行时长:</span>
+                  <span class="session-meta-value">${formatDuration(session.startTime)}</span>
                 </div>
               </div>
             </div>
-            <button class="btn btn-primary" onclick="event.stopPropagation(); openTerminal('${escapeHtml(session.id)}')">
-              Terminal
-            </button>
           </div>
         `).join('');
       } catch (error) {
         list.innerHTML = `
           <div class="empty">
             <div class="empty-icon">⚠</div>
-            <p>Failed to load sessions</p>
-            <button class="btn btn-primary" onclick="load()" style="margin-top: 16px;">Retry</button>
+            <p>加载会话失败</p>
+            <button class="btn btn-primary" onclick="load()" style="margin-top: 16px;">重试</button>
           </div>
         `;
       }
     }
 
-    function viewSession(id) {
-      alert(`Session: ${id}\n\nTo resume in terminal:\nclaude --resume ${id}`);
+    function getStatusText(status) {
+      const statusMap = {
+        'running': '运行中',
+        'completed': '已完成',
+        'stopped': '已停止'
+      };
+      return statusMap[status] || status || '未知';
     }
 
-    function openTerminal(id) {
-      window.location.href = `/terminal/${id}`;
+    function formatTokenCount(count) {
+      if (!count) return '0';
+      if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
+      if (count >= 1000) return (count / 1000).toFixed(0) + 'K';
+      return count.toString();
+    }
+
+    function formatDuration(startTime) {
+      if (!startTime) return '-';
+      const start = new Date(startTime).getTime();
+      const diff = Date.now() - start;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function viewSession(id) {
+      const msg = `会话：${id}\n\n在终端中恢复会话：\nclaude --resume ${id}`;
+      navigator.clipboard?.writeText(`claude --resume ${id}`);
+      alert(msg + '\n\n（会话 ID 已复制到剪贴板）');
     }
 
     // ============================================
