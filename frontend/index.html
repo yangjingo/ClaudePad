@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudePad // Sheikah Slate</title>
+  <style>
+    :root { --bg: #0a0a0f; --panel: #111118; --card: #1a1a24; --text: #e0e0e0; --muted: #78716c; --cyan: #00d4ff; --border: rgba(0,212,255,0.2); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'SF Mono', monospace; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+    /* Header */
+    .header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+    .logo { display: flex; align-items: center; gap: 12px; font-size: 1.2rem; }
+    .logo-icon { color: var(--cyan); }
+
+    /* CC Tips Button */
+    .btn-cc-tips {
+      margin-left: 12px;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-cc-tips:hover {
+      background: var(--cyan);
+      color: var(--bg);
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.3);
+    }
+
+    /* Buttons */
+    .btn { padding: 8px 16px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 4px; cursor: pointer; font-family: inherit; }
+    .btn-primary { border-color: var(--cyan); color: var(--cyan); }
+    .btn-primary:hover { background: var(--cyan); color: var(--bg); }
+    .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+
+    /* Container & Panels */
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 24px; }
+    .panel-header { background: rgba(0,212,255,0.05); padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { color: var(--cyan); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* Session Cards */
+    .session-card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: all 0.2s; }
+    .session-card:hover { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,212,255,0.1); }
+    .session-status { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .session-status.running { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: pulse 2s infinite; }
+    .session-id { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; font-family: monospace; }
+    .session-name { color: var(--text); margin-bottom: 8px; }
+    .session-meta { display: flex; gap: 24px; font-size: 0.85rem; color: var(--muted); }
+
+    /* Loading & Empty States */
+    .loading, .empty { text-align: center; padding: 60px; color: var(--muted); }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
+
+    /* Animations */
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* CC Tips Modal */
+    .tips-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+    .tips-modal-overlay.active { display: flex; }
+
+    .tips-modal {
+      background: var(--panel);
+      border: 1px solid var(--cyan);
+      border-radius: 8px;
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+    }
+
+    .tips-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tips-modal-title {
+      font-size: 0.9rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .tips-modal-close {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tips-modal-close:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .tip-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 20px;
+    }
+
+    .tip-category {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan);
+      border-radius: 12px;
+      font-size: 0.7rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .tip-title {
+      font-size: 1rem;
+      color: var(--cyan);
+      margin-bottom: 10px;
+    }
+
+    .tip-content {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .tip-source {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: right;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .tips-modal-footer {
+      margin-top: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .tip-count {
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .btn-next-tip {
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn-next-tip:hover {
+      background: var(--cyan);
+      color: var(--bg);
+    }
+
+    .empty-tip {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--muted);
+    }
+
+    .empty-tip-icon {
+      font-size: 2rem;
+      color: var(--cyan);
+      margin-bottom: 12px;
+      opacity: 0.7;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span style="background: linear-gradient(135deg, var(--cyan), #a08060); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">CLAUDEPAD</span>
+      <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Claude Code Tip">CC Tips</button>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="location.reload()">↻ Refresh</button>
+  </div>
+
+  <div class="container">
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">◈ Active Sessions</span>
+        <span id="count">-</span>
+      </div>
+      <div id="list">
+        <div class="loading">
+          <div class="spinner"></div>
+          Loading sessions...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CC Tips Modal -->
+  <div id="tips-modal" class="tips-modal-overlay" onclick="if(event.target === this) hideRandomTip()">
+    <div class="tips-modal">
+      <div class="tips-modal-header">
+        <span class="tips-modal-title">◈ CC Tips</span>
+        <button class="tips-modal-close" onclick="hideRandomTip()">✕</button>
+      </div>
+      <div id="tip-display">
+        <div class="empty-tip">
+          <div class="empty-tip-icon">◈</div>
+          <p>Click "Next Tip" to learn a random tip</p>
+        </div>
+      </div>
+      <div class="tips-modal-footer">
+        <span class="tip-count">Total: <span id="tip-count">0</span> tips</span>
+        <button class="btn-next-tip" onclick="showRandomTip()">Next Tip</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // CC Tips data
+    let tipsData = [];
+    let isTipsModalOpen = false;
+
+    // Load tips from JSON file
+    async function loadTips() {
+      try {
+        const response = await fetch('/docs/cc-tips/tips.json');
+        const data = await response.json();
+        tipsData = data.tips || [];
+        document.getElementById('tip-count').textContent = tipsData.length;
+      } catch (error) {
+        console.error('Failed to load tips:', error);
+        document.getElementById('tip-count').textContent = '?';
+      }
+    }
+
+    // Show random tip modal
+    function showRandomTip() {
+      isTipsModalOpen = true;
+      document.getElementById('tips-modal').classList.add('active');
+
+      if (tipsData.length === 0) {
+        document.getElementById('tip-display').innerHTML = `
+          <div class="empty-tip">
+            <div class="empty-tip-icon">◈</div>
+            <p>Loading tips...</p>
+          </div>
+        `;
+        return;
+      }
+
+      const randomIndex = Math.floor(Math.random() * tipsData.length);
+      const tip = tipsData[randomIndex];
+
+      document.getElementById('tip-display').innerHTML = `
+        <div class="tip-card">
+          <div class="tip-category">${escapeHtml(tip.category)}</div>
+          <div class="tip-title">${escapeHtml(tip.title)}</div>
+          <div class="tip-content">${escapeHtml(tip.content)}</div>
+          <div class="tip-source">Source: ${escapeHtml(tip.source)}</div>
+        </div>
+      `;
+    }
+
+    // Hide tips modal
+    function hideRandomTip() {
+      isTipsModalOpen = false;
+      document.getElementById('tips-modal').classList.remove('active');
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && isTipsModalOpen) {
+        hideRandomTip();
+      }
+    });
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Load sessions
+    async function load() {
+      const list = document.getElementById('list'), count = document.getElementById('count');
+      try {
+        const r = await fetch('/api/sessions'), d = await r.json();
+        count.textContent = `${d.sessions.length} session${d.sessions.length !== 1 ? 's' : ''}`;
+        if (!d.sessions.length) {
+          list.innerHTML = '<div class="empty">◈ No sessions found</div>';
+          return;
+        }
+        list.innerHTML = d.sessions.map(s => `
+          <div class="session-card" onclick="view('${s.id}')">
+            <div>
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                <span class="session-status ${s.status || ''}"></span>
+                <span class="session-id">${escapeHtml(s.id)}</span>
+              </div>
+              <div class="session-name">${escapeHtml(s.name || s.lastPrompt || 'Session')}</div>
+              <div class="session-meta">
+                <span>Status: ${s.status || 'unknown'}</span>
+                <span>Started: ${new Date(s.startTime).toLocaleString()}</span>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="event.stopPropagation(); term('${s.id}')">Terminal</button>
+          </div>
+        `).join('');
+      } catch(e) {
+        list.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+      }
+    }
+
+    function view(id) {
+      alert(`Session: ${id}\n\nTo resume in terminal:\nclaude --resume ${id}`);
+    }
+
+    function term(id) {
+      location.href = `/terminal/${id}`;
+    }
+
+    // Initial load
+    loadTips();
+    load();
+
+    // Auto refresh sessions every 10 seconds
+    setInterval(load, 10000);
+  </script>
+</body>
+</html>

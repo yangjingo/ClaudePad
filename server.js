@@ -276,6 +276,26 @@ const server = createServer(async (req, res) => {
     if (url.startsWith('/static/')) {
         return serveStatic(res, url);
     }
+
+    // Serve docs/cc-tips/tips.json
+    if (url.startsWith('/docs/')) {
+        const relativePath = url.replace('/docs/', '');
+        const filePath = join(__dirname, 'docs', relativePath);
+        const ext = extname(filePath);
+        const mime = MIME[ext] || 'application/octet-stream';
+        try {
+            await access(filePath);
+            res.writeHead(200, { 'Content-Type': mime });
+            createReadStream(filePath).pipe(res);
+            return;
+        }
+        catch {
+            res.writeHead(404);
+            res.end('Not found');
+            return;
+        }
+    }
+
     // Terminal SSE
     if (url.startsWith('/terminal/stream')) {
         return handleTerminalStream(req, res);
@@ -285,18 +305,21 @@ const server = createServer(async (req, res) => {
         return handleTerminalInput(req, res, await parseBody(req));
     }
     // Pages
-    if (url === '/' || url === '/terminal') {
-        const page = url === '/' ? 'index.html' : 'terminal.html';
-        const html = await readFile(join(__dirname, 'templates', page), 'utf-8').catch(() => null);
+    if (url === '/' || url === '/index.html') {
+        const html = await readFile(join(__dirname, 'frontend', 'index.html'), 'utf-8').catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
+            return;
         }
-        else {
-            res.writeHead(404);
-            res.end('Not found');
+    }
+    if (url === '/terminal') {
+        const html = await readFile(join(__dirname, 'frontend', 'terminal.html'), 'utf-8').catch(() => null);
+        if (html) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
         }
-        return;
     }
     // API routes
     const match = matchRoute(method, url);
