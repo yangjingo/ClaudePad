@@ -33,22 +33,48 @@ async function parseHistoryFile() {
     try {
         const content = await readFile(historyPath, 'utf-8');
         const lines = content.trim().split('\n').filter(line => line.trim());
-        for (let i = lines.length - 1; i >= 0; i--) {
+
+        // Track timestamps for each session
+        const sessionData = new Map();
+
+        for (const line of lines) {
             try {
-                const line = lines[i];
                 const data = JSON.parse(line);
                 const sessionId = data.sessionId;
-                if (sessionId && !sessions.has(sessionId)) {
-                    sessions.set(sessionId, {
+                const timestamp = data.timestamp;
+                if (!sessionId || !timestamp) continue;
+
+                if (!sessionData.has(sessionId)) {
+                    sessionData.set(sessionId, {
                         name: data.display?.slice(0, 50).replace(/\n/g, ' ') || 'Session',
-                        timestamp: data.timestamp,
                         project: data.project || '',
+                        messageCount: 0,
+                        minTime: timestamp,
+                        maxTime: timestamp
                     });
                 }
+
+                const session = sessionData.get(sessionId);
+                session.messageCount++;
+                if (timestamp < session.minTime) session.minTime = timestamp;
+                if (timestamp > session.maxTime) session.maxTime = timestamp;
+
             }
-            catch {
-                // Ignore parse errors
+            catch (e) {
+                console.error('Parse error:', e);
             }
+        }
+
+        // Convert to sessions map with proper structure
+        for (const [id, data] of sessionData) {
+            sessions.set(id, {
+                name: data.name,
+                project: data.project,
+                messageCount: data.messageCount,
+                startTime: data.minTime,
+                lastActivity: data.maxTime,
+                duration: Math.floor((data.maxTime - data.minTime) / 1000)
+            });
         }
     }
     catch (error) {
@@ -60,47 +86,34 @@ async function parseHistoryFile() {
 // Get all Claude sessions from disk
 async function getSessions() {
     try {
-        const sessionEnvDir = join(CLAUDE_DIR, 'session-env');
-        const sessionIds = await readdir(sessionEnvDir);
         const historySessions = await parseHistoryFile();
-        const sessions = await Promise.all(sessionIds.map(async (id) => {
+        const sessions = [];
+        const oneHourAgo = Date.now() - 60 * 60 * 1000;
+
+        for (const [id, h] of historySessions) {
             try {
-                const sessionDir = join(sessionEnvDir, id);
-                const history = historySessions.get(id);
-                const files = await readdir(sessionDir);
-                const name = history?.name || id.slice(0, 8);
-                const timestamp = history?.timestamp || Date.now();
-                const project = history?.project || '';
-                const startTime = new Date(timestamp).toISOString();
-                const oneHourAgo = Date.now() - 60 * 60 * 1000;
-                const status = timestamp > oneHourAgo ? 'running' : 'completed';
-                let tokenCount = 0;
-                for (const file of files) {
-                    try {
-                        const content = await readFile(join(sessionDir, file), 'utf-8');
-                        tokenCount += Math.floor(content.length / 4);
-                    }
-                    catch {
-                        // Ignore
-                    }
-                }
-                return {
+                // Filter out sessions without valid data
+                if (!h.messageCount || h.messageCount === 0) continue;
+                if (!h.startTime || !h.lastActivity) continue;
+
+                sessions.push({
                     id,
-                    name: name || `Session ${id.slice(0, 8)}`,
-                    status,
-                    tokenCount,
-                    startTime,
-                    projectPath: project || process.cwd(),
-                    lastActivity: new Date(timestamp).toISOString(),
-                };
+                    name: h.name || `Session ${id.slice(0, 8)}`,
+                    status: h.lastActivity > oneHourAgo ? 'running' : 'completed',
+                    tokenCount: h.messageCount * 100,
+                    startTime: new Date(h.startTime).toISOString(),
+                    lastActivity: new Date(h.lastActivity).toISOString(),
+                    duration: h.duration || 0,
+                    projectPath: h.project || process.cwd(),
+                    messageCount: h.messageCount || 0,
+                });
             }
             catch {
-                return null;
+                // Ignore
             }
-        }));
-        return sessions
-            .filter((s) => s !== null)
-            .sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+        }
+
+        return sessions.sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
     }
     catch (error) {
         console.error('Failed to get sessions:', error);

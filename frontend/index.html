@@ -695,7 +695,7 @@
                 </div>
                 <div class="session-meta-item">
                   <span class="session-meta-label">Duration:</span>
-                  <span class="session-meta-value">${formatDuration(session.startTime)}</span>
+                  <span class="session-meta-value">${formatDurationSec(session.duration)}</span>
                 </div>
               </div>
             </div>
@@ -735,6 +735,14 @@
       const hours = Math.floor(diff / (1000 * 60 * 60));
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function formatDurationSec(secs) {
+      if (secs === undefined || secs === null) return '-';
+      const hours = Math.floor(secs / 3600);
+      const minutes = Math.floor((secs % 3600) / 60);
+      const seconds = secs % 60;
       return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
 
