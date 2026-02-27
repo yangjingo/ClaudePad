@@ -1,74 +1,57 @@
 # ClaudePad
 
-Web-based task manager for Claude Code with a Sheikah Slate aesthetic.
+Claude Code Session Monitor with xterm.js Web Terminal.
 
-![ClaudePad Screenshot](asserts/claudepad.png)
-*Task board with Sheikah Slate theme - bronze/cyan interface*
+## Screenshot
+
+asserts/claudepad-v0227.png
+
+## Update
+
+- V0227, `.asserts/claudepad-v0227.png`
 
 ## Features
 
-- **Zero dependencies** - Pure Node.js, no runtime packages
-- **Sheikah Slate UI** - Ancient-tech aesthetic with bronze/cyan theme
-- **Kanban board** - Vertical task columns (pending/active/review/done)
-- **Built-in terminal** - Browser-based bash via Server-Sent Events
-- **JSON storage** - Simple file-based data, no database needed
-- **Mobile-first** - Works on phones, tablets, desktop
+- **Session List** - View all Claude Code sessions from `~/.claude/`
+- **Web Terminal** - Interactive xterm.js terminal for each session
+- **Real-time I/O** - WebSocket-based terminal streaming via node-pty
 
 ## Quick Start
 
 ```bash
-# Start server
-node server.js
-
-# Or dev mode with hot reload
-npm install  # only devDependencies
-npm run dev
+npm install
+npm run build
+npm start
 ```
 
-Open http://localhost:8080
+Visit http://localhost:8080
+
+## Architecture
+
+```
+ClaudePad/
+├── server.ts          # Main server (TypeScript)
+├── frontend/
+│   ├── index.html     # Session list
+│   └── terminal.html  # xterm.js terminal
+└── package.json
+```
+
+## API
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/sessions` | GET | List all sessions |
+| `/api/sessions/:id` | GET | Get session details |
+| `/api/sessions/:id/terminal` | POST | Start terminal for session |
+| `/ws/terminal/:id` | WS | WebSocket for terminal I/O |
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Backend | TypeScript + native Node.js HTTP |
-| Frontend | Alpine.js + vanilla CSS |
-| Terminal | xterm.js + SSE |
-| Storage | JSON files |
-
-## API Endpoints
-
-```
-GET  /api/projects              # List projects
-POST /api/projects              # Create project
-GET  /api/:project/tasks        # List tasks
-POST /api/:project/tasks        # Create task
-POST /api/:project/tasks/:id/status  # Update status
-GET  /terminal/stream           # Terminal SSE stream
-POST /terminal/input            # Send input to terminal
-```
-
-## Project Structure
-
-```
-├── server.ts          # TypeScript source
-├── server.js          # Compiled output
-├── static/
-│   ├── css/sheikah.css    # Sheikah Slate theme
-│   └── js/lib/xterm.*     # Terminal libs
-├── templates/
-│   ├── index.html      # Task board
-│   └── terminal.html   # Terminal page
-└── data/               # JSON storage (gitignored)
-```
-
-## Design Philosophy
-
-**Sheikah Slate aesthetic**: Ancient Hyrule technology meets modern interface.
-- Deep blue-black backgrounds (`#0a0a0f`)
-- Bronze/copper accents (`#8B7355`)
-- Cyan energy glows (`#00d4ff`)
-- Clean monospace typography
+- **Backend**: Node.js + TypeScript
+- **Terminal**: xterm.js (frontend) + node-pty (backend)
+- **Real-time**: WebSocket (ws)
+- **Storage**: Claude CLI data in `~/.claude/`
 
 ## License
 
