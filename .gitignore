@@ -1,19 +1,15 @@
 # Node.js
 node_modules/
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+
 
 # Compiled output (keep for deployment)
 # server.js
 
-# Data directory (user data)
-data/
 
 # Claude
 CLAUDE
-.claude/settings.json
+.claude/
 
 # IDE
 .idea/
@@ -23,4 +19,3 @@ CLAUDE
 
 # OS
 .DS_Store
-Thumbs.db
