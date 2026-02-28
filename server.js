@@ -168,6 +168,14 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
+    if (url === '/tips.html' || url === '/tips') {
+        const html = await readFile(join(__dirname, 'frontend', 'tips.html')).catch(() => null);
+        if (html) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
+        }
+    }
     if (url === '/terminal.html' || url === '/terminal') {
         const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
         if (html) {
@@ -182,6 +190,18 @@ const server = createServer(async (req, res) => {
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
+            return;
+        }
+    }
+    // Static files under /docs/
+    if (url.startsWith('/docs/')) {
+        const filePath = join(__dirname, url);
+        const ext = url.split('.').pop() || '';
+        const contentType = ext === 'json' ? 'application/json' : (MIME['.' + ext] || 'text/plain');
+        const content = await readFile(filePath).catch(() => null);
+        if (content) {
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
             return;
         }
     }

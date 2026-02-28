@@ -88,6 +88,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      text-decoration: none;
     }
 
     .logo-icon {
@@ -101,29 +102,31 @@
       font-size: 1.2rem;
       font-weight: 600;
       color: var(--bronze-light);
-      text-decoration: none;
     }
 
-    /* ============================================
-     * CC Tips Button
-     * ============================================ */
-    .btn-cc-tips {
-      margin-left: 12px;
-      padding: 6px 12px;
-      font-size: 0.75rem;
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
       font-family: var(--font-mono);
-      background: rgba(0, 212, 255, 0.1);
-      border: 1px solid var(--cyan-dim);
-      color: var(--cyan);
+      font-size: 0.85rem;
+      padding: 6px 12px;
       border-radius: var(--radius-sm);
-      cursor: pointer;
       transition: all 0.2s;
     }
 
-    .btn-cc-tips:hover {
+    .nav-link:hover {
+      color: var(--cyan);
       background: var(--cyan-glow);
-      border-color: var(--cyan);
-      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
     }
 
     /* ============================================
@@ -157,6 +160,7 @@
       background: transparent;
       color: var(--bronze-light);
       box-shadow: inset 0 0 0 1px var(--bronze-dim);
+      text-decoration: none;
     }
 
     .btn-ghost:hover {
@@ -421,79 +425,13 @@
     }
 
     /* ============================================
-     * Tips Modal Specific
+     * Modal Footer
      * ============================================ */
-    .tip-card {
-      background: var(--slate-bg-lighter);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-md);
-      padding: 20px;
-    }
-
-    .tip-category {
-      display: inline-block;
-      padding: 4px 12px;
-      background: rgba(0, 212, 255, 0.1);
-      border: 1px solid var(--cyan-dim);
-      border-radius: var(--radius-full);
-      font-size: 0.7rem;
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 12px;
-      font-family: var(--font-mono);
-    }
-
-    .tip-title {
-      font-size: 1rem;
-      color: var(--cyan);
-      margin-bottom: 10px;
-      font-weight: 600;
-    }
-
-    .tip-content {
-      font-size: 0.9rem;
-      color: var(--text);
-      line-height: 1.7;
-      margin-bottom: 12px;
-    }
-
-    .tip-source {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-align: right;
-      padding-top: 12px;
-      border-top: 1px solid var(--bronze-dim);
-    }
-
     .modal-footer {
       margin-top: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-
-    .tip-count {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-    }
-
-    .btn-next-tip {
-      padding: 6px 14px;
-      font-size: 0.75rem;
-      background: rgba(0, 212, 255, 0.1);
-      border: 1px solid var(--cyan-dim);
-      color: var(--cyan);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-family: var(--font-mono);
-      transition: all 0.2s;
-    }
-
-    .btn-next-tip:hover {
-      background: var(--cyan-glow);
-      border-color: var(--cyan);
-      box-shadow: 0 0 15px var(--cyan-glow);
     }
 
     .empty-tip {
@@ -759,14 +697,15 @@
 <body>
   <!-- Header -->
   <header class="header">
-    <div class="logo">
+    <a href="/" class="logo">
       <span class="logo-icon">◈</span>
       <span class="logo-text">ClaudePad</span>
-      <button class="btn-cc-tips" onclick="showRandomTip()" title="Random Tip">CC Tips</button>
-    </div>
+    </a>
+
     <div style="display: flex; gap: 8px; align-items: center;">
-      <a href="/idea.html" class="btn btn-ghost btn-sm" style="color: var(--bronze-light); text-decoration: none;">💡 Ideas</a>
-      <button class="btn btn-ghost btn-sm" onclick="load()">↻ Refresh</button>
+      <a href="/" class="nav-link active" style="color: var(--bronze-light);">🐱 Sessions</a>
+      <a href="/idea.html" class="nav-link" style="color: var(--bronze-light);">💡 Ideas</a>
+      <a href="/tips.html" class="nav-link"  style="color: var(--bronze-light);">🔧 Tips</a>
     </div>
   </header>
 
@@ -777,7 +716,7 @@
       <span class="config-value" id="config-path"><span class="icon">⟳</span> Loading...</span>
     </div>
     <div class="config-item config-model-container">
-      <span class="config-label">Model</span>
+      <span class="config-label">Model Config</span>
       <div class="config-model-row">
         <div class="item">
           <span class="icon">◈</span>
@@ -838,32 +777,10 @@
     </section>
   </main>
 
-  <!-- CC Tips Modal -->
-  <div id="tips-modal" class="modal-overlay" onclick="if(event.target === this) hideRandomTip()">
-    <div class="modal">
-      <div class="modal-header">
-        <span class="modal-title">◈ CC Tips</span>
-        <button class="modal-close" onclick="hideRandomTip()">✕</button>
-      </div>
-      <div id="tip-display">
-        <div class="empty-tip">
-          <div class="empty-tip-icon">◈</div>
-          <p>Click "Next Tip" to learn a random tip</p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <span class="tip-count"><span id="tip-count">0</span> tips</span>
-        <button class="btn-next-tip" onclick="showRandomTip()">Next Tip →</button>
-      </div>
-    </div>
-  </div>
-
   <script>
     // ============================================
     // State
     // ============================================
-    let tipsData = [];
-    let isTipsModalOpen = false;
     let currentConfig = {};
 
     // ============================================
@@ -921,59 +838,6 @@
         alert('Failed to save configuration: ' + error.message);
       }
     }
-
-    // ============================================
-    // CC Tips Functions
-    // ============================================
-    async function loadTips() {
-      try {
-        const response = await fetch('/docs/cc-tips/tips.json');
-        const data = await response.json();
-        tipsData = data.tips || [];
-        document.getElementById('tip-count').textContent = tipsData.length;
-      } catch (error) {
-        console.error('Failed to load tips:', error);
-        document.getElementById('tip-count').textContent = '?';
-      }
-    }
-
-    function showRandomTip() {
-      isTipsModalOpen = true;
-      document.getElementById('tips-modal').classList.add('active');
-
-      if (tipsData.length === 0) {
-        document.getElementById('tip-display').innerHTML = `
-          <div class="empty-tip">
-            <div class="empty-tip-icon">◈</div>
-            <p>Loading tips...</p>
-          </div>
-        `;
-        return;
-      }
-
-      const randomIndex = Math.floor(Math.random() * tipsData.length);
-      const tip = tipsData[randomIndex];
-
-      document.getElementById('tip-display').innerHTML = `
-        <div class="tip-card">
-          <span class="tip-category">${escapeHtml(tip.category)}</span>
-          <div class="tip-title">${escapeHtml(tip.title)}</div>
-          <div class="tip-content">${escapeHtml(tip.content)}</div>
-          <div class="tip-source">Source: ${escapeHtml(tip.source)}</div>
-        </div>
-      `;
-    }
-
-    function hideRandomTip() {
-      isTipsModalOpen = false;
-      document.getElementById('tips-modal').classList.remove('active');
-    }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isTipsModalOpen) {
-        hideRandomTip();
-      }
-    });
 
     // ============================================
     // Session Functions
@@ -1109,7 +973,6 @@
     // Initialization
     // ============================================
     loadConfig();
-    loadTips();
     load();
 
     // Auto-refresh every 10 seconds

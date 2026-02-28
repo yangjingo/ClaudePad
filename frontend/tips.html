@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClaudePad // CC Tips</title>
+  <style>
+    /* ============================================
+     * SHEIKAH SLATE THEME
+     * Ancient Futurism - Bronze & Cyan
+     * ============================================ */
+    :root {
+      --slate-bg: #0a0a0f;
+      --slate-bg-light: #111118;
+      --slate-bg-lighter: #1a1a24;
+      --slate-panel: #13131a;
+      --bronze: #8B7355;
+      --bronze-light: #A0826D;
+      --bronze-dark: #6b5b4f;
+      --bronze-dim: #4a3f37;
+      --cyan: #00d4ff;
+      --cyan-bright: #00f0ff;
+      --cyan-dim: #00a8cc;
+      --cyan-glow: rgba(0, 212, 255, 0.3);
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --text-dark: #666;
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-full: 9999px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--slate-bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ============================================
+     * Header
+     * ============================================ */
+    .header {
+      background: var(--slate-bg-light);
+      border-bottom: 1px solid var(--bronze-dim);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      color: var(--cyan);
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--bronze-light);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--cyan);
+      background: var(--cyan-glow);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+    }
+
+    /* ============================================
+     * Buttons
+     * ============================================ */
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan-glow);
+      box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--bronze-light);
+      box-shadow: inset 0 0 0 1px var(--bronze-dim);
+    }
+
+    .btn-ghost:hover {
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn-icon {
+      padding: 6px;
+      min-width: 32px;
+      justify-content: center;
+    }
+
+    /* ============================================
+     * Main Container
+     * ============================================ */
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+
+    /* ============================================
+     * Tips Header
+     * ============================================ */
+    .tips-header-section {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .tips-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--bronze-light);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips-count {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+     * Tip Card
+     * ============================================ */
+    .tips-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .tip-card {
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .tip-card:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+    }
+
+    .tip-category {
+      display: inline-block;
+      padding: 4px 12px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid var(--cyan-dim);
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .tip-title {
+      font-size: 1rem;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .tip-content {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.7;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .tip-source {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      padding-top: 12px;
+      border-top: 1px solid var(--bronze-dim);
+    }
+
+    .tip-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--bronze-dim);
+    }
+
+    /* ============================================
+     * Empty State
+     * ============================================ */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 2.5rem;
+      color: var(--bronze);
+      margin-bottom: 16px;
+      opacity: 0.7;
+    }
+
+    .empty-text {
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .empty-hint {
+      font-size: 0.85rem;
+      color: var(--text-dark);
+    }
+
+    /* ============================================
+     * Search Bar
+     * ============================================ */
+    .search-bar {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 0.9rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ============================================
+     * Toast Notification
+     * ============================================ */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--slate-panel);
+      border: 1px solid var(--cyan-dim);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast-icon {
+      color: var(--cyan);
+      font-size: 1.2rem;
+    }
+
+    .toast-message {
+      color: var(--text);
+      font-size: 0.9rem;
+    }
+
+    /* ============================================
+     * Animations
+     * ============================================ */
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .tip-card {
+      animation: slideIn 0.3s ease-out;
+    }
+
+    /* ============================================
+     * Scrollbar
+     * ============================================ */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--slate-bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--bronze-dim);
+      border-radius: var(--radius-full);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--bronze);
+    }
+
+    /* ============================================
+     * Responsive
+     * ============================================ */
+    @media (max-width: 640px) {
+      .header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .tips-header-section {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+      }
+
+      .tip-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .search-bar {
+        flex-direction: column;
+      }
+
+      .search-input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <a href="/" class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">ClaudePad</span>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link">🐱 Sessions</a>
+      <a href="/idea.html" class="nav-link">💡 Ideas</a>
+      <a href="/tips.html" class="nav-link active">🔧 Tips</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+    <!-- Search Bar -->
+    <section class="search-bar">
+      <input
+        type="text"
+        id="search-input"
+        class="search-input"
+        placeholder="Search tips... (Ctrl+K to focus)"
+      />
+    </section>
+
+    <!-- Tips Header -->
+    <div class="tips-header-section">
+      <h2 class="tips-title">◈ CC Tips</h2>
+      <span class="tips-count"><span id="tip-count">0</span> tips</span>
+    </div>
+
+    <!-- Random Tip Display -->
+    <div id="random-tip-display"></div>
+
+    <!-- Search Results (hidden by default) -->
+    <div id="search-results" style="display: none;"></div>
+
+    <!-- Next Tip Button Container -->
+    <div id="next-tip-container" style="text-align: center; margin-top: 20px;">
+      <button class="btn btn-primary" onclick="showRandomTip()">Next Tip →</button>
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message">Copied to clipboard!</span>
+  </div>
+
+  <script>
+    // ============================================
+    // Constants
+    // ============================================
+    const TIPS_FILE = '/docs/cc-tips/tips.json';
+
+    // ============================================
+    // State
+    // ============================================
+    let tipsData = [];
+
+    // ============================================
+    // Load Tips
+    // ============================================
+    async function loadTips() {
+      try {
+        const response = await fetch(TIPS_FILE);
+        const data = await response.json();
+        tipsData = data.tips || [];
+        document.getElementById('tip-count').textContent = tipsData.length;
+        showRandomTip();
+      } catch (error) {
+        console.error('Failed to load tips:', error);
+        document.getElementById('tip-count').textContent = '?';
+        document.getElementById('random-tip-display').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠</div>
+            <p class="empty-text">Failed to load tips</p>
+            <p class="empty-hint">Please check if tips.json exists</p>
+          </div>
+        `;
+        document.getElementById('next-tip-container').style.display = 'none';
+      }
+    }
+
+    // ============================================
+    // Random Tip Function
+    // ============================================
+    function showRandomTip() {
+      if (tipsData.length === 0) {
+        document.getElementById('random-tip-display').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">◈</div>
+            <p class="empty-text">No tips available</p>
+          </div>
+        `;
+        document.getElementById('next-tip-container').style.display = 'none';
+        document.getElementById('search-results').style.display = 'none';
+        return;
+      }
+
+      // Hide search results, show random tip
+      document.getElementById('search-results').style.display = 'none';
+      document.getElementById('next-tip-container').style.display = 'block';
+
+      const randomIndex = Math.floor(Math.random() * tipsData.length);
+      const tip = tipsData[randomIndex];
+
+      document.getElementById('random-tip-display').innerHTML = `
+        <div class="tip-card" style="animation: slideIn 0.3s ease-out;">
+          <span class="tip-category">${escapeHtml(tip.category)}</span>
+          <div class="tip-title">${escapeHtml(tip.title)}</div>
+          <div class="tip-content">${escapeHtml(tip.content)}</div>
+          <div class="tip-source">Source: ${escapeHtml(tip.source)}</div>
+          <div class="tip-actions">
+            <button class="btn btn-primary btn-sm" onclick="copyTip('${escapeHtml(tip.id || tip.title)}')">
+              📋 Copy
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // ============================================
+    // Search/Filter Functions
+    // ============================================
+    function filterTips() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      const searchResults = document.getElementById('search-results');
+      const randomTipDisplay = document.getElementById('random-tip-display');
+      const nextTipContainer = document.getElementById('next-tip-container');
+
+      if (!query) {
+        // No query - show random tip
+        searchResults.style.display = 'none';
+        randomTipDisplay.style.display = 'block';
+        nextTipContainer.style.display = 'block';
+        showRandomTip();
+        return;
+      }
+
+      // Hide random tip and next tip button, show search results
+      randomTipDisplay.style.display = 'none';
+      nextTipContainer.style.display = 'none';
+      searchResults.style.display = 'block';
+
+      const filtered = tipsData.filter(tip =>
+        tip.title.toLowerCase().includes(query) ||
+        tip.content.toLowerCase().includes(query) ||
+        tip.category.toLowerCase().includes(query)
+      );
+
+      if (filtered.length === 0) {
+        searchResults.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🔍</div>
+            <p class="empty-text">No tips found</p>
+            <p class="empty-hint">Try a different search term</p>
+          </div>
+        `;
+        return;
+      }
+
+      searchResults.innerHTML = filtered.map(tip => `
+        <div class="tip-card" style="animation: slideIn 0.3s ease-out;">
+          <span class="tip-category">${escapeHtml(tip.category)}</span>
+          <div class="tip-title">${escapeHtml(tip.title)}</div>
+          <div class="tip-content">${escapeHtml(tip.content)}</div>
+          <div class="tip-source">Source: ${escapeHtml(tip.source)}</div>
+          <div class="tip-actions">
+            <button class="btn btn-primary btn-sm" onclick="copyTip('${escapeHtml(tip.id || tip.title)}')">
+              📋 Copy
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ============================================
+    // Action Functions
+    // ============================================
+    function copyTip(id) {
+      const tip = tipsData.find(t => (t.id || t.title) === id);
+      if (tip) {
+        const text = `${tip.title}\n\n${tip.content}\n\nSource: ${tip.source}`;
+        navigator.clipboard.writeText(text).then(() => {
+          showToast('Copied to clipboard!');
+        }).catch(() => {
+          showToast('Failed to copy', 'error');
+        });
+      }
+    }
+
+    // ============================================
+    // Toast Notification
+    // ============================================
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastIcon = toast.querySelector('.toast-icon');
+      const toastMessage = toast.querySelector('.toast-message');
+
+      toastIcon.textContent = type === 'error' ? '⚠' : '✓';
+      toastIcon.style.color = type === 'error' ? '#ef4444' : 'var(--cyan)';
+      toastMessage.textContent = message;
+
+      toast.classList.add('show');
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    // ============================================
+    // Utilities
+    // ============================================
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ============================================
+    // Keyboard Shortcuts
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('search-input').focus();
+      }
+
+      if (e.key === 'Escape') {
+        const search = document.getElementById('search-input');
+        if (document.activeElement === search && search.value) {
+          search.value = '';
+          filterTips();
+        }
+      }
+    });
+
+    // ============================================
+    // Initialization
+    // ============================================
+    loadTips();
+  </script>
+</body>
+</html>
