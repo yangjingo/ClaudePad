@@ -4,6 +4,8 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 
 ## Update
 
+- **v0.2.31** - Optimized session loading with multi-level caching (memory + file cache), pagination support, and enhanced terminal experience. Fixed token counting and improved error handling. Refactored terminal UI for better session information display.
+
 - **v0.2.30** - Added CC Tips page for browsing Claude Code tips. Random tip display with "Next Tip" button, full-text search, and copy to clipboard. Pure HTML frontend with Sheikah Slate theme.
 
 - **v0.2.29** - Updated navigation bar with unified style. Sessions, Ideas, and Tips links with consistent styling.
