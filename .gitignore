@@ -13,7 +13,7 @@ data/
 
 # Claude
 CLAUDE
-.claude/
+.claude/settings.json
 
 # IDE
 .idea/
