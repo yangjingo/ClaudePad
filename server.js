@@ -39,8 +39,18 @@ async function getSessions() {
             const h = history.get(id);
             const ts = h?.timestamp || Date.now();
             const status = ts > Date.now() - 3600000 ? 'running' : 'completed';
-            return { id, name: h?.name || id.slice(0, 8), lastPrompt: h?.name || id.slice(0, 8), status, startTime: new Date(ts).toISOString(), projectPath: h?.project || process.cwd(), lastActivity: new Date(ts).toISOString() };
-        }))).filter(s => s).sort((a, b) => new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime());
+            const duration = Math.floor((Date.now() - ts) / 1000);
+            return {
+                id,
+                name: h?.name || id.slice(0, 8),
+                status,
+                startTime: new Date(ts).toISOString(),
+                projectPath: h?.project || process.cwd(),
+                lastActivity: new Date(ts).toISOString(),
+                duration,
+                tokenCount: 0
+            };
+        }))).filter(s => s).sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime());
     }
     catch (e) {
         console.error(e);
@@ -160,7 +170,7 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    if (url === '/idea.html' || url === '/idea') {
+    if (url === '/idea.html' || url === '/ideas') {
         const html = await readFile(join(__dirname, 'frontend', 'idea.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -176,32 +186,12 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    if (url === '/terminal.html' || url === '/terminal') {
-        const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
-        if (html) {
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(html);
-            return;
-        }
-    }
     const tm = url.match(/^\/terminal\/([^\/]+)/);
     if (tm) {
         const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
-            return;
-        }
-    }
-    // Static files under /docs/
-    if (url.startsWith('/docs/')) {
-        const filePath = join(__dirname, url);
-        const ext = url.split('.').pop() || '';
-        const contentType = ext === 'json' ? 'application/json' : (MIME['.' + ext] || 'text/plain');
-        const content = await readFile(filePath).catch(() => null);
-        if (content) {
-            res.writeHead(200, { 'Content-Type': contentType });
-            res.end(content);
             return;
         }
     }

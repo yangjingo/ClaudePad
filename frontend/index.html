@@ -692,7 +692,11 @@
       padding-top: 16px;
       border-top: 1px solid var(--bronze-dim);
     }
-  </style>
+
+    /* ============================================
+     * Config Bar - New UI Area
+     * ============================================ */
+     </style>
 </head>
 <body>
   <!-- Header -->
@@ -766,7 +770,22 @@
     <section class="panel">
       <div class="panel-header">
         <span class="panel-title">◈ Active Sessions</span>
-        <span id="count" class="panel-count">-</span>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <!-- 分页控件 -->
+          <div id="header-pagination" style="display: flex; align-items: center; gap: 6px; margin-right: 12px;">
+            <button class="btn btn-ghost btn-sm" id="prev-btn" onclick="changePage(-1)" style="opacity:0.4;cursor:not-allowed;">← Prev</button>
+            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" id="page-info">Page 1</span>
+            <button class="btn btn-ghost btn-sm" id="next-btn" onclick="changePage(1)" style="opacity:0.4;cursor:not-allowed;">Next →</button>
+          </div>
+          <!-- 状态统计 -->
+          <span id="status-stats" style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 8px;"></span>
+          <span style="color: var(--bronze);">|</span>
+          <!-- Session 数量 -->
+          <span id="count" class="panel-count">-</span>
+          <span style="color: var(--bronze);">|</span>
+          <!-- 总时长 -->
+          <span id="total-duration" style="font-size: 0.75rem; color: var(--text-muted);"></span>
+        </div>
       </div>
       <div id="list" class="session-list">
         <div class="loading">
@@ -782,6 +801,12 @@
     // State
     // ============================================
     let currentConfig = {};
+    let pagination = {
+      offset: 0,
+      limit: 20,
+      total: 0
+    };
+    let refreshInterval;
 
     // ============================================
     // Config Functions
@@ -845,20 +870,63 @@
     async function load() {
       const list = document.getElementById('list');
       const count = document.getElementById('count');
+      const statusStats = document.getElementById('status-stats');
 
-      list.innerHTML = `
-        <div class="loading">
-          <div class="spinner"></div>
-          <div>Fetching sessions...</div>
-        </div>
-      `;
+      // 如果是首次加载或刷新，显示 loading
+      if (!document.querySelector('.session-card')) {
+        list.innerHTML = `
+          <div class="loading">
+            <div class="spinner"></div>
+            <div>Fetching sessions...</div>
+          </div>
+        `;
+      }
 
       try {
-        const response = await fetch('/api/sessions');
+        const response = await fetch(`/api/sessions?limit=${pagination.limit}&offset=${pagination.offset}`);
         const data = await response.json();
         const sessions = data.sessions || [];
+        pagination.total = data.pagination?.total || sessions.length;
 
         count.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
+
+        // 统计各状态数量
+        const statusCounts = {
+          running: 0,
+          idle: 0,
+          completed: 0,
+          stopped: 0,
+          unknown: 0
+        };
+
+        sessions.forEach(session => {
+          const status = session.status;
+          if (statusCounts.hasOwnProperty(status)) {
+            statusCounts[status]++;
+          } else {
+            statusCounts.unknown++;
+          }
+        });
+
+        // 显示状态统计
+        const statusLabels = {
+          running: { text: 'Running', color: 'var(--status-active)' },
+          idle: { text: 'Idle', color: 'var(--status-pending)' },
+          completed: { text: 'Completed', color: 'var(--status-done)' },
+          stopped: { text: 'Stopped', color: 'var(--status-error)' },
+          unknown: { text: 'Unknown', color: 'var(--text-muted)' }
+        };
+
+        statusStats.innerHTML = Object.entries(statusCounts)
+          .filter(([_, count]) => count > 0)
+          .map(([status, count]) => {
+            const label = statusLabels[status] || statusLabels.unknown;
+            return `<span style="color: ${label.color}; display: flex; align-items: center; gap: 4px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${label.color};"></span>
+              ${count}
+            </span>`;
+          })
+          .join('');
 
         if (sessions.length === 0) {
           list.innerHTML = `
@@ -870,11 +938,33 @@
               </p>
             </div>
           `;
+          renderPagination();
           return;
         }
 
+        // 按开始时间倒序排序（最新的在前）
+        sessions.sort((a, b) => {
+          const timeA = new Date(a.startTime).getTime();
+          const timeB = new Date(b.startTime).getTime();
+          return timeB - timeA;
+        });
+
+        // 统计总 Duration（动态计算 running session 的 duration）
+        const totalDuration = sessions.reduce((sum, s) => {
+          let duration = s.duration || 0;
+          // 如果是 running 状态，动态计算 duration
+          if (s.status === 'running' && s.startTime) {
+            const startTime = new Date(s.startTime).getTime();
+            duration = Math.floor((Date.now() - startTime) / 1000);
+          }
+          return sum + duration;
+        }, 0);
+
+        // 显示总持续时间到顶部
+        document.getElementById('total-duration').innerHTML = `Total: <span style="color: var(--cyan); font-family: var(--font-mono);">${formatDurationSec(totalDuration)}</span>`;
+
         list.innerHTML = sessions.map(session => `
-          <div class="session-card" onclick="viewSession('${escapeHtml(session.id)}')">
+          <div class="session-card" onclick="viewSession('${escapeHtml(session.id)}')" data-session-id="${escapeHtml(session.id)}" data-status="${session.status}" data-start="${new Date(session.startTime).getTime()}">
             <div class="session-info">
               <div class="session-header">
                 <span class="session-status ${session.status || ''}"></span>
@@ -891,17 +981,19 @@
                   <span class="session-meta-value">${new Date(session.startTime).toLocaleString()}</span>
                 </div>
                 <div class="session-meta-item">
-                  <span class="session-meta-label">Tokens:</span>
-                  <span class="session-meta-value">${formatTokenCount(session.tokenCount)}</span>
-                </div>
-                <div class="session-meta-item">
                   <span class="session-meta-label">Duration:</span>
-                  <span class="session-meta-value">${formatDurationSec(session.duration)}</span>
+                  <span class="session-meta-value duration" data-status="${session.status}" data-start="${new Date(session.startTime).getTime()}">${formatDurationWithStatus(session.duration, session.status, new Date(session.startTime).getTime())}</span>
                 </div>
               </div>
             </div>
           </div>
         `).join('');
+
+        renderPagination();
+
+        // 启动 Duration 实时更新
+        startDurationUpdates();
+
       } catch (error) {
         list.innerHTML = `
           <div class="empty">
@@ -910,6 +1002,109 @@
             <button class="btn btn-primary" onclick="load()" style="margin-top: 16px;">Retry</button>
           </div>
         `;
+      }
+    }
+
+    // 格式化 Duration（支持动态计算）
+    function formatDurationWithStatus(staticDuration, status, startTimeMs) {
+      let duration = staticDuration || 0;
+      // 如果是 running 状态，动态计算 duration
+      if (status === 'running' && startTimeMs) {
+        duration = Math.floor((Date.now() - startTimeMs) / 1000);
+      }
+      return formatDurationSec(duration);
+    }
+
+    // 启动 Duration 实时更新（仅针对 running session）
+    function startDurationUpdates() {
+      // 清除之前的 interval（如果有）
+      if (window.durationUpdateInterval) {
+        clearInterval(window.durationUpdateInterval);
+      }
+
+      // 每秒更新一次 running session 的 duration
+      window.durationUpdateInterval = setInterval(() => {
+        const durationElements = document.querySelectorAll('.duration[data-status="running"]');
+        durationElements.forEach(el => {
+          const startTimeMs = parseInt(el.getAttribute('data-start'));
+          if (startTimeMs) {
+            const duration = Math.floor((Date.now() - startTimeMs) / 1000);
+            el.textContent = formatDurationSec(duration);
+          }
+        });
+
+        // 更新顶部的总 duration
+        updateTotalDuration();
+      }, 1000);
+    }
+
+    // 更新总 duration
+    function updateTotalDuration() {
+      const durationElements = document.querySelectorAll('.duration[data-status="running"]');
+      let runningTotal = 0;
+
+      durationElements.forEach(el => {
+        const startTimeMs = parseInt(el.getAttribute('data-start'));
+        if (startTimeMs) {
+          runningTotal += Math.floor((Date.now() - startTimeMs) / 1000);
+        }
+      });
+
+      // 加上 completed/stopped session 的静态 duration
+      const staticDurations = document.querySelectorAll('.duration:not([data-status="running"])');
+      let staticTotal = 0;
+      staticDurations.forEach(el => {
+        const text = el.textContent;
+        const parts = text.split(':').map(Number);
+        if (parts.length === 3) {
+          staticTotal += parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+      });
+
+      const totalDuration = runningTotal + staticTotal;
+      document.getElementById('total-duration').innerHTML = `Total: <span style="color: var(--cyan); font-family: var(--font-mono);">${formatDurationSec(totalDuration)}</span>`;
+    }
+
+    // 渲染分页控件（在 header 中）
+    function renderPagination() {
+      const currentPage = Math.floor(pagination.offset / pagination.limit) + 1;
+      const totalPages = Math.ceil(pagination.total / pagination.limit) || 1;
+
+      // 更新页面信息
+      document.getElementById('page-info').textContent = `Page ${currentPage} / ${totalPages}`;
+
+      // 更新按钮状态
+      const prevBtn = document.getElementById('prev-btn');
+      const nextBtn = document.getElementById('next-btn');
+
+      if (pagination.offset === 0) {
+        prevBtn.style.opacity = '0.4';
+        prevBtn.style.cursor = 'not-allowed';
+        prevBtn.removeAttribute('onclick');
+      } else {
+        prevBtn.style.opacity = '1';
+        prevBtn.style.cursor = 'pointer';
+        prevBtn.setAttribute('onclick', 'changePage(-1)');
+      }
+
+      const hasNext = pagination.offset + pagination.limit < pagination.total;
+      if (!hasNext) {
+        nextBtn.style.opacity = '0.4';
+        nextBtn.style.cursor = 'not-allowed';
+        nextBtn.removeAttribute('onclick');
+      } else {
+        nextBtn.style.opacity = '1';
+        nextBtn.style.cursor = 'pointer';
+        nextBtn.setAttribute('onclick', 'changePage(1)');
+      }
+    }
+
+    // 处理分页按钮点击
+    function changePage(delta) {
+      const newOffset = pagination.offset + (delta * pagination.limit);
+      if (newOffset >= 0 && newOffset < pagination.total) {
+        pagination.offset = newOffset;
+        load();
       }
     }
 
@@ -922,23 +1117,6 @@
       return statusMap[status] || status || 'Unknown';
     }
 
-    function formatTokenCount(count) {
-      if (!count) return '0';
-      if (count >= 1000000) return (count / 1000000).toFixed(1) + 'M';
-      if (count >= 1000) return (count / 1000).toFixed(0) + 'K';
-      return count.toString();
-    }
-
-    function formatDuration(startTime) {
-      if (!startTime) return '-';
-      const start = new Date(startTime).getTime();
-      const diff = Date.now() - start;
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-
     function formatDurationSec(secs) {
       if (secs === undefined || secs === null) return '-';
       const hours = Math.floor(secs / 3600);
@@ -948,16 +1126,9 @@
     }
 
     function viewSession(id) {
-      // 调用终端 API 启动 session
-      fetch(`/api/sessions/${id}/terminal`, { method: 'POST' })
-        .then(r => {
-          if (!r.ok) throw new Error(r.statusText);
-          // 跳转到 terminal 页面
-          window.location.href = `/terminal/${id}`;
-        })
-        .catch(err => {
-          alert('Failed to start terminal: ' + err.message);
-        });
+      // 直接跳转到 terminal 页面，无需等待
+      // terminal 页面会自动连接或启动 session
+      window.location.href = `/terminal/${id}`;
     }
 
     // ============================================
@@ -972,11 +1143,20 @@
     // ============================================
     // Initialization
     // ============================================
-    loadConfig();
-    load();
+    // 等待 DOM 加载完成后再初始化
+    (function init() {
+      loadConfig();
+      load();
+    })();
 
     // Auto-refresh every 10 seconds
-    setInterval(load, 10000);
+    setInterval(() => {
+      // 清除 duration 更新 interval，避免重复
+      if (window.durationUpdateInterval) {
+        clearInterval(window.durationUpdateInterval);
+      }
+      load();
+    }, 10000);
   </script>
 </body>
 </html>

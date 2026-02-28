@@ -8,44 +8,615 @@
   <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/lib/xterm.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.8.0/lib/addon-fit.min.js"></script>
   <style>
-    :root { --bg: #0a0a0f; --panel: #111118; --cyan: #00d4ff; --green: #22c55e; --border: rgba(0,212,255,0.2); }
+    /* ============================================
+     * SHEIKAH SLATE THEME
+     * Ancient Futurism - Bronze & Cyan
+     * ============================================ */
+    :root {
+      /* Background - Sheikah Slate colors */
+      --slate-bg: #0a0a0f;
+      --slate-bg-light: #111118;
+      --slate-bg-lighter: #1a1a24;
+      --slate-panel: #13131a;
+
+      /* Bronze/Copper Ancient Metal */
+      --bronze: #8B7355;
+      --bronze-light: #A0826D;
+      --bronze-dark: #6b5b4f;
+      --bronze-dim: #4a3f37;
+
+      /* Cyan Glow - Tech Energy */
+      --cyan: #00d4ff;
+      --cyan-bright: #00f0ff;
+      --cyan-dim: #00a8cc;
+      --cyan-glow: rgba(0, 212, 255, 0.3);
+
+      /* Text */
+      --text: #e0e0e0;
+      --text-muted: #888;
+      --text-dark: #666;
+
+      /* Status Colors */
+      --status-active: #00d4ff;
+      --status-done: #4ade80;
+      --status-error: #ef4444;
+      --status-pending: #666;
+
+      /* Typography */
+      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+
+      /* Border Radius */
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-full: 9999px;
+    }
+
+    /* ============================================
+     * Reset & Base
+     * ============================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'SF Mono', monospace; background: var(--bg); height: 100vh; overflow: hidden; }
-    .header { background: var(--panel); border-bottom: 1px solid var(--border); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; }
-    .back { color: var(--cyan); text-decoration: none; }
-    .status { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: #78716c; }
-    .dot.connected { background: var(--green); box-shadow: 0 0 8px var(--green); }
-    .overlay { position: fixed; inset: 0; background: rgba(10,10,15,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--slate-bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* ============================================
+     * Header / Navigation
+     * ============================================ */
+    .header {
+      background: var(--slate-bg-light);
+      border-bottom: 1px solid var(--bronze-dim);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .back {
+      color: var(--cyan);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--bronze-dim);
+      transition: all 0.2s;
+    }
+
+    .back:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .logo-icon {
+      color: var(--cyan);
+      font-size: 1.5rem;
+      text-shadow: 0 0 10px var(--cyan-glow);
+    }
+
+    .logo-text {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--bronze-light);
+    }
+
+    .status { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; font-family: var(--font-mono); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+    .dot.connected { background: var(--status-done); box-shadow: 0 0 8px var(--status-done); }
+
+    /* ============================================
+     * Overlay
+     * ============================================ */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 15, 0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay-content {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: scaleIn 0.2s ease-out;
+    }
+
+    @keyframes scaleIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .overlay-title {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    /* ============================================
+     * Info Card
+     * ============================================ */
+    .info-card {
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 16px 0;
+      text-align: left;
+    }
+
+    .info-card h3 {
+      color: var(--bronze-light);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-card .stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--bronze-dim);
+      font-size: 0.8rem;
+    }
+
+    .info-card .stat:last-child {
+      border-bottom: none;
+    }
+
+    .info-card .stat-label {
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .info-card .stat-value {
+      color: var(--text);
+      font-family: var(--font-mono);
+      text-align: right;
+      word-break: break-all;
+      max-width: 60%;
+    }
+
+    .info-card code {
+      display: block;
+      background: rgba(0, 212, 255, 0.1);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--bronze-dim);
+      font-size: 0.8rem;
+      color: var(--cyan);
+      word-break: break-all;
+      font-family: var(--font-mono);
+      margin: 8px 0;
+    }
+
+    .info-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin: 8px 0;
+    }
+
+    /* ============================================
+     * Buttons
+     * ============================================ */
+    .btn {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: transparent;
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-primary:hover {
+      background: var(--cyan-glow);
+      box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--bronze-light);
+      box-shadow: inset 0 0 0 1px var(--bronze-dim);
+      font-size: 0.8rem;
+      padding: 6px 12px;
+    }
+
+    .btn-secondary:hover {
+      color: var(--cyan);
+      box-shadow: inset 0 0 0 1px var(--cyan-dim);
+    }
+
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+      padding: 10px 20px;
+      font-weight: 600;
+    }
+
+    /* ============================================
+     * Spinner
+     * ============================================ */
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bronze-dim);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
     .hidden { display: none !important; }
+
+    /* ============================================
+     * Terminal Container
+     * ============================================ */
+    #terminal {
+      height: calc(100vh - 50px);
+      padding: 16px;
+    }
+
+    /* ============================================
+     * Nav Links
+     * ============================================ */
+    .nav-links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .nav-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--cyan);
+      background: var(--cyan-glow);
+    }
+
+    .nav-link.active {
+      color: var(--cyan);
+      border: 1px solid var(--cyan-dim);
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <a href="/" class="back">← Back</a>
-    <span id="title">Terminal</span>
-    <div class="status"><span class="dot" id="dot"></span><span id="status">Connecting...</span></div>
+    <div class="logo">
+      <span class="logo-icon">◈</span>
+      <span class="logo-text">ClaudePad</span>
+    </div>
+    <div class="nav-links">
+      <a href="/" class="nav-link">Sessions</a>
+      <a href="/idea.html" class="nav-link">Ideas</a>
+      <a href="/tips.html" class="nav-link">Tips</a>
+    </div>
+    <div class="status"><span class="dot" id="dot"></span><span id="status">Ready</span></div>
   </div>
-  <div id="terminal" style="height: calc(100vh - 50px); padding: 16px;"></div>
-  <div class="overlay" id="overlay"><div class="spinner"></div></div>
+
+  <div id="terminal"></div>
+
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 class="overlay-title" style="margin:0;">◈ Terminal Guide</h2>
+        <button class="btn btn-secondary" onclick="closeOverlay()" style="padding:4px 8px;font-size:0.75rem;">✕ Close</button>
+      </div>
+
+      <div class="info-card">
+        <h3>📋 Session Information</h3>
+        <div class="stat">
+          <span class="stat-label">Session ID:</span>
+          <span class="stat-value" id="stat-id">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Session Name:</span>
+          <span class="stat-value" id="stat-name">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Status:</span>
+          <span class="stat-value" id="stat-status" style="color:var(--cyan);">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Started:</span>
+          <span class="stat-value" id="stat-started">-</span>
+        </div>
+        <div class="stat">
+          <span class="stat-label">Duration:</span>
+          <span class="stat-value" id="stat-duration">-</span>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>🚀 How to Resume</h3>
+        <p style="margin-bottom:12px;">Run this command in your terminal:</p>
+        <code id="resume-command">claude --resume xxx</code>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <button class="btn btn-secondary" onclick="copyCommand()" style="flex:1;">📋 Copy</button>
+          <button class="btn btn-secondary" onclick="openInExternalTerminal()" style="flex:1;">📂 Open Terminal</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-block" onclick="startTerminal()">▶️ Start in Browser</button>
+      <p style="margin-top:12px;font-size:0.7rem;color:var(--text-muted);">
+        💡 Tip: Starting in browser will run claude --resume in the background
+      </p>
+    </div>
+  </div>
+
   <script>
-    const id = location.pathname.split('/').pop();
-    document.getElementById('title').textContent = `Terminal: ${id.slice(0, 8)}`;
-    const term = new Terminal({ cursorBlink: true, fontSize: 14, theme: { background: '#0a0a0f', foreground: '#e0e0e0', cursor: '#00d4ff' } });
-    const fit = new FitAddon.FitAddon(); term.loadAddon(fit); term.open(document.getElementById('terminal')); fit.fit();
-    window.addEventListener('resize', () => fit.fit());
-    term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
-    term.writeln('\x1b[90mConnecting...\x1b[0m\r\n');
-    fetch(`/api/sessions/${id}/terminal`, { method: 'POST' }).then(async r => {
-      if (!r.ok) throw new Error(await r.text());
-      const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/terminal/${id}`);
-      ws.onopen = () => { document.getElementById('dot').className = 'dot connected'; document.getElementById('status').textContent = 'Connected'; document.getElementById('overlay').classList.add('hidden'); term.writeln('\x1b[32m✓ Connected\x1b[0m\r\n'); term.focus(); };
-      ws.onmessage = e => { const { type, data } = JSON.parse(e.data); if (type === 'output') term.write(data); };
-      ws.onclose = () => { document.getElementById('dot').className = 'dot'; document.getElementById('status').textContent = 'Disconnected'; term.writeln('\r\n\x1b[31m✗ Disconnected\x1b[0m'); };
-      term.onData(data => { if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'input', data })); });
-    }).catch(err => { document.getElementById('overlay').innerHTML = `<div style="color:#ef4444;text-align:center">Error: ${err.message}<br><br><button class="btn" onclick="location.reload()">Retry</button></div>`; });
+    // 定义全局函数供HTML调用
+    function closeOverlay() {
+      window.location.href = '/';
+    }
+
+    function copyCommand() {
+      const id = location.pathname.split('/').pop();
+      const cmd = `claude --resume ${id}`;
+      navigator.clipboard.writeText(cmd).then(() => {
+        const btn = document.querySelector('button[onclick="copyCommand()"]');
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => btn.textContent = originalText, 2000);
+      });
+    }
+
+    function openInExternalTerminal() {
+      const id = location.pathname.split('/').pop();
+      const cmd = `claude --resume ${id}`;
+      navigator.clipboard.writeText(cmd).then(() => {
+        alert('Command copied! Open your terminal and paste the command to run.');
+      });
+    }
+
+    function startTerminal() {
+      document.getElementById('overlay').innerHTML = `
+        <div style="text-align:center;padding:40px 20px">
+          <div class="spinner"></div>
+          <p style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.85rem;">Starting terminal session...</p>
+        </div>
+      `;
+      initTerminal();
+    }
+
+    // 初始化终端
+    async function initTerminal() {
+      const id = location.pathname.split('/').pop();
+
+      // 初始化 xterm.js
+      const term = new Terminal({
+        cursorBlink: true,
+        fontSize: 14,
+        fontFamily: '"SF Mono", "Fira Code", Consolas, monospace',
+        theme: {
+          background: '#0a0a0f',
+          foreground: '#e0e0e0',
+          cursor: '#00d4ff',
+          selection: 'rgba(0, 212, 255, 0.3)'
+        }
+      });
+
+      const fit = new FitAddon.FitAddon();
+      term.loadAddon(fit);
+      term.open(document.getElementById('terminal'));
+      fit.fit();
+
+      window.addEventListener('resize', () => fit.fit());
+
+      term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
+      term.writeln('\x1b[90mStarting session...\x1b[0m\r\n');
+
+      try {
+        document.getElementById('status').textContent = 'Starting...';
+
+        // 启动终端会话
+        const startResponse = await fetch(`/api/sessions/${id}/terminal`, { method: 'POST' });
+        if (!startResponse.ok) {
+          throw new Error('Failed to start: ' + startResponse.statusText);
+        }
+        await startResponse.json();
+
+        term.writeln('\x1b[90mSession started, connecting...\x1b[0m\r\n');
+
+        // 连接WebSocket
+        const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/terminal/${id}`);
+
+        ws.onopen = () => {
+          document.getElementById('dot').className = 'dot connected';
+          document.getElementById('status').textContent = 'Connected';
+          document.getElementById('overlay').classList.add('hidden');
+          term.writeln('\x1b[32m✓ Connected\x1b[0m\r\n');
+          term.focus();
+        };
+
+        ws.onmessage = e => {
+          const { type, data } = JSON.parse(e.data);
+          if (type === 'output') term.write(data);
+          else if (type === 'waiting') term.writeln(`\x1b[90m${data}\x1b[0m\r\n`);
+        };
+
+        ws.onclose = () => {
+          document.getElementById('dot').className = 'dot';
+          document.getElementById('status').textContent = 'Disconnected';
+          term.writeln('\r\n\x1b[31m✗ Disconnected\x1b[0m');
+        };
+
+        ws.onerror = () => {
+          document.getElementById('status').textContent = 'Error';
+        };
+
+        term.onData(data => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'input', data }));
+          }
+        });
+
+      } catch (err) {
+        document.getElementById('overlay').innerHTML = `
+          <div class="overlay-content">
+            <h2 class="overlay-title" style="color:var(--status-error)">✕ Error</h2>
+            <div class="info-card">
+              <p style="color:var(--text);margin-bottom:16px;">${err.message || 'Failed to start session'}</p>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="location.reload()">Retry</button>
+            <button class="btn btn-secondary btn-block" onclick="window.location.href='/'" style="margin-top:8px;">Back to Sessions</button>
+          </div>
+        `;
+      }
+    }
+
+    // 加载 session 信息
+    async function loadSessionInfo() {
+      const id = location.pathname.split('/').pop();
+      document.title = `ClaudePad // Terminal: ${id.slice(0, 8)}`;
+
+      try {
+        const response = await fetch(`/api/sessions/${id}`);
+        if (!response.ok) {
+          // Session not found, show generic info
+          showGenericInfo();
+          return;
+        }
+        const data = await response.json();
+
+        // 更新页面元素中的session信息
+        document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
+        document.getElementById('stat-name').textContent = data.name || 'Unnamed Session';
+
+        // 状态显示
+        const statusEl = document.getElementById('stat-status');
+        const dot = document.getElementById('dot');
+        if (data.status === 'running') {
+          statusEl.textContent = '● Running';
+          statusEl.style.color = 'var(--status-active)';
+          dot.style.background = 'var(--status-active)';
+          dot.style.boxShadow = '0 0 8px var(--status-active)';
+          // 添加脉冲动画
+          dot.style.animation = 'pulse 2s ease-in-out infinite';
+        } else if (data.status === 'completed') {
+          statusEl.textContent = '✓ Completed';
+          statusEl.style.color = 'var(--status-done)';
+          dot.style.background = 'var(--status-done)';
+          dot.style.boxShadow = 'none';
+          dot.style.animation = 'none';
+        } else if (data.status === 'idle') {
+          statusEl.textContent = '● Idle';
+          statusEl.style.color = 'var(--status-pending)';
+          dot.style.background = 'var(--status-pending)';
+          dot.style.boxShadow = 'none';
+          dot.style.animation = 'none';
+        } else {
+          statusEl.textContent = (data.status || 'Unknown').toUpperCase();
+          statusEl.style.color = 'var(--text-muted)';
+          dot.style.background = 'var(--text-muted)';
+          dot.style.boxShadow = 'none';
+          dot.style.animation = 'none';
+        }
+
+        document.getElementById('stat-started').textContent = new Date(data.startTime).toLocaleString();
+        document.getElementById('stat-duration').textContent = formatDuration(data.duration);
+        document.getElementById('resume-command').textContent = `claude --resume ${data.id}`;
+      } catch (err) {
+        console.error('Failed to load session info:', err);
+        showGenericInfo();
+      }
+    }
+
+    // 显示通用信息（当 session 不存在时）
+    function showGenericInfo() {
+      const id = location.pathname.split('/').pop();
+      document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
+      document.getElementById('stat-name').textContent = 'Session not found';
+      document.getElementById('stat-status').textContent = 'Unknown';
+      document.getElementById('stat-status').style.color = 'var(--text-muted)';
+      document.getElementById('stat-started').textContent = '-';
+      document.getElementById('stat-duration').textContent = '-';
+      document.getElementById('resume-command').textContent = `claude --resume ${id}`;
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds && seconds !== 0) return '-';
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    // 页面加载完成后加载session信息
+    document.addEventListener('DOMContentLoaded', function() {
+      loadSessionInfo();
+    });
   </script>
 </body>
 </html>
