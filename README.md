@@ -1,16 +1,23 @@
 # ClaudePad
 
-Claude Code Session Monitor with xterm.js Web Terminal.
+Claude Code Session Monitor with xterm.js Web Terminal and Idea Capture.
 
 ## Update
 
-- **v0.2.27** - Pure HTML frontend with Sheikah Slate theme. Session monitoring with real-time status, token count, and duration display. Zero framework dependencies.
+- **v0.2.28** - Added CC Ideas for capturing spontaneous inspiration. Pure HTML frontend with Sheikah Slate theme. Session monitoring with real-time status, token count, and duration display. Zero framework dependencies.
+
+- **v0.2.27** - Updated theme to Sheikah Slate, loads session information directly from `~/.claude/` directory.
+
+- **v0.2.26** - Implemented basic features with unified color scheme.
+
+
 
 ## Features
 
 - **Session List** - View all Claude Code sessions from `~/.claude/`
 - **Web Terminal** - Interactive xterm.js terminal for each session
 - **Real-time I/O** - WebSocket-based terminal streaming via node-pty
+- **CC Ideas** - Capture and manage spontaneous inspiration with status tracking
 
 ## Quick Start
 
@@ -21,33 +28,6 @@ npm start
 ```
 
 Visit http://localhost:8080
-
-## Architecture
-
-```
-ClaudePad/
-├── server.ts          # Main server (TypeScript)
-├── frontend/
-│   ├── index.html     # Session list
-│   └── terminal.html  # xterm.js terminal
-└── package.json
-```
-
-## API
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/sessions` | GET | List all sessions |
-| `/api/sessions/:id` | GET | Get session details |
-| `/api/sessions/:id/terminal` | POST | Start terminal for session |
-| `/ws/terminal/:id` | WS | WebSocket for terminal I/O |
-
-## Tech Stack
-
-- **Backend**: Node.js + TypeScript
-- **Terminal**: xterm.js (frontend) + node-pty (backend)
-- **Real-time**: WebSocket (ws)
-- **Storage**: Claude CLI data in `~/.claude/`
 
 ## License
 

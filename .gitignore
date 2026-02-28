@@ -11,6 +11,10 @@ yarn-error.log*
 # Data directory (user data)
 data/
 
+# Claude
+CLAUDE
+.claude/
+
 # IDE
 .idea/
 .vscode/
@@ -20,6 +24,3 @@ data/
 # OS
 .DS_Store
 Thumbs.db
-
-# Claude
-CLAUDE
