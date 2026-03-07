@@ -1,0 +1,378 @@
+{
+  "tips": [
+    {
+      "id": 1,
+      "category": "快捷键",
+      "title": "清除输入",
+      "content": "按 `Esc + Esc` 可以快速清除所有输入，重新开始。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 2,
+      "category": "快捷键",
+      "title": "切换权限模式",
+      "content": "按 `Shift + Tab` 可以在默认模式、自动模式和计划模式之间切换。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 3,
+      "category": "快捷键",
+      "title": "切换详细输出",
+      "content": "按 `Ctrl + O` 可以切换详细输出模式，查看 Claude 的思考过程。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 4,
+      "category": "快捷键",
+      "title": "换行输入",
+      "content": "按 `Shift + Enter` 可以在输入时换行，用于编写多行提示词。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 5,
+      "category": "快捷键",
+      "title": "撤销操作",
+      "content": "按 `Ctrl + _` (Control + 下划线) 可以撤销上一次操作。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 6,
+      "category": "命令",
+      "title": "清空会话",
+      "content": "`/clear` - 清空当前会话的上下文，保留系统提示。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 7,
+      "category": "命令",
+      "title": "查看费用",
+      "content": "`/cost` - 查看当前会话的 Token 消耗和费用。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 8,
+      "category": "命令",
+      "title": "重命名会话",
+      "content": "`/rename` - 重命名当前会话，便于后续恢复。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 9,
+      "category": "命令",
+      "title": "恢复历史会话",
+      "content": "`/resume` - 恢复历史会话，可以按名称或 ID 恢复。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 10,
+      "category": "命令",
+      "title": "切换模型",
+      "content": "`/model sonnet` 切换到 Sonnet（便宜快速），`/model opus` 切换到 Opus（更强但更贵）。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 11,
+      "category": "命令",
+      "title": "初始化项目",
+      "content": "`/init` - 初始化 CLAUDE.md 文件，记录项目规范和常用命令。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 12,
+      "category": "命令",
+      "title": "编辑记忆",
+      "content": "`/memory` - 编辑项目记忆文件，记录稳定模式和使用心得。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 13,
+      "category": "模型选择",
+      "title": "日常开发首选 Sonnet",
+      "content": "Sonnet 成本低、速度快，适合 90% 的日常开发任务。",
+      "source": "README.md"
+    },
+    {
+      "id": 14,
+      "category": "模型选择",
+      "title": "复杂问题用 Opus",
+      "content": "Opus 推理能力强，适合复杂架构设计、深度分析和复杂 Bug 调试。",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 15,
+      "category": "文件引用",
+      "title": "引用单个文件",
+      "content": "使用 `@文件路径` 可以快速引用文件内容到对话中。",
+      "source": "README.md"
+    },
+    {
+      "id": 16,
+      "category": "文件引用",
+      "title": "引用目录结构",
+      "content": "使用 `@目录路径` 可以引用目录结构（显示文件列表而非内容）。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 17,
+      "category": "MCP",
+      "title": "什么是 MCP",
+      "content": "MCP（Model Context Protocol）是一个开放协议，让 AI 模型能够安全地连接外部工具和数据源。",
+      "source": "mcp-skills.md"
+    },
+    {
+      "id": 18,
+      "category": "MCP",
+      "title": "添加 MySQL MCP",
+      "content": "`claude mcp add mysql npx @benborla29/mcp-server-mysql` - 让 Claude 可以直接操作 MySQL 数据库。",
+      "source": "mcp-skills.md"
+    },
+    {
+      "id": 19,
+      "category": "MCP",
+      "title": "添加 Playwright MCP",
+      "content": "`claude mcp add playwright npx @playwright/mcp@latest` - 让 Claude 可以进行浏览器自动化测试。",
+      "source": "mcp-skills.md"
+    },
+    {
+      "id": 20,
+      "category": "Skills",
+      "title": "什么是 Skill",
+      "content": "Skill 是一组打包的指令，教 Claude 如何处理特定任务或工作流。",
+      "source": "mcp-skills.md"
+    },
+    {
+      "id": 21,
+      "category": "Skills",
+      "title": "注册官方 Skills 市场",
+      "content": "`/plugin marketplace add anthropics/skills` - 注册后可以安装官方 Skills。",
+      "source": "mcp-skills.md"
+    },
+    {
+      "id": 22,
+      "category": "工作流程",
+      "title": "标准开发流程",
+      "content": "探索 → 规划 → 编码 → 验证 → 提交。遵循这个流程可以提高代码质量。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 23,
+      "category": "工作流程",
+      "title": "探索阶段",
+      "content": "从广泛问题开始（如 'give me an overview'），逐步聚焦到具体领域，询问编码约定和模式。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 24,
+      "category": "工作流程",
+      "title": "计划模式",
+      "content": "对于复杂或不确定的任务，使用计划模式（Shift+Tab 切换）先制定详细计划再执行。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 25,
+      "category": "工作流程",
+      "title": "小步提交频繁验证",
+      "content": "编码阶段应小步提交、频繁验证，让 Claude 解释代码逻辑。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 26,
+      "category": "工作流程",
+      "title": "调试流程",
+      "content": "1.分享错误信息 → 2.获取修复建议 → 3.应用修复 → 4.验证修复",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 27,
+      "category": "工作流程",
+      "title": "TDD 流程",
+      "content": "1.编写测试（先失败）→ 2.确认测试失败 → 3.实现功能（使测试通过）→ 4.重构优化",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 28,
+      "category": "提示词技巧",
+      "title": "任务描述要具体",
+      "content": "❌ '生成一个登录页面' ✅ '生成一个 React 登录页面，包含表单验证、错误处理、响应式设计'",
+      "source": "README.md"
+    },
+    {
+      "id": 29,
+      "category": "提示词技巧",
+      "title": "使用触发词",
+      "content": "`think` - 基础思考，`think hard` - 深入分析，`ultrathink` - 深度推理。",
+      "source": "README.md"
+    },
+    {
+      "id": 30,
+      "category": "提示词技巧",
+      "title": "结构化提问",
+      "content": "使用编号列表提问：'请分析这个功能的：1.技术实现方案 2.潜在风险点 3.测试策略 4.性能考虑'",
+      "source": "README.md"
+    },
+    {
+      "id": 31,
+      "category": "成本控制",
+      "title": "监控 Token 使用",
+      "content": "使用 `/cost` 命令查看当前会话的 Token 消耗和费用。",
+      "source": "README.md"
+    },
+    {
+      "id": 32,
+      "category": "成本控制",
+      "title": "限制预算",
+      "content": "使用 `claude -p --max-budget-usd 5.00 \"任务\"` 可以限制单次任务的最大花费。",
+      "source": "README.md"
+    },
+    {
+      "id": 33,
+      "category": "成本控制",
+      "title": "精简 CLAUDE.md",
+      "content": "避免 CLAUDE.md 内容过长，只保留关键信息，可以减少 Token 消耗。",
+      "source": "README.md"
+    },
+    {
+      "id": 34,
+      "category": "成本控制",
+      "title": "及时清理上下文",
+      "content": "使用 `/clear` 清理不需要的上下文，避免 Token 溢出。",
+      "source": "README.md"
+    },
+    {
+      "id": 35,
+      "category": "上下文管理",
+      "title": "精确引用文件",
+      "content": "使用 `@文件` 精确引用所需文件，而非引用整个目录，可以减少 Token 消耗。",
+      "source": "README.md"
+    },
+    {
+      "id": 36,
+      "category": "Git 集成",
+      "title": "审查变更",
+      "content": "`git diff | claude -p 'review these changes'` - 让 Claude 审查你的代码变更。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 37,
+      "category": "Git 集成",
+      "title": "生成提交信息",
+      "content": "`git diff --staged | claude -p 'write a commit message'` - 自动生成规范的提交信息。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 38,
+      "category": "Git 集成",
+      "title": "从 PR 恢复会话",
+      "content": "使用 `claude --from-pr 123` 可以从指定的 Pull Request 恢复会话。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 39,
+      "category": "调试技巧",
+      "title": "分层分析法",
+      "content": "请 Claude 分析：1.可能的原因（3-5 个）2.每个原因的验证方法 3.最可能的原因 4.修复方案 5.预防措施。",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 40,
+      "category": "调试技巧",
+      "title": "日志分析",
+      "content": "`cat app.log | claude -p '分析日志：识别错误、找规律、建议根因、推荐修复'`",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 41,
+      "category": "安装问题",
+      "title": "安装失败解决",
+      "content": "使用 sudo 安装：`sudo npm install -g @anthropic-ai/claude-code`，或使用 npx 免安装：`npx @anthropic-ai/claude-code`。",
+      "source": "troubleshooting.md"
+    },
+    {
+      "id": 42,
+      "category": "安装问题",
+      "title": "检查 Node.js 版本",
+      "content": "Claude Code 需要 Node.js >= 18。使用 `node --version` 检查，使用 `brew upgrade node` 升级。",
+      "source": "troubleshooting.md"
+    },
+    {
+      "id": 43,
+      "category": "认证问题",
+      "title": "重新登录",
+      "content": "遇到认证错误时：`claude auth logout` 然后 `claude auth login`。",
+      "source": "troubleshooting.md"
+    },
+    {
+      "id": 44,
+      "category": "会话管理",
+      "title": "命名会话",
+      "content": "使用 `/rename 会话名称` 命名当前会话，便于后续恢复。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 45,
+      "category": "会话管理",
+      "title": "按名称恢复",
+      "content": "使用 `claude --resume 会话名称` 可以恢复之前命名的会话。",
+      "source": "core-workflows.md"
+    },
+    {
+      "id": 46,
+      "category": "会话管理",
+      "title": "查看所有会话",
+      "content": "使用 `claude --resume` 不带参数可以查看所有可恢复的会话列表。",
+      "source": "cli-guide.md"
+    },
+    {
+      "id": 47,
+      "category": "高级配置",
+      "title": "追加系统提示",
+      "content": "使用 `claude --append-system-prompt \"Always use TypeScript\"` 追加自定义规则。",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 48,
+      "category": "高级配置",
+      "title": "权限配置",
+      "content": "在 `.claude/settings.json` 中配置 `permissions.allow` 可以预授权安全命令。",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 49,
+      "category": "高级配置",
+      "title": "JSON 输出格式",
+      "content": "使用 `claude -p \"分析代码\" --output-format json` 可以获得结构化 JSON 输出。",
+      "source": "advanced-tips.md"
+    },
+    {
+      "id": 50,
+      "category": "Shell 别名",
+      "title": "快速启动别名",
+      "content": "在 ~/.bashrc 或 ~/.zshrc 中添加：`alias cc='claude'`、`alias ccp='claude -p'`、`alias ccc='claude --continue'`。",
+      "source": "advanced-tips.md"
+    }
+  ],
+  "categories": [
+    "快捷键",
+    "命令",
+    "模型选择",
+    "文件引用",
+    "MCP",
+    "Skills",
+    "工作流程",
+    "提示词技巧",
+    "成本控制",
+    "上下文管理",
+    "Git 集成",
+    "调试技巧",
+    "安装问题",
+    "认证问题",
+    "会话管理",
+    "高级配置",
+    "Shell 别名"
+  ],
+  "meta": {
+    "total_tips": 50,
+    "last_updated": "2026-02-27",
+    "version": "1.0.0"
+  }
+}

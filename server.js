@@ -12,7 +12,21 @@ import { homedir, userInfo, networkInterfaces } from 'node:os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '8080');
 const CLAUDE_DIR = join(homedir(), '.claude');
-const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript' };
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
+
+// Serve static files from a directory
+async function serveStaticFile(res, filePath) {
+    try {
+        const ext = filePath.slice(filePath.lastIndexOf('.'));
+        const contentType = MIME[ext] || 'application/octet-stream';
+        const content = await readFile(filePath);
+        res.writeHead(200, { 'Content-Type': contentType });
+        res.end(content);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
 const terminals = new Map();
 async function parseHistory() {
     const sessions = new Map();
@@ -115,6 +129,8 @@ async function saveConfig(newConfig) {
 }
 const server = createServer(async (req, res) => {
     const url = req.url || '/', method = req.method || 'GET';
+    // Parse URL to handle query params
+    const urlPath = url.split('?')[0];
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     if (method === 'OPTIONS') {
@@ -122,9 +138,9 @@ const server = createServer(async (req, res) => {
         res.end();
         return;
     }
-    if (url === '/api/config' && method === 'GET')
+    if (urlPath === '/api/config' && method === 'GET')
         return json(res, await getConfig());
-    if (url === '/api/config' && method === 'POST') {
+    if (urlPath === '/api/config' && method === 'POST') {
         try {
             const body = await new Promise((resolve, reject) => {
                 let data = '';
@@ -145,14 +161,14 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    if (url === '/api/sessions' && method === 'GET')
+    if (urlPath === '/api/sessions' && method === 'GET')
         return json(res, { sessions: await getSessions() });
-    const m = url.match(/^\/api\/sessions\/([^\/]+)/);
+    const m = urlPath.match(/^\/api\/sessions\/([^\/]+)/);
     if (m && method === 'GET') {
         const s = (await getSessions()).find(x => x.id === m[1]);
         return s ? json(res, s) : json(res, { error: 'Not found' }, 404);
     }
-    if (m && method === 'POST' && url.includes('/terminal')) {
+    if (m && method === 'POST' && urlPath.includes('/terminal')) {
         if (terminals.has(m[1]))
             return json(res, { error: 'Running' }, 400);
         const proc = pty.spawn(process.env.SHELL || 'bash', ['-c', `unset CLAUDECODE && claude --resume ${m[1]}`], { name: 'xterm-256color', cols: 120, rows: 30, cwd: process.cwd(), env: { ...process.env, TERM: 'xterm-256color', CLAUDECODE: undefined } });
@@ -162,7 +178,7 @@ const server = createServer(async (req, res) => {
         proc.onExit(() => terminals.delete(m[1]));
         return json(res, { status: 'started' });
     }
-    if (url === '/' || url === '/index.html') {
+    if (urlPath === '/' || urlPath === '/index.html') {
         const html = await readFile(join(__dirname, 'frontend', 'index.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -170,7 +186,21 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    if (url === '/idea.html' || url === '/ideas') {
+    // Serve static files from asserts directory
+    if (urlPath.startsWith('/asserts/')) {
+        const filePath = join(__dirname, urlPath);
+        if (await serveStaticFile(res, filePath)) {
+            return;
+        }
+    }
+    // Serve static files from docs directory
+    if (urlPath.startsWith('/docs/')) {
+        const filePath = join(__dirname, urlPath);
+        if (await serveStaticFile(res, filePath)) {
+            return;
+        }
+    }
+    if (urlPath === '/idea.html' || urlPath === '/ideas') {
         const html = await readFile(join(__dirname, 'frontend', 'idea.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -178,7 +208,7 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    if (url === '/tips.html' || url === '/tips') {
+    if (urlPath === '/tips.html' || urlPath === '/tips') {
         const html = await readFile(join(__dirname, 'frontend', 'tips.html')).catch(() => null);
         if (html) {
             res.writeHead(200, { 'Content-Type': 'text/html' });
@@ -186,7 +216,15 @@ const server = createServer(async (req, res) => {
             return;
         }
     }
-    const tm = url.match(/^\/terminal\/([^\/]+)/);
+    if (urlPath === '/playground.html' || urlPath === '/playground') {
+        const html = await readFile(join(__dirname, 'frontend', 'playground.html')).catch(() => null);
+        if (html) {
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
+        }
+    }
+    const tm = urlPath.match(/^\/terminal\/([^\/]+)/);
     if (tm) {
         const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null);
         if (html) {

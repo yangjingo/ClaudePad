@@ -470,7 +470,40 @@ function spawnClaude(sessionId) {
 - [ ] 前端：从想法创建任务（未来）
 - [ ] 后端：想法与任务关联（未来）
 
-### Phase 4 - 增强功能（规划中）
+### Phase 4 - Agent Activity Dashboard（新增）
+**设计参考**：
+- Star-Office-UI (https://github.com/ringhyacinth/Star-Office-UI) - 游戏化界面设计
+- Pixel-Agents (https://github.com/pablodelucca/pixel-agents) - Agent可视化与状态监控
+
+**功能需求**：
+- [ ] 前端：Agent 活动监控页面 (`/agents.html`)
+- [ ] 前端：集成 Zelda 主题图标 (`/asserts/zelda-icon/`)
+- [ ] 前端：Agent 状态可视化（运行中/空闲/错误/警告）
+- [ ] 前端：资源监控（CPU/内存使用率）
+- [ ] 前端：活动日志实时展示
+- [ ] 前端：搜索与状态过滤
+- [ ] 前端：图标画廊展示
+- [ ] 后端：`/api/agents` 端点
+- [ ] 后端：`/api/agents/:id` 详情端点
+
+**图标资源**：
+| 图标 | Agent类型 | 功能角色 |
+|------|----------|----------|
+| link.png | Link Agent | 通用任务处理 |
+| mipha.png | Mipha Agent | 健康监测/诊断 |
+| revali.png | Revali Agent | 数据处理/分析 |
+| urbosa.png | Urbosa Agent | 安全防护 |
+| darurk.png | Daruk Agent | 基础设施/支撑 |
+
+**状态指示器**：
+| 状态 | 颜色 | 样式 |
+|------|------|------|
+| running | #4CAF50 | 绿色 + 脉冲动画 |
+| idle | #9E9E9E | 灰色 + 静态 |
+| warning | #FF9800 | 橙色 + 警告标志 |
+| error | #F44336 | 红色 + 错误标志 |
+
+### Phase 5 - 增强功能（规划中）
 - [ ] Skills 管理
 - [ ] 会话搜索
 - [ ] Token 统计图表
