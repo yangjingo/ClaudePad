@@ -2,7 +2,16 @@
 
 ## 概述
 
-Agent Playground 是一个受 **Star-Office-UI** 和 **Pixel-Agents** 启发的 Agent 活动监控页面，集成 Zelda 主题图标，采用主从架构设计（Link 作为主控，四大 Champion 作为子 Agent）。
+Agent Playground 是一个受 **Star-Office-UI** 和 **Pixel-Agents** 启发的软件开发团队可视化监控页面，集成 Zelda 主题图标，采用软件开发流程架构设计（Link 作为项目经理/技术负责人，四大 Champion 作为开发团队成员）。
+
+**核心概念**: 将软件开发流程中的各个角色映射到塞尔达传说中的角色，实现游戏化的开发团队监控。
+
+**角色映射**:
+- **Link (♔)** - Project Manager / Tech Lead - 项目管理与架构决策
+- **Revali (💨)** - Requirements Analyst - 需求分析与技术调研
+- **Mipha (💚)** - Frontend / UX Designer - 前端开发与界面设计
+- **Urbosa (⚡)** - Backend Developer - 后端开发与API构建
+- **Daruk (🛡️)** - QA / DevOps Engineer - 测试验证与持续集成
 
 **参考项目**:
 - [Star-Office-UI](https://github.com/ringhyacinth/Star-Office-UI) - 游戏化界面设计
@@ -15,16 +24,16 @@ Agent Playground 是一个受 **Star-Office-UI** 和 **Pixel-Agents** 启发的 
 ## 设计原则
 
 ### 1. 游戏化界面设计 (Star-Office-UI 风格)
-- **角色化功能模块**：不同功能由不同游戏角色代表
-- **像素艺术风格**：使用复古像素艺术元素
-- **沉浸式体验**：通过游戏化视觉和交互提升用户体验
-- **主题一致性**：保持希卡之石主题（青铜色 + 青色）
+- **角色化开发岗位**: 不同开发角色由不同游戏角色代表
+- **像素艺术风格**: 使用复古像素艺术元素
+- **沉浸式体验**: 通过游戏化视觉和交互提升开发体验
+- **主题一致性**: 保持希卡之石主题（青铜色 + 青色）
 
-### 2. Agent 可视化 (Pixel-Agents 风格)
-- **状态指示系统**：直观展示 Agent 当前状态
-- **实时活动跟踪**：显示每个 Agent 的活动历史和任务
-- **资源监控**：展示 CPU 使用率等计算资源
-- **动态交互**：悬停效果、状态动画、实时更新
+### 2. 软件开发流程可视化 (Pixel-Agents 风格)
+- **状态指示系统**: 直观展示开发阶段和任务状态
+- **实时活动跟踪**: 显示每个开发角色的活动历史和任务
+- **协作监控**: 展示团队间的协作流程和数据流转
+- **动态交互**: 悬停效果、状态动画、实时更新
 
 ### 3. 主从架构设计
 ```
@@ -248,51 +257,255 @@ function toggleSimulation() {
 
 ### 2. 角色映射方案
 
-#### 2.1 主从架构映射
+#### 2.1 软件开发流程映射
 
-| 角色 | 类型 | 映射关系 | 功能定位 |
-|------|------|----------|----------|
-| **Link** | Commander | 主 Claude Session | 主控/指挥/调度 |
-| **Mipha** | Champion | Task/Subagent (Healer类工具) | 治疗/支援/修复 |
-| **Revali** | Champion | Task/Subagent (Scout类工具) | 侦察/搜索/探索 |
-| **Urbosa** | Champion | Task/Subagent (Assault类工具) | 攻击/执行/构建 |
-| **Daruk** | Champion | Task/Subagent (Defense类工具) | 防御/保护/审查 |
+基于软件工程的标准开发流程，将 Champion 角色映射到各个开发阶段：
 
-#### 2.2 工具类型到 Champion 映射
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     软件开发流程 - Champion 映射                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   📋 需求阶段 → 🔷 设计阶段 → 💻 开发阶段 → 🧪 测试阶段 → 🚀 部署阶段    │
+│                                                                         │
+│      Revali      Mipha        Urbosa       Daruk        Link           │
+│     (侦察需求)   (设计界面)    (后端构建)    (质量保证)    (项目管理)      │
+│        💨          💚           ⚡           🛡️          ♔              │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+| 角色 | 开发角色 | 类型 | 职责定位 | 工作场景 |
+|------|----------|------|----------|----------|
+| **Link** | Project Manager / Tech Lead | Commander | 项目管理、架构决策、资源协调 | 制定计划、分配任务、监控进度 |
+| **Revali** | Requirements Analyst | Champion | 需求分析、技术调研、可行性评估 | 阅读文档、分析需求、技术选型 |
+| **Mipha** | Frontend Dev / UX Designer | Champion | 前端开发、UI/UX设计、用户体验优化 | 界面实现、交互设计、样式调整 |
+| **Urbosa** | Backend Developer | Champion | 后端开发、数据库设计、API构建 | 业务逻辑、数据处理、服务构建 |
+| **Daruk** | QA Engineer / DevOps | Champion | 测试验证、代码审查、质量保证 | 编写测试、执行验证、CI/CD |
+
+#### 2.2 开发阶段到 Champion 映射
 
 ```javascript
-// 工具类型到 Champion 的映射规则
-const TOOL_CHAMPION_MAP = {
-  // Mipha (Healer) - 修复、治疗类工具
-  'Edit': 'mipha',        // 代码修复
-  'Fix': 'mipha',         // 错误修复
-  'Refactor': 'mipha',    // 重构改进
-  'Clean': 'mipha',       // 清理优化
+// 开发阶段到 Champion 的映射规则
+const DEV_PHASE_CHAMPION_MAP = {
+  // 需求阶段 - Revali (侦察者)
+  'requirement': 'revali',
+  'analysis': 'revali',
+  'research': 'revali',
+  'investigation': 'revali',
+  'documentation': 'revali',
 
-  // Revali (Scout) - 探索、搜索类工具
-  'Read': 'revali',       // 阅读文件
-  'Grep': 'revali',       // 代码搜索
-  'Glob': 'revali',       // 文件查找
-  'WebSearch': 'revali',  // 网络搜索
-  'WebFetch': 'revali',   // 网页获取
+  // 设计阶段 - Mipha (设计者)
+  'design': 'mipha',
+  'ui': 'mipha',
+  'ux': 'mipha',
+  'prototype': 'mipha',
+  'styling': 'mipha',
 
-  // Urbosa (Assault) - 执行、构建类工具
-  'Write': 'urbosa',      // 写入文件
-  'Bash': 'urbosa',       // 命令执行
-  'Task': 'urbosa',       // 子任务
-  'Build': 'urbosa',      // 构建编译
+  // 开发阶段 - Urbosa (构建者)
+  'backend': 'urbosa',
+  'api': 'urbosa',
+  'database': 'urbosa',
+  'logic': 'urbosa',
+  'implementation': 'urbosa',
 
-  // Daruk (Defense) - 保护、审查类工具
-  'Test': 'daruk',        // 测试保护
-  'Review': 'daruk',      // 代码审查
-  'Audit': 'daruk',       // 安全审计
-  'Verify': 'daruk',      // 验证确认
+  // 测试阶段 - Daruk (守护者)
+  'testing': 'daruk',
+  'review': 'daruk',
+  'qa': 'daruk',
+  'validation': 'daruk',
+  'security': 'daruk',
+
+  // 管理阶段 - Link (指挥官)
+  'planning': 'link',
+  'coordination': 'link',
+  'architecture': 'link',
+  'deployment': 'link',
 };
 
-// 根据工具获取 Champion 类型
-function getChampionByTool(toolName) {
-  return TOOL_CHAMPION_MAP[toolName] || 'link';
+// 文件类型到 Champion 映射（开发场景）
+const FILE_TYPE_CHAMPION_MAP = {
+  // Revali - 需求/文档类
+  '.md': 'revali',
+  '.txt': 'revali',
+  'README': 'revali',
+  'PRD': 'revali',
+  'SPEC': 'revali',
+
+  // Mipha - 前端/UI类
+  '.html': 'mipha',
+  '.css': 'mipha',
+  '.scss': 'mipha',
+  '.tsx': 'mipha',
+  '.jsx': 'mipha',
+  '.vue': 'mipha',
+  '.svg': 'mipha',
+  '.png': 'mipha',
+
+  // Urbosa - 后端/逻辑类
+  '.py': 'urbosa',
+  '.js': 'urbosa',
+  '.ts': 'urbosa',
+  '.go': 'urbosa',
+  '.rs': 'urbosa',
+  '.java': 'urbosa',
+  '.sql': 'urbosa',
+  '.json': 'urbosa',
+
+  // Daruk - 测试/配置类
+  '.test.js': 'daruk',
+  '.spec.ts': 'daruk',
+  '.test.py': 'daruk',
+  'Dockerfile': 'daruk',
+  '.yml': 'daruk',
+  '.yaml': 'daruk',
+  '.toml': 'daruk',
+};
+
+// 根据任务类型获取 Champion
+function getChampionByTask(taskType) {
+  return DEV_PHASE_CHAMPION_MAP[taskType] || 'link';
 }
+
+// 根据文件类型获取 Champion
+function getChampionByFile(filename) {
+  for (const [ext, champion] of Object.entries(FILE_TYPE_CHAMPION_MAP)) {
+    if (filename.includes(ext)) return champion;
+  }
+  return 'link';
+}
+```
+
+#### 2.3 角色详细设定
+
+##### Link - Project Manager / Tech Lead ♔
+
+```yaml
+角色: 项目经理 / 技术负责人
+图标: ♔ (王冠)
+位置: 指挥中心 (Canvas 中心)
+职责:
+  - 项目规划与任务分解
+  - 协调各 Champion 之间的工作
+  - 技术架构决策
+  - 进度监控与风险管理
+  - 最终代码审查与合并
+
+工作流:
+  1. 接收用户需求
+  2. 分解任务并分配给各 Champion
+  3. 监控各阶段进度
+  4. 解决跨阶段冲突
+  5. 最终交付与部署
+
+状态指示:
+  - 🟢 Active: 正在协调项目
+  - 🟡 Planning: 制定计划
+  - 🔵 Reviewing: 审查代码
+```
+
+##### Revali - Requirements Analyst 💨
+
+```yaml
+角色: 需求分析师
+图标: 💨 (风之标记)
+位置: 左上角 (侦察位)
+职责:
+  - 阅读和分析需求文档
+  - 技术可行性调研
+  - 竞品分析与最佳实践研究
+  - 编写技术规格说明书
+  - 评估开发工作量
+
+工作流:
+  1. 阅读 PRD/需求文档
+  2. 进行技术调研 (WebSearch, WebFetch)
+  3. 分析现有代码库 (Grep, Glob, Read)
+  4. 输出技术方案文档
+  5. 参与技术评审
+
+状态指示:
+  - 🟢 Active: 正在分析需求
+  - 🔵 Researching: 技术调研中
+  - 🟡 Documenting: 编写文档
+```
+
+##### Mipha - Frontend Dev / UX Designer 💚
+
+```yaml
+角色: 前端开发 / UX设计师
+图标: 💚 (治愈之心)
+位置: 左下角 (设计位)
+职责:
+  - 用户界面设计与实现
+  - 交互逻辑开发
+  - CSS 样式与动画
+  - 响应式适配
+  - 用户体验优化
+
+工作流:
+  1. 根据设计稿实现 HTML/CSS
+  2. 开发前端交互逻辑 (JS/TS/React)
+  3. 优化页面性能与加载速度
+  4. 处理浏览器兼容性
+  5. 与 Backend 对接 API
+
+状态指示:
+  - 🟢 Active: 正在开发界面
+  - 🎨 Designing: 设计 UI
+  - 🔧 Refining: 优化样式
+```
+
+##### Urbosa - Backend Developer ⚡
+
+```yaml
+角色: 后端开发工程师
+图标: ⚡ (雷电)
+位置: 右下角 (构建位)
+职责:
+  - 业务逻辑实现
+  - 数据库设计与操作
+  - API 接口开发
+  - 服务端性能优化
+  - 系统架构实现
+
+工作流:
+  1. 设计数据库 Schema
+  2. 实现核心业务逻辑
+  3. 开发 RESTful/GraphQL API
+  4. 编写单元测试
+  5. 性能优化与缓存策略
+
+状态指示:
+  - 🟢 Active: 正在编写代码
+  - ⚡ Building: 构建功能
+  - 🔌 Integrating: 集成测试
+```
+
+##### Daruk - QA Engineer / DevOps 🛡️
+
+```yaml
+角色: 质量保证工程师 / DevOps
+图标: 🛡️ (护盾)
+位置: 右上角 (守护位)
+职责:
+  - 测试用例编写与执行
+  - 代码审查与质量把控
+  - CI/CD 流水线维护
+  - 安全审计与漏洞修复
+  - 自动化测试框架搭建
+
+工作流:
+  1. 根据需求编写测试用例
+  2. 执行单元测试与集成测试
+  3. 进行代码审查 (Code Review)
+  4. 配置 CI/CD 流水线
+  5. 监控生产环境稳定性
+
+状态指示:
+  - 🟢 Active: 正在测试
+  - 🧪 Testing: 执行测试
+  - 🔍 Reviewing: 代码审查
 ```
 
 ### 3. 状态机与动画设计
@@ -324,38 +537,56 @@ function getChampionByTool(toolName) {
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### 3.2 Champion 动画状态对应表
+#### 3.2 Champion 动画状态对应表 (开发场景)
 
-| 状态 | Link (Hero) | Mipha (Healer) | Revali (Scout) | Urbosa (Assault) | Daruk (Defense) |
-|------|-------------|----------------|----------------|------------------|-----------------|
-| **IDLE** | 希卡石板待机 | 三叉戟待机 | 翅膀收拢 | 雷电环绕 | 护盾持握 |
-| **WALK** | 奔跑 | 飘行 | 飞行 | 冲刺 | 稳步 |
-| **TYPE** | 操作石板 | 施法治疗 | 高空侦察 | 释放雷电 | 举盾防御 |
-| **Reading** | 阅读石板 | 祈祷 | 俯瞰 | 蓄力 | 坚守 |
+| 状态 | Link (PM) | Revali (Analyst) | Mipha (Frontend) | Urbosa (Backend) | Daruk (QA) |
+|------|-----------|------------------|------------------|------------------|------------|
+| **IDLE** | 希卡石板待机 | 风之观察 | 设计稿预览 | 代码构思 | 测试待命 |
+| **WALK** | 巡视项目 | 调研走访 | 界面调整 | 逻辑构建 | 测试执行 |
+| **TYPE** | 编写计划 | 文档撰写 | 代码实现 | 后端编码 | 编写用例 |
+| **Review** | 代码审查 | 需求评审 | UI走查 | API审核 | 质量把关 |
 
-#### 3.3 工具动画细分
+#### 3.3 开发任务动画细分
 
 ```javascript
-// 根据工具类型返回对应动画
-function getToolAnimation(champion, tool) {
-  const READING_TOOLS = ['Read', 'Grep', 'Glob', 'WebSearch', 'WebFetch'];
+// 根据开发任务类型返回对应动画
+function getTaskAnimation(champion, task) {
+  const RESEARCH_TASKS = ['requirement', 'analysis', 'research', 'documentation'];
+  const DESIGN_TASKS = ['design', 'ui', 'ux', 'prototype'];
+  const BUILD_TASKS = ['backend', 'api', 'database', 'logic'];
+  const TEST_TASKS = ['testing', 'review', 'qa', 'validation'];
 
-  // Reading 类工具 - 阅读/侦察动画
-  if (READING_TOOLS.includes(tool)) {
+  // 需求分析类任务
+  if (RESEARCH_TASKS.includes(task)) {
     return {
-      mipha: 'prayer',        // 祈祷治疗
-      revali: 'surveillance', // 高空侦察
-      urbosa: 'meditation',   // 冥想蓄力
-      daruk: 'shield_hold',   // 持盾警戒
+      revali: 'wind_survey',      // 风之调研
     }[champion];
   }
 
-  // Writing/Building 类工具 - 打字/攻击动画
+  // 设计类任务
+  if (DESIGN_TASKS.includes(task)) {
+    return {
+      mipha: 'graceful_design',   // 优雅设计
+    }[champion];
+  }
+
+  // 开发类任务
+  if (BUILD_TASKS.includes(task)) {
+    return {
+      urbosa: 'thunder_code',     // 雷电编码
+    }[champion];
+  }
+
+  // 测试类任务
+  if (TEST_TASKS.includes(task)) {
+    return {
+      daruk: 'shield_guard',      // 护盾守护
+    }[champion];
+  }
+
+  // 管理类任务
   return {
-    mipha: 'healing_wave',   // 治疗波动
-    revali: 'wind_gust',     // 风刃攻击
-    urbosa: 'thunder_strike',// 雷电攻击
-    daruk: 'shield_bash',    // 盾击
+    link: 'command_wave',         // 指挥波动
   }[champion];
 }
 ```
@@ -375,9 +606,9 @@ interface ExtensionMessage {
   status?: string;
   parentToolId?: string;
 
-  // 新增：Champion 映射
-  championType?: 'link' | 'mipha' | 'revali' | 'urbosa' | 'daruk';
-  toolCategory?: 'healer' | 'scout' | 'assault' | 'defense';
+  // 新增：Champion 映射 (开发流程)
+  championType?: 'link' | 'revali' | 'mipha' | 'urbosa' | 'daruk';
+  devPhase?: 'planning' | 'analysis' | 'design' | 'development' | 'testing' | 'deployment';
 
   // 新增：游戏化状态
   activity?: {
@@ -456,7 +687,7 @@ class GameStateAdapter {
 
 ### 5. 游戏化 UI 组件设计
 
-#### 5.1 主界面布局
+#### 5.1 主界面布局 (开发流程版本)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -500,16 +731,17 @@ class GameStateAdapter {
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### 5.2 特效系统
+#### 5.2 特效系统 (开发场景)
 
 ```javascript
-// Champion 特效配置
+// Champion 特效配置 - 软件开发主题
 const CHAMPION_EFFECTS = {
-  // 入场特效 - Matrix 数字雨
+  // 入场特效 - Matrix 代码雨 (代表代码)
   spawn: (champion) => {
     return new MatrixRainEffect({
       color: CHAMPION_COLORS[champion],
-      duration: 300
+      duration: 300,
+      chars: '01<>/;{}[]' // 代码字符
     });
   },
 
@@ -520,19 +752,21 @@ const CHAMPION_EFFECTS = {
     });
   },
 
-  // 状态特效
+  // 工作状态特效
   active: {
-    mipha:  'healing_aura',    // 绿色治疗光环
-    revali: 'wind_current',    // 风之轨迹
-    urbosa: 'thunder_surge',   // 雷电迸发
-    daruk:  'shield_glow',     // 护盾光芒
+    revali: 'wind_survey',      // 风之调研 - 需求分析
+    mipha:  'design_sparkle',   // 设计闪光 - UI设计
+    urbosa: 'code_thunder',     // 代码雷电 - 后端开发
+    daruk:  'shield_guard',     // 护盾守护 - QA测试
   },
 
-  // 工具特效
-  toolEffects: {
-    reading:  'scanning_beam',  // 扫描光束
-    writing:  'energy_pulse',   // 能量脉冲
-    bash:     'impact_wave',    // 冲击波
+  // 开发阶段特效
+  phaseEffects: {
+    requirement: 'document_scan',  // 文档扫描
+    design:      'ui_wireframe',   // UI线框
+    development: 'code_matrix',    // 代码矩阵
+    testing:     'test_pulse',     // 测试脉冲
+    deployment:  'deploy_wave',    // 部署波纹
   }
 };
 ```
@@ -563,16 +797,16 @@ ClaudePad/
 
 ## 扩展建议
 
-### 功能路线图
+### 功能路线图 (开发流程版本)
 
 | 阶段 | 功能 | 描述 | 优先级 |
 |------|------|------|--------|
-| **MVP** | 基础状态监控 | Link 主控角色 + 基础状态显示 | P0 |
-| **v0.2** | Champion 系统 | 四大 Champion 角色 + 工具映射 | P0 |
-| **v0.3** | Canvas 动画 | FSM 状态机动画 + 路径规划 | P1 |
-| **v0.4** | 特效系统 | Matrix 数字雨 + Champion 特效 | P1 |
-| **v0.5** | 数据统计 | 任务历史图表 + 效率统计 | P2 |
-| **v1.0** | 实时同步 | WebSocket + 多客户端支持 | P2 |
+| **MVP** | 基础开发团队监控 | Link (PM) + 4 人开发团队角色显示 | P0 |
+| **v0.2** | 开发阶段映射 | 需求→设计→开发→测试 流程可视化 | P0 |
+| **v0.3** | Canvas 动画 | FSM 状态机动画 + 团队协作路径 | P1 |
+| **v0.4** | 特效系统 | Matrix 代码雨 + 开发阶段特效 | P1 |
+| **v0.5** | Sprint 统计 | 燃尽图 + 团队效率分析 | P2 |
+| **v1.0** | 实时同步 | WebSocket + CI/CD 集成 | P2 |
 
 ### 未来功能
 

@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClaudePad | Link's Command Center</title>
+  <title>ClaudePad | Agent Playground</title>
   <style>
     :root {
+      /* Sheikah Slate Theme */
       --slate-bg: #0a0a0f;
       --slate-bg-light: #111118;
       --slate-bg-lighter: #1a1a24;
@@ -21,15 +22,16 @@
       --text: #e0e0e0;
       --text-muted: #888;
       --text-dark: #666;
-      --status-active: #00d4ff;
-      --status-idle: #666;
-      --status-busy: #ff9800;
-      --status-offline: #444;
+
+      /* Champion Colors */
+      --link-color: #00d4ff;
+      --mipha-color: #4ade80;
+      --revali-color: #60a5fa;
+      --urbosa-color: #fbbf24;
+      --daruk-color: #f87171;
+
       --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --radius-sm: 4px;
-      --radius-md: 8px;
-      --radius-lg: 12px;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,14 +41,14 @@
       background: var(--slate-bg);
       color: var(--text);
       min-height: 100vh;
-      line-height: 1.5;
+      overflow-x: hidden;
     }
 
     /* Header */
     .header {
       background: var(--slate-bg-light);
       border-bottom: 1px solid var(--bronze-dim);
-      padding: 12px 20px;
+      padding: 12px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -77,7 +79,7 @@
 
     .nav-links {
       display: flex;
-      gap: 12px;
+      gap: 8px;
     }
 
     .nav-link {
@@ -86,7 +88,7 @@
       font-family: var(--font-mono);
       font-size: 0.85rem;
       padding: 6px 12px;
-      border-radius: var(--radius-sm);
+      border-radius: 4px;
       transition: all 0.2s;
     }
 
@@ -95,634 +97,358 @@
       background: var(--cyan-glow);
     }
 
+    /* Main Container */
     .container {
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
       padding: 24px;
     }
 
     /* Command Center Header */
     .command-header {
-      text-align: center;
-      margin-bottom: 32px;
-      padding: 24px;
-      background: linear-gradient(135deg, var(--slate-bg-light) 0%, var(--slate-panel) 100%);
-      border: 2px solid var(--bronze-dim);
-      border-radius: var(--radius-lg);
-      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--bronze-dim);
     }
 
-    .command-header::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: linear-gradient(90deg, var(--bronze), var(--cyan), var(--bronze));
+    .command-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .command-header h1 {
+    .command-title h1 {
       font-family: var(--font-mono);
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       color: var(--bronze-light);
-      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(139, 115, 85, 0.3);
     }
 
-    .command-header p {
+    .live-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--cyan);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 600;
+      color: var(--cyan);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      margin-top: 4px;
     }
 
-    /* Main Dashboard Grid */
+    /* Main Dashboard */
     .dashboard {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 1fr 350px;
       gap: 24px;
       margin-bottom: 24px;
     }
 
-    @media (max-width: 900px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* Link Commander Panel */
-    .commander-panel {
+    /* Hyrule Map (Canvas) */
+    .map-container {
       background: var(--slate-panel);
-      border: 2px solid var(--bronze);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      text-align: center;
-      position: relative;
+      border: 1px solid var(--bronze-dim);
+      border-radius: 12px;
       overflow: hidden;
-    }
-
-    .commander-panel::before {
-      content: '◈ COMMANDER ◈';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(90deg, var(--bronze), var(--bronze-dark));
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      padding: 6px;
-      letter-spacing: 2px;
-    }
-
-    .commander-avatar {
-      width: 140px;
-      height: 140px;
-      margin: 32px auto 16px;
-      border-radius: 50%;
-      border: 4px solid var(--cyan);
-      overflow: hidden;
-      box-shadow: 0 0 30px var(--cyan-glow);
       position: relative;
+      height: 500px;
     }
 
-    .commander-avatar::after {
-      content: '♔';
+    .map-title {
       position: absolute;
-      top: -8px;
-      right: -8px;
-      width: 32px;
-      height: 32px;
-      background: var(--bronze);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1rem;
-      border: 2px solid var(--slate-panel);
-    }
-
-    .commander-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .commander-name {
+      top: 16px;
+      left: 16px;
       font-family: var(--font-mono);
-      font-size: 1.4rem;
-      color: var(--cyan);
-      margin-bottom: 4px;
-    }
-
-    .commander-title {
-      color: var(--bronze-light);
       font-size: 0.85rem;
-      margin-bottom: 20px;
-    }
-
-    /* Commander Stats */
-    .commander-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .cmd-stat {
-      background: var(--slate-bg-light);
+      color: var(--bronze-light);
+      z-index: 10;
+      background: rgba(10, 10, 15, 0.8);
+      padding: 4px 12px;
+      border-radius: 4px;
       border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-sm);
-      padding: 12px;
     }
 
-    .cmd-stat-value {
-      font-family: var(--font-mono);
-      font-size: 1.3rem;
-      color: var(--cyan);
-      font-weight: 600;
+    #hyruleCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
-    .cmd-stat-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    /* Commander Controls */
-    .commander-controls {
+    /* Side Panel */
+    .side-panel {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 16px;
     }
 
-    .cmd-btn {
-      padding: 12px;
+    /* Champion Cards */
+    .champion-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .champion-card {
+      background: var(--slate-panel);
       border: 1px solid var(--bronze-dim);
-      background: var(--slate-bg-light);
-      color: var(--text);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      border-radius: var(--radius-sm);
+      border-radius: 8px;
+      padding: 12px;
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
+    }
+
+    .champion-card:hover {
+      border-color: var(--bronze);
+      transform: translateY(-2px);
+    }
+
+    .champion-card.active {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
+    }
+
+    .champion-card.mipha:hover { border-color: var(--mipha-color); }
+    .champion-card.revali:hover { border-color: var(--revali-color); }
+    .champion-card.urbosa:hover { border-color: var(--urbosa-color); }
+    .champion-card.daruk:hover { border-color: var(--daruk-color); }
+
+    .champion-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .champion-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-    }
-
-    .cmd-btn:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    .cmd-btn.primary {
-      background: linear-gradient(135deg, var(--bronze), var(--bronze-dark));
-      border-color: var(--bronze);
-    }
-
-    .cmd-btn.primary:hover {
-      background: linear-gradient(135deg, var(--bronze-light), var(--bronze));
-    }
-
-    /* Sub-Agents Panel */
-    .subagents-panel {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
-    }
-
-    .panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--bronze-dim);
-      flex-shrink: 0;
-    }
-
-    .panel-title {
-      font-family: var(--font-mono);
-      font-size: 1rem;
-      color: var(--bronze-light);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .panel-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .panel-btn {
-      padding: 6px 12px;
-      border: 1px solid var(--bronze-dim);
-      background: var(--slate-bg-light);
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .panel-btn:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    /* Sub-Agent Grid - 2x2 Harmonious Layout */
-    .subagent-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 16px;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .subagent-card {
-      background: var(--slate-bg-light);
-      border: 2px solid var(--bronze-dim);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
-      display: flex;
-      flex-direction: column;
       overflow: hidden;
+      background: var(--slate-bg);
     }
 
-    .subagent-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--bronze);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-
-    .subagent-card:hover::before,
-    .subagent-card.active::before {
-      transform: scaleX(1);
-    }
-
-    .subagent-card:hover {
-      border-color: var(--bronze);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .subagent-card.active {
-      border-color: var(--cyan);
-      box-shadow: 0 0 20px var(--cyan-glow);
-    }
-
-    /* Card Type Indicators */
-    .subagent-card[data-type="healer"] { border-top-color: #4ade80; }
-    .subagent-card[data-type="scout"] { border-top-color: #60a5fa; }
-    .subagent-card[data-type="assault"] { border-top-color: #fbbf24; }
-    .subagent-card[data-type="defense"] { border-top-color: #f87171; }
-
-    .subagent-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-      flex-shrink: 0;
-    }
-
-    .subagent-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      border: 3px solid var(--bronze-dim);
-      overflow: hidden;
-      position: relative;
-      flex-shrink: 0;
-      transition: all 0.3s;
-    }
-
-    .subagent-card:hover .subagent-avatar,
-    .subagent-card.active .subagent-avatar {
-      border-color: var(--cyan);
-      box-shadow: 0 0 15px var(--cyan-glow);
-    }
-
-    .subagent-avatar img {
+    .champion-avatar img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
 
-    .subagent-status {
-      position: absolute;
-      bottom: 3px;
-      right: 3px;
-      width: 16px;
-      height: 16px;
+    .champion-avatar .fallback-icon {
+      font-size: 1.2rem;
+    }
+
+    .champion-card.link .champion-avatar { border-color: var(--link-color); }
+    .champion-card.mipha .champion-avatar { border-color: var(--mipha-color); }
+    .champion-card.revali .champion-avatar { border-color: var(--revali-color); }
+    .champion-card.urbosa .champion-avatar { border-color: var(--urbosa-color); }
+    .champion-card.daruk .champion-avatar { border-color: var(--daruk-color); }
+
+    .champion-info h4 {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .champion-role {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .champion-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      margin-top: 8px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      border: 3px solid var(--slate-bg-light);
     }
 
-    .subagent-status.active {
-      background: var(--status-active);
-      box-shadow: 0 0 8px var(--cyan);
-      animation: pulse 2s infinite;
-    }
-
-    .subagent-status.idle {
-      background: var(--status-idle);
-    }
-
-    .subagent-status.busy {
-      background: var(--status-busy);
-      animation: blink 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.15); opacity: 0.8; }
-    }
+    .status-dot.active { background: var(--cyan); animation: pulse 2s infinite; }
+    .status-dot.idle { background: var(--text-dark); }
+    .status-dot.busy { background: #ff9800; animation: blink 1s infinite; }
 
     @keyframes blink {
       0%, 100% { opacity: 1; }
       50% { opacity: 0.3; }
     }
 
-    .subagent-info h3 {
+    /* Quick Actions */
+    .quick-actions {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .quick-actions h3 {
       font-family: var(--font-mono);
-      font-size: 1rem;
+      font-size: 0.85rem;
       color: var(--bronze-light);
-      margin-bottom: 2px;
-    }
-
-    .subagent-info .role {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .role-icon {
-      font-size: 0.85rem;
-    }
-
-    /* Task Section */
-    .task-section {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      min-height: 0;
-    }
-
-    .task-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 6px;
-    }
-
-    .task-name {
-      font-size: 0.8rem;
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    .task-percent {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--cyan);
-      font-weight: 600;
-    }
-
-    .progress-container {
-      background: var(--slate-bg);
-      border-radius: 6px;
-      height: 8px;
-      overflow: hidden;
-      position: relative;
       margin-bottom: 12px;
     }
 
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--bronze), var(--cyan));
-      border-radius: 6px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-
-    .progress-fill::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      animation: shimmer 2s infinite;
-    }
-
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
-    }
-
-    /* Stats Row */
-    .subagent-stats {
-      display: flex;
-      justify-content: space-between;
-      padding-top: 12px;
-      border-top: 1px solid var(--bronze-dim);
-      flex-shrink: 0;
-    }
-
-    .stat-box {
-      text-align: center;
-      flex: 1;
-    }
-
-    .stat-box:not(:last-child) {
-      border-right: 1px solid var(--bronze-dim);
-    }
-
-    .stat-value {
-      font-family: var(--font-mono);
-      font-size: 1rem;
-      color: var(--cyan);
-      font-weight: 600;
-    }
-
-    .stat-label {
-      font-size: 0.6rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 2px;
-    }
-
-    /* Command Log */
-    .command-log {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-lg);
-      padding: 20px;
-    }
-
-    .log-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--bronze-light);
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
+    .action-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
 
-    .log-entries {
-      max-height: 250px;
+    .action-btn {
+      background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+      background: var(--bronze-dim);
+      border-color: var(--bronze);
+    }
+
+    .action-btn.primary {
+      background: var(--cyan-glow);
+      border-color: var(--cyan);
+      color: var(--cyan);
+    }
+
+    .action-btn.primary:hover {
+      background: var(--cyan);
+      color: var(--slate-bg);
+    }
+
+    /* Activity Log */
+    .activity-log {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: 12px;
+      height: 300px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-header {
+      padding: 16px;
+      border-bottom: 1px solid var(--bronze-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .log-header h3 {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      color: var(--bronze-light);
+    }
+
+    .log-clear {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .log-clear:hover { color: var(--cyan); }
+
+    .log-content {
+      flex: 1;
       overflow-y: auto;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
     }
 
     .log-entry {
       display: flex;
-      align-items: flex-start;
       gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--bronze-dim);
-      font-size: 0.85rem;
-    }
-
-    .log-entry:last-child {
-      border-bottom: none;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(107, 91, 79, 0.2);
     }
 
     .log-time {
-      font-family: var(--font-mono);
-      color: var(--text-muted);
-      font-size: 0.7rem;
-      min-width: 50px;
+      color: var(--text-dark);
+      white-space: nowrap;
     }
 
-    .log-agent {
-      font-family: var(--font-mono);
-      color: var(--bronze-light);
-      font-size: 0.75rem;
-      min-width: 70px;
+    .log-champion {
+      white-space: nowrap;
     }
+
+    .log-link { color: var(--link-color); }
+    .log-mipha { color: var(--mipha-color); }
+    .log-revali { color: var(--revali-color); }
+    .log-urbosa { color: var(--urbosa-color); }
+    .log-daruk { color: var(--daruk-color); }
 
     .log-action {
-      flex: 1;
-      color: var(--text);
-    }
-
-    .log-status {
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 500;
-    }
-
-    .log-status.success {
-      background: rgba(0, 212, 255, 0.1);
-      color: var(--cyan);
-    }
-
-    .log-status.pending {
-      background: rgba(255, 152, 0, 0.1);
-      color: var(--status-busy);
+      color: var(--text-muted);
     }
 
     /* Responsive */
     @media (max-width: 1200px) {
-      .subagent-grid {
-        gap: 16px;
-      }
-
-      .subagent-card {
-        padding: 20px;
-      }
-
-      .subagent-avatar {
-        width: 56px;
-        height: 56px;
-      }
-    }
-
-    @media (max-width: 900px) {
       .dashboard {
         grid-template-columns: 1fr;
       }
-
-      .commander-panel {
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: 20px;
-        align-items: center;
-      }
-
-      .commander-avatar {
-        width: 100px;
-        height: 100px;
-        margin: 0;
-      }
-
-      .commander-stats {
-        margin-bottom: 0;
-      }
-
-      .commander-controls {
-        flex-direction: row;
-        flex-wrap: wrap;
-      }
-
-      .subagent-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-      }
+      .map-container { height: 400px; }
     }
 
     @media (max-width: 600px) {
-      .container {
-        padding: 16px;
-      }
-
-      .commander-panel {
-        display: flex;
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .commander-avatar {
-        width: 120px;
-        height: 120px;
-        margin: 0 auto;
-      }
-
-      .commander-controls {
-        flex-direction: column;
-      }
-
-      .subagent-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .subagent-card {
-        padding: 20px;
-      }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .champion-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -734,312 +460,850 @@
       <span class="logo-text">ClaudePad</span>
     </a>
     <nav class="nav-links">
-      <a href="/" class="nav-link">Home</a>
+      <a href="/" class="nav-link">Sessions</a>
       <a href="/idea.html" class="nav-link">Ideas</a>
       <a href="/tips.html" class="nav-link">Tips</a>
       <a href="/playground.html" class="nav-link active">Playground</a>
     </nav>
   </header>
 
-  <main class="container">
+  <div class="container">
     <!-- Command Center Header -->
-    <section class="command-header">
-      <h1>◈ Link's Command Center ◈</h1>
-      <p>Master control interface for the Champion Squad</p>
-    </section>
+    <div class="command-header">
+      <div class="command-title">
+        <h1>🏰 Agent Playground</h1>
+        <span style="color: var(--text-muted);">|</span>
+        <span style="color: var(--bronze);">Sheikah Slate Interface</span>
+      </div>
+      <div class="live-indicator">
+        <span class="live-dot"></span>
+        <span>LIVE</span>
+      </div>
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-value" id="activeAgents">5</div>
+        <div class="stat-label">Active Agents</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="tasksCompleted">42</div>
+        <div class="stat-label">Tasks Completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="uptime">2h 15m</div>
+        <div class="stat-label">Uptime</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="cpuLoad">32%</div>
+        <div class="stat-label">CPU Load</div>
+      </div>
+    </div>
 
     <!-- Main Dashboard -->
     <div class="dashboard">
-      <!-- Link Commander Panel -->
-      <div class="commander-panel">
-        <div class="commander-avatar">
-          <img src="/asserts/zelda-icon/link.png" alt="Link" onerror="this.style.display='none'">
-        </div>
-        <div class="commander-name">Link</div>
-        <div class="commander-title">Hero of Hyrule | Squad Leader</div>
-
-        <div class="commander-stats">
-          <div class="cmd-stat">
-            <div class="cmd-stat-value" id="cmd-active">3</div>
-            <div class="cmd-stat-label">Active</div>
-          </div>
-          <div class="cmd-stat">
-            <div class="cmd-stat-value" id="cmd-tasks">128</div>
-            <div class="cmd-stat-label">Tasks</div>
-          </div>
-          <div class="cmd-stat">
-            <div class="cmd-stat-value" id="cmd-uptime">12h</div>
-            <div class="cmd-stat-label">Uptime</div>
-          </div>
-          <div class="cmd-stat">
-            <div class="cmd-stat-value" id="cmd-load">72%</div>
-            <div class="cmd-stat-label">Load</div>
-          </div>
-        </div>
-
-        <div class="commander-controls">
-          <button class="cmd-btn primary" onclick="deployAll()">🚀 Deploy All</button>
-          <button class="cmd-btn" onclick="recallAll()">📥 Recall All</button>
-          <button class="cmd-btn" onclick="refreshStatus()">↻ Refresh</button>
-          <button class="cmd-btn" onclick="toggleSim()">▶ Simulate</button>
-        </div>
+      <!-- Hyrule Map Canvas -->
+      <div class="map-container">
+        <div class="map-title">🗺️ Hyrule Map - Agent Activity</div>
+        <canvas id="hyruleCanvas"></canvas>
       </div>
 
-      <!-- Sub-Agents Panel -->
-      <div class="subagents-panel">
-        <div class="panel-header">
-          <div class="panel-title">
-            <span>◈</span>
-            <span>Champion Squad Status</span>
-          </div>
-          <div class="panel-actions">
-            <button class="panel-btn" onclick="selectAll()">Select All</button>
-            <button class="panel-btn" onclick="clearSelection()">Clear</button>
-          </div>
+      <!-- Side Panel -->
+      <div class="side-panel">
+        <!-- Champion Cards -->
+        <div class="champion-grid" id="championGrid">
+          <!-- Dynamically populated -->
         </div>
 
-        <div class="subagent-grid" id="subagent-grid">
-          <!-- Sub-agents rendered here -->
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <h3>🎮 Sprint Actions</h3>
+          <div class="action-buttons">
+            <button class="action-btn primary" onclick="deployAll()">Start Sprint</button>
+            <button class="action-btn" onclick="recallAll()">Standup</button>
+            <button class="action-btn" onclick="refreshStatus()">Code Review</button>
+            <button class="action-btn" onclick="toggleSimulation()">Simulate</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Command Log -->
-    <div class="command-log">
-      <div class="log-title">
-        <span>◈</span>
-        <span>Squad Activity Log</span>
+    <!-- Activity Log -->
+    <div class="activity-log">
+      <div class="log-header">
+        <h3>📜 Activity Log</h3>
+        <span class="log-clear" onclick="clearLog()">Clear</span>
       </div>
-      <div class="log-entries" id="log-entries">
-        <!-- Logs rendered here -->
+      <div class="log-content" id="logContent">
+        <!-- Dynamically populated -->
       </div>
     </div>
-  </main>
+  </div>
 
   <script>
-    // Sub-agents data (Link's team)
-    const subAgents = [
-      {
-        id: 'mipha',
-        name: 'Mipha',
-        role: 'Healer / Support',
-        type: 'healer',
-        icon: '💚',
-        avatar: '/asserts/zelda-icon/mipha.png',
+    // ========== CONFIGURATION ==========
+    const CHAMPIONS = {
+      link: {
+        id: 'link',
+        name: 'Link',
+        role: 'Project Manager / Tech Lead',
+        shortRole: 'PM',
+        icon: '♔',
+        avatar: '/asserts/zelda-icon/link.png',
+        color: '#00d4ff',
+        type: 'commander',
         status: 'active',
-        task: 'Healing Wave',
-        progress: 78,
-        tasksDone: 67,
-        cpu: 32
+        x: 0.5, y: 0.5,
+        tasksDone: 156,
+        description: '项目管理、架构决策、资源协调'
       },
-      {
+      revali: {
         id: 'revali',
         name: 'Revali',
-        role: 'Recon / Scout',
-        type: 'scout',
+        role: 'Requirements Analyst',
+        shortRole: 'Analyst',
         icon: '💨',
         avatar: '/asserts/zelda-icon/revali.png',
-        status: 'busy',
-        task: 'Aerial Survey',
-        progress: 45,
-        tasksDone: 23,
-        cpu: 78
+        color: '#60a5fa',
+        type: 'analyst',
+        status: 'active',
+        x: 0.2, y: 0.2,
+        tasksDone: 67,
+        description: '需求分析、技术调研、可行性评估'
       },
-      {
+      mipha: {
+        id: 'mipha',
+        name: 'Mipha',
+        role: 'Frontend / UX Designer',
+        shortRole: 'Frontend',
+        icon: '💚',
+        avatar: '/asserts/zelda-icon/mipha.png',
+        color: '#4ade80',
+        type: 'frontend',
+        status: 'idle',
+        x: 0.2, y: 0.8,
+        tasksDone: 89,
+        description: '界面设计、前端开发、用户体验优化'
+      },
+      urbosa: {
         id: 'urbosa',
         name: 'Urbosa',
-        role: 'Assault / Power',
-        type: 'assault',
+        role: 'Backend Developer',
+        shortRole: 'Backend',
         icon: '⚡',
         avatar: '/asserts/zelda-icon/urbosa.png',
-        status: 'active',
-        task: 'Thunder Strike',
-        progress: 92,
-        tasksDone: 89,
-        cpu: 38
+        color: '#fbbf24',
+        type: 'backend',
+        status: 'busy',
+        x: 0.8, y: 0.8,
+        tasksDone: 134,
+        description: '业务逻辑、API开发、数据库设计'
       },
-      {
+      daruk: {
         id: 'daruk',
         name: 'Daruk',
-        role: 'Defense / Tank',
-        type: 'defense',
+        role: 'QA / DevOps Engineer',
+        shortRole: 'QA',
         icon: '🛡️',
         avatar: '/asserts/zelda-icon/darurk.png',
+        color: '#f87171',
+        type: 'qa',
         status: 'idle',
-        task: 'Shield Guard',
-        progress: 25,
-        tasksDone: 12,
-        cpu: 15
+        x: 0.8, y: 0.2,
+        tasksDone: 56,
+        description: '测试验证、代码审查、CI/CD'
       }
-    ];
+    };
 
-    let selectedAgents = new Set();
-    let simInterval = null;
+    // 开发阶段到 Champion 映射
+    const DEV_PHASE_MAP = {
+      'requirement': 'revali', 'analysis': 'revali', 'research': 'revali',
+      'design': 'mipha', 'ui': 'mipha', 'ux': 'mipha', 'frontend': 'mipha',
+      'backend': 'urbosa', 'api': 'urbosa', 'database': 'urbosa', 'logic': 'urbosa',
+      'testing': 'daruk', 'review': 'daruk', 'qa': 'daruk', 'deploy': 'daruk',
+      'planning': 'link', 'coordination': 'link', 'architecture': 'link'
+    };
 
-    // Activity log
-    const logs = [
-      { time: '14:32', agent: 'Mipha', action: 'Restored squad health', status: 'success' },
-      { time: '14:28', agent: 'Revali', action: 'Detected enemy movement', status: 'pending' },
-      { time: '14:25', agent: 'Urbosa', action: 'Charged lightning attack', status: 'success' },
-      { time: '14:20', agent: 'Daruk', action: 'Activated shield barrier', status: 'success' },
-      { time: '14:15', agent: 'Link', action: 'Issued new directive', status: 'success' },
-    ];
+    // 文件类型到 Champion 映射
+    const FILE_TYPE_MAP = {
+      '.md': 'revali', '.txt': 'revali', 'README': 'revali', 'PRD': 'revali',
+      '.html': 'mipha', '.css': 'mipha', '.scss': 'mipha', '.tsx': 'mipha', '.jsx': 'mipha', '.vue': 'mipha',
+      '.py': 'urbosa', '.js': 'urbosa', '.ts': 'urbosa', '.go': 'urbosa', '.sql': 'urbosa',
+      '.test.js': 'daruk', '.spec.ts': 'daruk', 'Dockerfile': 'daruk', '.yml': 'daruk'
+    };
 
-    function renderSubAgents() {
-      const grid = document.getElementById('subagent-grid');
-      grid.innerHTML = subAgents.map(agent => `
-        <div class="subagent-card ${selectedAgents.has(agent.id) ? 'active' : ''}"
-             onclick="toggleSelect('${agent.id}')"
-             data-id="${agent.id}"
-             data-type="${agent.type}">
-          <div class="subagent-header">
-            <div class="subagent-avatar">
-              <img src="${agent.avatar}" alt="${agent.name}"
-                   onerror="this.parentElement.innerHTML='<div style=\"display:flex;align-items:center;justify-content:center;height:100%;font-size:1.5rem;\">◈</div>'">
-              <div class="subagent-status ${agent.status}"></div>
-            </div>
-            <div class="subagent-info">
-              <h3>${agent.name}</h3>
-              <div class="role">
-                <span class="role-icon">${agent.icon}</span>
-                <span>${agent.role}</span>
-              </div>
-            </div>
-          </div>
+    // ========== STATE ==========
+    let canvas, ctx;
+    let animationId;
+    let isSimulating = false;
+    let characters = [];
+    let logEntries = [];
 
-          <div class="task-section">
-            <div class="task-header">
-              <span class="task-name">${agent.task}</span>
-              <span class="task-percent">${agent.progress}%</span>
-            </div>
-            <div class="progress-container">
-              <div class="progress-fill" style="width: ${agent.progress}%"></div>
-            </div>
+    // Westworld-style wandering and dialogue system
+    let dialogueBubbles = [];
+    const DIALOGUES = {
+      link: ['Let\'s plan the sprint', 'Code review needed', 'Architecture looks good', 'Ship it!'],
+      revali: ['Analyzing requirements...', 'This tech stack looks promising', 'Let me research that', 'Found a solution!'],
+      mipha: ['Designing the UI...', 'This color palette works', 'Responsive layout done', 'UX improved!'],
+      urbosa: ['Building the API...', 'Database optimized', 'Cache layer added', 'Performance boosted!'],
+      daruk: ['Running tests...', 'Bug found!', 'All tests passing', 'Deploying to prod!']
+    };
 
-            <div class="subagent-stats">
-              <div class="stat-box">
-                <div class="stat-value">${agent.tasksDone}</div>
-                <div class="stat-label">Tasks</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value">${agent.cpu}%</div>
-                <div class="stat-label">Load</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-value">${agent.status}</div>
-                <div class="stat-label">Status</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      updateCommanderStats();
+    function initCharacters() {
+      characters = Object.values(CHAMPIONS).map(champ => ({
+        ...champ,
+        state: 'IDLE',
+        targetX: champ.x,
+        targetY: champ.y,
+        progress: 0,
+        currentTool: null,
+        wanderTimer: 0,
+        dialogueTimer: 0,
+        currentDialogue: null
+      }));
     }
 
-    function renderLogs() {
-      const container = document.getElementById('log-entries');
-      container.innerHTML = logs.map(log => `
-        <div class="log-entry">
-          <span class="log-time">${log.time}</span>
-          <span class="log-agent">${log.agent}</span>
-          <span class="log-action">${log.action}</span>
-          <span class="log-status ${log.status}">${log.status}</span>
-        </div>
-      `).join('');
+    // ========== INITIALIZATION ==========
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('DOMContentLoaded fired');
+      initCanvas();
+      console.log('Canvas initialized, size:', canvas.width, canvas.height);
+      await loadAvatarImages();
+      console.log('Images loaded:', imagesLoaded, Object.keys(avatarImages));
+      initCharacters();
+      console.log('Characters initialized:', characters.length);
+      renderChampionCards();
+      addLogEntry('link', 'Project initialized - Development Team Ready');
+      addLogEntry('revali', 'Requirements analysis systems online');
+      addLogEntry('mipha', 'UI/UX design tools ready');
+      addLogEntry('urbosa', 'Backend development environment active');
+      addLogEntry('daruk', 'QA & Testing frameworks loaded');
+      console.log('Starting animation...');
+      startAnimation();
+    });
+
+    function initCanvas() {
+      canvas = document.getElementById('hyruleCanvas');
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
     }
 
-    function updateCommanderStats() {
-      const activeCount = subAgents.filter(a => a.status === 'active').length;
-      const totalTasks = subAgents.reduce((sum, a) => sum + a.tasksDone, 0);
-      const avgCpu = Math.round(subAgents.reduce((sum, a) => sum + a.cpu, 0) / subAgents.length);
-
-      document.getElementById('cmd-active').textContent = activeCount;
-      document.getElementById('cmd-tasks').textContent = totalTasks;
-      document.getElementById('cmd-load').textContent = avgCpu + '%';
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
     }
 
-    function toggleSelect(agentId) {
-      if (selectedAgents.has(agentId)) {
-        selectedAgents.delete(agentId);
-      } else {
-        selectedAgents.add(agentId);
-      }
-      renderSubAgents();
-    }
+    // ========== CANVAS IMAGE CACHE ==========
+    const avatarImages = {};
+    let imagesLoaded = false;
 
-    function selectAll() {
-      subAgents.forEach(a => selectedAgents.add(a.id));
-      renderSubAgents();
-    }
-
-    function clearSelection() {
-      selectedAgents.clear();
-      renderSubAgents();
-    }
-
-    function deployAll() {
-      subAgents.forEach(agent => {
-        agent.status = 'active';
-        agent.progress = Math.min(100, agent.progress + 10);
+    function loadAvatarImages() {
+      const promises = Object.values(CHAMPIONS).map(champ => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            console.log('Image loaded:', champ.id);
+            avatarImages[champ.id] = img;
+            resolve();
+          };
+          img.onerror = () => {
+            console.log('Image failed to load:', champ.avatar);
+            resolve();
+          };
+          img.src = champ.avatar;
+        });
       });
-      addLog('Link', 'Deployed all champions', 'success');
-      renderSubAgents();
+      return Promise.all(promises).then(() => {
+        imagesLoaded = true;
+        console.log('All images processed, loaded:', Object.keys(avatarImages));
+      });
+    }
+
+    // ========== RENDERING ==========
+    function startAnimation() {
+      console.log('Animation started');
+      let frameCount = 0;
+      function animate() {
+        frameCount++;
+        if (frameCount % 60 === 0) console.log('Frame', frameCount, 'chars:', characters.length);
+        drawMap();
+        updateCharacters();
+        drawCharacters();
+        drawDialogues();
+        animationId = requestAnimationFrame(animate);
+      }
+      animate();
+    }
+
+    function drawMap() {
+      // Clear canvas
+      ctx.fillStyle = '#0a0a0f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw grid
+      ctx.strokeStyle = 'rgba(107, 91, 79, 0.2)';
+      ctx.lineWidth = 1;
+      const gridSize = 50;
+
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw decorative elements (ancient Sheikah symbols)
+      ctx.strokeStyle = 'rgba(139, 115, 85, 0.1)';
+      ctx.lineWidth = 2;
+
+      // Center circle (Link's position area)
+      ctx.beginPath();
+      ctx.arc(canvas.width * 0.5, canvas.height * 0.5, 80, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Draw zone labels
+      const zones = [
+        { x: 0.2, y: 0.15, label: 'REQUIREMENTS', color: CHAMPIONS.revali.color },
+        { x: 0.2, y: 0.85, label: 'FRONTEND', color: CHAMPIONS.mipha.color },
+        { x: 0.8, y: 0.85, label: 'BACKEND', color: CHAMPIONS.urbosa.color },
+        { x: 0.8, y: 0.15, label: 'QA/DEVOPS', color: CHAMPIONS.daruk.color }
+      ];
+
+      zones.forEach(zone => {
+        ctx.fillStyle = zone.color + '60';
+        ctx.font = '10px "SF Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(zone.label, canvas.width * zone.x, canvas.height * zone.y);
+      });
+
+      // Draw Hyrule landscape elements (mountains)
+      drawHyruleMountains();
+    }
+
+    // Draw Hyrule-style mountains
+    function drawHyruleMountains() {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Mountain ranges - stylized triangles with gradients
+      const mountains = [
+        // Background mountains (distant)
+        { x: 0.05, y: 0.35, width: 0.12, height: 0.15, color: '#1a1a2e', opacity: 0.4 },
+        { x: 0.88, y: 0.4, width: 0.1, height: 0.12, color: '#1a1a2e', opacity: 0.4 },
+        { x: 0.45, y: 0.08, width: 0.15, height: 0.1, color: '#1a1a2e', opacity: 0.3 },
+
+        // Mid-ground mountains
+        { x: 0.35, y: 0.25, width: 0.08, height: 0.1, color: '#16213e', opacity: 0.5 },
+        { x: 0.6, y: 0.3, width: 0.1, height: 0.12, color: '#16213e', opacity: 0.5 },
+        { x: 0.08, y: 0.6, width: 0.1, height: 0.15, color: '#16213e', opacity: 0.5 },
+        { x: 0.9, y: 0.65, width: 0.08, height: 0.1, color: '#16213e', opacity: 0.5 },
+
+        // Foreground mountains (closer, more visible)
+        { x: 0.02, y: 0.45, width: 0.06, height: 0.12, color: '#0f3460', opacity: 0.6 },
+        { x: 0.95, y: 0.5, width: 0.05, height: 0.1, color: '#0f3460', opacity: 0.6 },
+        { x: 0.5, y: 0.92, width: 0.12, height: 0.08, color: '#0f3460', opacity: 0.5 },
+      ];
+
+      mountains.forEach(m => {
+        const mx = m.x * w;
+        const my = m.y * h;
+        const mw = m.width * w;
+        const mh = m.height * h;
+
+        // Create gradient for mountain
+        const gradient = ctx.createLinearGradient(mx, my - mh, mx, my);
+        gradient.addColorStop(0, m.color);
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = m.opacity;
+
+        // Draw mountain as triangle
+        ctx.beginPath();
+        ctx.moveTo(mx - mw / 2, my);
+        ctx.lineTo(mx, my - mh);
+        ctx.lineTo(mx + mw / 2, my);
+        ctx.closePath();
+        ctx.fill();
+
+        // Draw snow cap for taller mountains
+        if (m.height > 0.12) {
+          ctx.fillStyle = 'rgba(200, 200, 220, 0.3)';
+          ctx.beginPath();
+          ctx.moveTo(mx - mw / 6, my - mh * 0.6);
+          ctx.lineTo(mx, my - mh);
+          ctx.lineTo(mx + mw / 6, my - mh * 0.6);
+          ctx.lineTo(mx, my - mh * 0.5);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+      });
+
+      // Draw some hills (rounded)
+      const hills = [
+        { x: 0.25, y: 0.95, width: 0.3, height: 0.08, color: '#1a1a24' },
+        { x: 0.75, y: 0.95, width: 0.25, height: 0.06, color: '#1a1a24' },
+        { x: 0.5, y: 0.05, width: 0.2, height: 0.05, color: '#1a1a24' },
+      ];
+
+      hills.forEach(hill => {
+        const hx = hill.x * w;
+        const hy = hill.y * h;
+        const hw = hill.width * w;
+        const hh = hill.height * h;
+
+        const gradient = ctx.createRadialGradient(hx, hy - hh, 0, hx, hy, hw);
+        gradient.addColorStop(0, hill.color);
+        gradient.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = gradient;
+        ctx.globalAlpha = 0.3;
+
+        ctx.beginPath();
+        ctx.ellipse(hx, hy, hw / 2, hh, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+      });
+
+      // Draw some decorative trees (simple triangles)
+      const trees = [
+        { x: 0.03, y: 0.55, size: 15 },
+        { x: 0.06, y: 0.58, size: 12 },
+        { x: 0.94, y: 0.6, size: 14 },
+        { x: 0.97, y: 0.57, size: 10 },
+        { x: 0.48, y: 0.88, size: 12 },
+        { x: 0.52, y: 0.9, size: 14 },
+      ];
+
+      trees.forEach(tree => {
+        const tx = tree.x * w;
+        const ty = tree.y * h;
+        const ts = tree.size;
+
+        // Tree trunk
+        ctx.fillStyle = '#4a3f37';
+        ctx.fillRect(tx - 2, ty, 4, ts / 3);
+
+        // Tree foliage (triangle)
+        ctx.fillStyle = 'rgba(74, 175, 80, 0.3)';
+        ctx.beginPath();
+        ctx.moveTo(tx - ts / 2, ty);
+        ctx.lineTo(tx, ty - ts);
+        ctx.lineTo(tx + ts / 2, ty);
+        ctx.closePath();
+        ctx.fill();
+      });
+    }
+
+    function updateCharacters() {
+      const now = Date.now();
+
+      characters.forEach(char => {
+        // Westworld-style wandering
+        if (char.state === 'IDLE' && isSimulating) {
+          char.wanderTimer = (char.wanderTimer || 0) + 1;
+
+          // Randomly start wandering every 3-8 seconds
+          if (char.wanderTimer > 180 + Math.random() * 300) {
+            char.wanderTimer = 0;
+            startWandering(char);
+          }
+
+          // Random dialogue
+          char.dialogueTimer = (char.dialogueTimer || 0) + 1;
+          if (char.dialogueTimer > 300 + Math.random() * 600 && !char.currentDialogue) {
+            char.dialogueTimer = 0;
+            showDialogue(char);
+          }
+        }
+
+        // Handle movement
+        if (char.state === 'WALK' || char.state === 'WANDER') {
+          const dx = char.targetX - char.x;
+          const dy = char.targetY - char.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist > 0.01) {
+            char.x += dx * 0.015;
+            char.y += dy * 0.015;
+          } else {
+            char.x = char.targetX;
+            char.y = char.targetY;
+            char.state = 'IDLE';
+
+            // Return to base position after wandering
+            if (char.returnToBase) {
+              const base = CHAMPIONS[char.id];
+              setTimeout(() => {
+                char.targetX = base.x;
+                char.targetY = base.y;
+                char.state = 'WALK';
+                char.returnToBase = false;
+              }, 1000 + Math.random() * 2000);
+            }
+          }
+        }
+
+        // Update dialogue timer
+        if (char.currentDialogue) {
+          char.currentDialogue.timer--;
+          if (char.currentDialogue.timer <= 0) {
+            char.currentDialogue = null;
+          }
+        }
+      });
+
+      // Update dialogue bubbles
+      dialogueBubbles = dialogueBubbles.filter(bubble => {
+        bubble.timer--;
+        return bubble.timer > 0;
+      });
+    }
+
+    function startWandering(char) {
+      // Generate random target within bounds (keeping some margin)
+      const margin = 0.15;
+      char.targetX = margin + Math.random() * (1 - margin * 2);
+      char.targetY = margin + Math.random() * (1 - margin * 2);
+      char.state = 'WANDER';
+      char.returnToBase = true;
+
+      // Show wander dialogue
+      const wanderLines = {
+        link: ['Checking on the team...'],
+        revali: ['Looking for requirements...'],
+        mipha: ['Exploring design ideas...'],
+        urbosa: ['Checking the codebase...'],
+        daruk: ['Patrolling for bugs...']
+      };
+
+      if (Math.random() > 0.7) {
+        showDialogue(char, wanderLines[char.id][0]);
+      }
+    }
+
+    function showDialogue(char, text = null) {
+      const lines = text ? [text] : DIALOGUES[char.id];
+      const line = text || lines[Math.floor(Math.random() * lines.length)];
+
+      char.currentDialogue = {
+        text: line,
+        timer: 180 // Show for 3 seconds (at 60fps)
+      };
+
+      dialogueBubbles.push({
+        charId: char.id,
+        text: line,
+        timer: 180
+      });
+    }
+
+    function drawDialogues() {
+      characters.forEach(char => {
+        if (char.currentDialogue) {
+          const x = char.x * canvas.width;
+          const y = char.y * canvas.height - 45;
+
+          ctx.font = '12px "SF Mono", monospace';
+          const textWidth = ctx.measureText(char.currentDialogue.text).width;
+          const padding = 10;
+          const bubbleWidth = textWidth + padding * 2;
+          const bubbleHeight = 24;
+
+          // Draw bubble background
+          ctx.fillStyle = 'rgba(19, 19, 26, 0.95)';
+          ctx.strokeStyle = char.color;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.roundRect(x - bubbleWidth / 2, y - bubbleHeight / 2, bubbleWidth, bubbleHeight, 6);
+          ctx.fill();
+          ctx.stroke();
+
+          // Draw tail
+          ctx.beginPath();
+          ctx.moveTo(x - 5, y + bubbleHeight / 2);
+          ctx.lineTo(x, y + bubbleHeight / 2 + 6);
+          ctx.lineTo(x + 5, y + bubbleHeight / 2);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Draw text
+          ctx.fillStyle = '#e0e0e0';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(char.currentDialogue.text, x, y);
+        }
+      });
+    }
+
+    function drawCharacters() {
+      console.log('drawCharacters called, characters:', characters.length, 'imagesLoaded:', imagesLoaded);
+      if (characters.length === 0) {
+        console.log('No characters to draw');
+        return;
+      }
+      characters.forEach(char => {
+        const x = char.x * canvas.width;
+        const y = char.y * canvas.height;
+        const size = char.type === 'commander' ? 60 : 50;
+
+        // Draw connection lines between commander and champions
+        if (char.type !== 'commander') {
+          const link = characters.find(c => c.type === 'commander');
+          if (link && char.status === 'active') {
+            ctx.strokeStyle = char.color + '40';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(link.x * canvas.width, link.y * canvas.height);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+
+        // Draw glow effect for active status
+        if (char.status === 'active') {
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
+          gradient.addColorStop(0, char.color + '40');
+          gradient.addColorStop(1, 'transparent');
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Draw character circle background
+        ctx.fillStyle = '#13131a';
+        ctx.strokeStyle = char.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // Draw avatar image or fallback to icon
+        if (imagesLoaded && avatarImages[char.id]) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x, y, size / 2 - 3, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(avatarImages[char.id], x - size / 2 + 3, y - size / 2 + 3, size - 6, size - 6);
+          ctx.restore();
+        } else {
+          // Fallback to icon
+          ctx.fillStyle = char.color;
+          ctx.font = `${size * 0.5}px Arial`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(char.icon, x, y);
+        }
+
+        // Draw name label
+        ctx.fillStyle = '#e0e0e0';
+        ctx.font = 'bold 12px "SF Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(char.name, x, y + size / 2 + 15);
+
+        // Draw role label
+        ctx.fillStyle = '#888';
+        ctx.font = '10px "SF Mono", monospace';
+        ctx.fillText(char.shortRole, x, y + size / 2 + 28);
+
+        // Draw state indicator
+        if (char.state === 'TYPE') {
+          const time = Date.now() / 200;
+          for (let i = 0; i < 3; i++) {
+            const dotY = y - size / 2 - 10 - Math.sin(time + i) * 3;
+            ctx.fillStyle = char.color;
+            ctx.beginPath();
+            ctx.arc(x - 8 + i * 8, dotY, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
+    }
+
+    // ========== CHAMPION CARDS ==========
+    function renderChampionCards() {
+      const grid = document.getElementById('championGrid');
+      grid.innerHTML = characters.map(char => `
+        <div class="champion-card ${char.id}" onclick="selectChampion('${char.id}')" title="${char.description}">
+          <div class="champion-header">
+            <div class="champion-avatar ${char.id}">
+              <img src="${char.avatar}" alt="${char.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\\'fallback-icon\\'>${char.icon}</span>';">
+            </div>
+            <div class="champion-info">
+              <h4>${char.name}</h4>
+              <div class="champion-role">${char.shortRole}</div>
+            </div>
+          </div>
+          <div class="champion-status">
+            <span class="status-dot ${char.status}"></span>
+            <span>${char.status.toUpperCase()}</span>
+            <span style="margin-left: auto; color: var(--text-muted);">${char.tasksDone}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function selectChampion(id) {
+      document.querySelectorAll('.champion-card').forEach(card => {
+        card.classList.remove('active');
+      });
+      document.querySelector(`.champion-card.${id}`).classList.add('active');
+
+      const char = characters.find(c => c.id === id);
+      addLogEntry(id, `Selected: ${char.name}`);
+    }
+
+    // ========== ACTIVITY LOG ==========
+    function addLogEntry(championId, action) {
+      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+      const champion = CHAMPIONS[championId];
+
+      logEntries.unshift({ time, championId, champion: champion.name, action });
+      if (logEntries.length > 20) logEntries.pop();
+
+      renderLog();
+    }
+
+    function renderLog() {
+      const container = document.getElementById('logContent');
+      container.innerHTML = logEntries.map(entry => `
+        <div class="log-entry">
+          <span class="log-time">${entry.time}</span>
+          <span class="log-champion log-${entry.championId}">${entry.champion} ${CHAMPIONS[entry.championId].icon}</span>
+          <span class="log-action">${entry.action}</span>
+        </div>
+      `).join('');
+    }
+
+    function clearLog() {
+      logEntries = [];
+      renderLog();
+    }
+
+    // ========== QUICK ACTIONS ==========
+    function deployAll() {
+      characters.forEach(char => {
+        if (char.type !== 'commander') {
+          char.status = 'active';
+          char.state = 'WALK';
+          // Move towards center then back
+          char.targetX = 0.5 + (Math.random() - 0.5) * 0.3;
+          char.targetY = 0.5 + (Math.random() - 0.5) * 0.3;
+        }
+      });
+      renderChampionCards();
+      addLogEntry('link', 'Deploy All command issued');
+      updateStats();
     }
 
     function recallAll() {
-      subAgents.forEach(agent => {
-        agent.status = 'idle';
-        agent.progress = Math.max(0, agent.progress - 10);
+      characters.forEach(char => {
+        if (char.type !== 'commander') {
+          char.status = 'idle';
+          char.state = 'WALK';
+          // Return to original positions
+          const original = CHAMPIONS[char.id];
+          char.targetX = original.x;
+          char.targetY = original.y;
+        }
       });
-      addLog('Link', 'Recalled all champions', 'success');
-      renderSubAgents();
+      renderChampionCards();
+      addLogEntry('link', 'Recall All command issued');
+      updateStats();
     }
 
     function refreshStatus() {
-      subAgents.forEach(agent => {
-        agent.cpu = Math.max(10, Math.min(95, agent.cpu + (Math.random() - 0.5) * 20));
-        agent.progress = Math.max(0, Math.min(100, agent.progress + (Math.random() - 0.5) * 10));
+      characters.forEach(char => {
+        char.status = ['active', 'idle', 'busy'][Math.floor(Math.random() * 3)];
       });
-      addLog('Link', 'Refreshed squad status', 'success');
-      renderSubAgents();
+      renderChampionCards();
+      addLogEntry('link', 'Status refreshed');
+      updateStats();
     }
 
-    function toggleSim() {
-      if (simInterval) {
-        clearInterval(simInterval);
-        simInterval = null;
-        addLog('Link', 'Simulation stopped', 'success');
-      } else {
-        simInterval = setInterval(() => {
-          subAgents.forEach(agent => {
-            // Random status changes
-            if (Math.random() < 0.1) {
-              const statuses = ['active', 'idle', 'busy'];
-              agent.status = statuses[Math.floor(Math.random() * statuses.length)];
-            }
-            agent.cpu = Math.max(5, Math.min(95, agent.cpu + (Math.random() - 0.5) * 10));
-            agent.progress = Math.max(0, Math.min(100, agent.progress + (Math.random() - 0.5) * 5));
-          });
-          renderSubAgents();
-        }, 2000);
-        addLog('Link', 'Simulation started', 'success');
+    function toggleSimulation() {
+      isSimulating = !isSimulating;
+      addLogEntry('link', `Simulation ${isSimulating ? 'started' : 'stopped'}`);
+
+      if (isSimulating) {
+        // Simulate random activities
+        simulateActivities();
       }
     }
 
-    function addLog(agent, action, status) {
-      const now = new Date();
-      const time = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
-      logs.unshift({ time, agent, action, status });
-      if (logs.length > 20) logs.pop();
-      renderLogs();
+    function simulateActivities() {
+      if (!isSimulating) return;
+
+      // Randomly activate a developer
+      const subAgents = characters.filter(c => c.type !== 'commander');
+      const randomAgent = subAgents[Math.floor(Math.random() * subAgents.length)];
+
+      if (Math.random() > 0.6) {
+        // Development phase tasks
+        const tasks = {
+          revali: ['Analyzing requirements', 'Researching tech stack', 'Reviewing PRD', 'Estimating effort'],
+          mipha: ['Designing UI components', 'Implementing CSS', 'Adding animations', 'Responsive layout'],
+          urbosa: ['Building API endpoint', 'Database migration', 'Business logic', 'Performance tuning'],
+          daruk: ['Writing unit tests', 'Code review', 'Security audit', 'CI/CD pipeline']
+        };
+
+        const agentTasks = tasks[randomAgent.id];
+        const task = agentTasks[Math.floor(Math.random() * agentTasks.length)];
+        const target = generateRandomTarget();
+
+        randomAgent.state = 'TYPE';
+        randomAgent.status = 'busy';
+        addLogEntry(randomAgent.id, `${task}: ${target}`);
+
+        setTimeout(() => {
+          randomAgent.state = 'IDLE';
+          randomAgent.status = 'active';
+          renderChampionCards();
+        }, 2000);
+
+        renderChampionCards();
+        updateStats();
+      }
+
+      setTimeout(simulateActivities, 3000);
     }
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', () => {
-      renderSubAgents();
-      renderLogs();
-    });
+    function generateRandomTarget() {
+      const targets = [
+        // Requirements
+        'user-authentication.md', 'api-specification.yml', 'database-schema.sql',
+        // Frontend
+        'LoginForm.tsx', 'Dashboard.css', 'Button component', 'UserProfile.jsx',
+        // Backend
+        'authController.py', 'userService.js', 'database.ts', 'redis-cache.go',
+        // QA
+        'auth.test.js', 'integration.spec.ts', 'Dockerfile', 'github-actions.yml'
+      ];
+      return targets[Math.floor(Math.random() * targets.length)];
+    }
+
+    function updateStats() {
+      const activeCount = characters.filter(c => c.status === 'active' || c.status === 'busy').length;
+      document.getElementById('activeAgents').textContent = activeCount;
+      document.getElementById('cpuLoad').textContent = Math.floor(20 + Math.random() * 40) + '%';
+    }
   </script>
 </body>
 </html>
