@@ -4,6 +4,8 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 
 ## Update
 
+- **v0.3.08.2** - Redesigned Agent Playground with software development team theme. Link (PM) coordinates with Revali (Analyst), Mipha (Frontend), Urbosa (Backend), and Daruk (QA). Added Westworld-style character wandering, dialogue system, and Hyrule landscape elements (mountains, hills, trees) to the Canvas map.
+
 - **v0.3.08** - Added Agent Playground with Zelda-themed activity monitoring. Features Link as Commander with Mipha (Healer), Revali (Scout), Urbosa (Assault), and Daruk (Defense) as sub-agents. Real-time status tracking, activity logs, and command center interface with Sheikah Slate theme.
 
 - **v0.2.31** - Optimized session loading with multi-level caching (memory + file cache), pagination support, and enhanced terminal experience. Fixed token counting and improved error handling. Refactored terminal UI for better session information display.
