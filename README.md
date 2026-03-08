@@ -4,6 +4,8 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 
 ## Update
 
+- **v0.3.08** - Added Agent Playground with Zelda-themed activity monitoring. Features Link as Commander with Mipha (Healer), Revali (Scout), Urbosa (Assault), and Daruk (Defense) as sub-agents. Real-time status tracking, activity logs, and command center interface with Sheikah Slate theme.
+
 - **v0.2.31** - Optimized session loading with multi-level caching (memory + file cache), pagination support, and enhanced terminal experience. Fixed token counting and improved error handling. Refactored terminal UI for better session information display.
 
 - **v0.2.30** - Added CC Tips page for browsing Claude Code tips. Random tip display with "Next Tip" button, full-text search, and copy to clipboard. Pure HTML frontend with Sheikah Slate theme.
@@ -25,6 +27,7 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 - **Real-time I/O** - WebSocket-based terminal streaming via node-pty
 - **CC Ideas** - Capture and manage spontaneous inspiration with status tracking
 - **CC Tips** - Browse Claude Code tips with random display, search, and copy functionality
+- **Agent Playground** - Zelda-themed Agent activity dashboard with Link as Commander and four Champions (Mipha, Revali, Urbosa, Daruk) for real-time monitoring
 
 ## Quick Start
 
@@ -41,6 +44,7 @@ Visit http://localhost:8080
 - **Sessions** (`/`) - View and manage Claude Code sessions
 - **Ideas** (`/idea.html`) - Capture and track inspiration
 - **Tips** (`/tips.html`) - Browse CC Tips
+- **Playground** (`/playground.html`) - Agent activity dashboard with Zelda theme
 
 ## License
 
