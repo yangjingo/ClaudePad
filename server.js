@@ -9,6 +9,12 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 import * as pty from 'node-pty';
 import { homedir, userInfo, networkInterfaces } from 'node:os';
+import {
+  addServer, removeServer, getServers, getServerConfig,
+  testConnection, execCommand, getRemoteSessions,
+  createPTYSession, writeToPTY, closePTYSession, resizePTY, getPTYSession
+} from './ssh-manager.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '8080');
 const CLAUDE_DIR = join(homedir(), '.claude');
@@ -72,6 +78,22 @@ async function getSessions() {
     }
 }
 const json = (res, data, status = 200) => { res.writeHead(status, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(data)); };
+
+// Helper to parse request body
+async function parseBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => {
+      try {
+        resolve(JSON.parse(data));
+      } catch {
+        reject(new Error('Invalid JSON'));
+      }
+    });
+    req.on('error', reject);
+  });
+}
 async function getConfig() {
     const settingsPath = join(homedir(), '.claude', 'settings.json');
     let settings = {};
@@ -132,12 +154,109 @@ const server = createServer(async (req, res) => {
     // Parse URL to handle query params
     const urlPath = url.split('?')[0];
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
     if (method === 'OPTIONS') {
         res.writeHead(204);
         res.end();
         return;
     }
+
+    // ===== Remote Server Management API =====
+    // GET /api/servers - List all configured remote servers
+    if (urlPath === '/api/servers' && method === 'GET') {
+        return json(res, { servers: getServers() });
+    }
+
+    // POST /api/servers - Add a new remote server
+    if (urlPath === '/api/servers' && method === 'POST') {
+        try {
+            const body = await parseBody(req);
+            if (!body.id || !body.host || !body.username || !body.password) {
+                return json(res, { error: 'Missing required fields: id, host, username, password' }, 400);
+            }
+            addServer(body.id, {
+                name: body.name || body.host,
+                host: body.host,
+                port: body.port || 22,
+                username: body.username,
+                password: body.password
+            });
+            return json(res, { success: true, server: { id: body.id, name: body.name || body.host, host: body.host, port: body.port || 22, username: body.username } });
+        } catch (e) {
+            return json(res, { error: e.message }, 400);
+        }
+    }
+
+    // DELETE /api/servers/:id - Remove a remote server
+    const serverDeleteMatch = urlPath.match(/^\/api\/servers\/([^\/]+)$/);
+    if (serverDeleteMatch && method === 'DELETE') {
+        const serverId = serverDeleteMatch[1];
+        removeServer(serverId);
+        return json(res, { success: true });
+    }
+
+    // POST /api/servers/:id/test - Test SSH connection
+    const serverTestMatch = urlPath.match(/^\/api\/servers\/([^\/]+)\/test$/);
+    if (serverTestMatch && method === 'POST') {
+        const serverId = serverTestMatch[1];
+        try {
+            await testConnection(serverId);
+            return json(res, { success: true, connected: true });
+        } catch (e) {
+            return json(res, { success: false, error: e.message }, 500);
+        }
+    }
+
+    // GET /api/servers/:id/sessions - Get remote sessions from a server
+    const remoteSessionsMatch = urlPath.match(/^\/api\/servers\/([^\/]+)\/sessions$/);
+    if (remoteSessionsMatch && method === 'GET') {
+        const serverId = remoteSessionsMatch[1];
+        try {
+            const sessions = await getRemoteSessions(serverId);
+            return json(res, { sessions });
+        } catch (e) {
+            return json(res, { error: e.message }, 500);
+        }
+    }
+
+    // POST /api/servers/:serverId/sessions/:sessionId/terminal - Start SSH terminal
+    const sshTerminalMatch = urlPath.match(/^\/api\/servers\/([^\/]+)\/sessions\/([^\/]+)\/terminal$/);
+    if (sshTerminalMatch && method === 'POST') {
+        const serverId = sshTerminalMatch[1];
+        const sessionId = sshTerminalMatch[2];
+
+        // Check if session already exists
+        const existingSession = getPTYSession(serverId, sessionId);
+        if (existingSession) {
+            return json(res, { status: 'already_running' });
+        }
+
+        try {
+            // Create PTY session via SSH
+            const session = await createPTYSession(serverId, sessionId);
+
+            // Store session info for WebSocket connection
+            const wsKey = `ssh:${serverId}:${sessionId}`;
+            terminals.set(wsKey, {
+                type: 'ssh',
+                serverId,
+                sessionId,
+                session,
+                emitter: session.emitter
+            });
+
+            // Handle session close
+            session.emitter.on('close', () => {
+                terminals.delete(wsKey);
+            });
+
+            return json(res, { status: 'started', serverId, sessionId });
+        } catch (e) {
+            return json(res, { error: e.message }, 500);
+        }
+    }
+
+    // ===== Existing Local API =====
     if (urlPath === '/api/config' && method === 'GET')
         return json(res, await getConfig());
     if (urlPath === '/api/config' && method === 'POST') {
@@ -238,7 +357,75 @@ const server = createServer(async (req, res) => {
 });
 const wss = new WebSocketServer({ server });
 wss.on('connection', (ws, req) => {
-    const m = (req.url || '').match(/^\/ws\/terminal\/([^\/]+)/);
+    const url = req.url || '';
+
+    // Check for SSH session WebSocket: /ws/ssh/:serverId/:sessionId
+    const sshMatch = url.match(/^\/ws\/ssh\/([^\/]+)\/([^\/]+)/);
+    if (sshMatch) {
+        const serverId = sshMatch[1];
+        const sessionId = sshMatch[2];
+        const wsKey = `ssh:${serverId}:${sessionId}`;
+
+        const term = terminals.get(wsKey);
+        if (!term) {
+            ws.send(JSON.stringify({ type: 'error', data: 'SSH session not found' }));
+            ws.close();
+            return;
+        }
+
+        term.ws = ws;
+
+        // Listen for data from SSH stream via EventEmitter
+        const dataHandler = (data) => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'output', data }));
+            }
+        };
+
+        const closeHandler = () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'close' }));
+            }
+            ws.close();
+        };
+
+        const errorHandler = (err) => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'error', data: err.message }));
+            }
+        };
+
+        term.emitter.on('data', dataHandler);
+        term.emitter.on('close', closeHandler);
+        term.emitter.on('error', errorHandler);
+
+        // Handle messages from browser
+        ws.on('message', data => {
+            try {
+                const { type, data: input, cols, rows } = JSON.parse(data.toString());
+                if (type === 'input') {
+                    writeToPTY(serverId, sessionId, input);
+                } else if (type === 'resize') {
+                    resizePTY(serverId, sessionId, cols, rows);
+                }
+            } catch {
+                // Raw data fallback
+                writeToPTY(serverId, sessionId, data.toString());
+            }
+        });
+
+        ws.on('close', () => {
+            term.emitter.off('data', dataHandler);
+            term.emitter.off('close', closeHandler);
+            term.emitter.off('error', errorHandler);
+            term.ws = undefined;
+        });
+
+        return;
+    }
+
+    // Local PTY session WebSocket: /ws/terminal/:sessionId
+    const m = url.match(/^\/ws\/terminal\/([^\/]+)/);
     if (!m) {
         ws.close();
         return;

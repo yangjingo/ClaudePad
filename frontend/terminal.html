@@ -416,14 +416,20 @@
   </div>
 
   <script>
+    // Session context (local vs remote)
+    let sessionContext = {
+      type: 'local', // 'local' or 'remote'
+      serverId: null,
+      sessionId: null
+    };
+
     // 定义全局函数供HTML调用
     function closeOverlay() {
       window.location.href = '/';
     }
 
     function copyCommand() {
-      const id = location.pathname.split('/').pop();
-      const cmd = `claude --resume ${id}`;
+      const cmd = getResumeCommand();
       navigator.clipboard.writeText(cmd).then(() => {
         const btn = document.querySelector('button[onclick="copyCommand()"]');
         const originalText = btn.textContent;
@@ -433,11 +439,18 @@
     }
 
     function openInExternalTerminal() {
-      const id = location.pathname.split('/').pop();
-      const cmd = `claude --resume ${id}`;
+      const cmd = getResumeCommand();
       navigator.clipboard.writeText(cmd).then(() => {
         alert('Command copied! Open your terminal and paste the command to run.');
       });
+    }
+
+    function getResumeCommand() {
+      const { type, serverId, sessionId } = sessionContext;
+      if (type === 'remote' && serverId) {
+        return `ssh ${serverId} "claude --resume ${sessionId}"`;
+      }
+      return `claude --resume ${sessionId}`;
     }
 
     function startTerminal() {
@@ -450,9 +463,57 @@
       initTerminal();
     }
 
+    // Parse URL to determine session type and IDs
+    function parseSessionUrl() {
+      const path = location.pathname;
+      // Local session: /terminal/:sessionId
+      // Remote session: /terminal/:serverId/:sessionId
+      const parts = path.split('/').filter(p => p);
+
+      if (parts.length >= 2 && parts[0] === 'terminal') {
+        if (parts.length === 2) {
+          // Local session
+          sessionContext = {
+            type: 'local',
+            serverId: null,
+            sessionId: parts[1]
+          };
+        } else if (parts.length >= 3) {
+          // Remote session
+          sessionContext = {
+            type: 'remote',
+            serverId: parts[1],
+            sessionId: parts[2]
+          };
+        }
+      }
+      return sessionContext;
+    }
+
+    // Get the appropriate API endpoint for starting the terminal
+    function getStartEndpoint() {
+      if (sessionContext.type === 'remote') {
+        return `/api/servers/${sessionContext.serverId}/sessions/${sessionContext.sessionId}/terminal`;
+      }
+      return `/api/sessions/${sessionContext.sessionId}/terminal`;
+    }
+
+    // Get the appropriate WebSocket URL
+    function getWebSocketUrl() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = location.host;
+      if (sessionContext.type === 'remote') {
+        return `${protocol}//${host}/ws/ssh/${sessionContext.serverId}/${sessionContext.sessionId}`;
+      }
+      return `${protocol}//${host}/ws/terminal/${sessionContext.sessionId}`;
+    }
+
     // 初始化终端
     async function initTerminal() {
-      const id = location.pathname.split('/').pop();
+      // Parse session context from URL
+      parseSessionUrl();
+      const { type, serverId, sessionId } = sessionContext;
+      const id = sessionId;
 
       // 初始化 xterm.js
       const term = new Terminal({
@@ -475,13 +536,18 @@
       window.addEventListener('resize', () => fit.fit());
 
       term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
-      term.writeln('\x1b[90mStarting session...\x1b[0m\r\n');
+      if (type === 'remote') {
+        term.writeln(`\x1b[90mConnecting to remote session on ${serverId}...\x1b[0m\r\n`);
+      } else {
+        term.writeln('\x1b[90mStarting local session...\x1b[0m\r\n');
+      }
 
       try {
         document.getElementById('status').textContent = 'Starting...';
 
         // 启动终端会话
-        const startResponse = await fetch(`/api/sessions/${id}/terminal`, { method: 'POST' });
+        const endpoint = getStartEndpoint();
+        const startResponse = await fetch(endpoint, { method: 'POST' });
         if (!startResponse.ok) {
           throw new Error('Failed to start: ' + startResponse.statusText);
         }
@@ -490,7 +556,8 @@
         term.writeln('\x1b[90mSession started, connecting...\x1b[0m\r\n');
 
         // 连接WebSocket
-        const ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws/terminal/${id}`);
+        const wsUrl = getWebSocketUrl();
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
           document.getElementById('dot').className = 'dot connected';
@@ -538,8 +605,18 @@
 
     // 加载 session 信息
     async function loadSessionInfo() {
-      const id = location.pathname.split('/').pop();
+      // Parse session context from URL
+      parseSessionUrl();
+      const { type, serverId, sessionId } = sessionContext;
+      const id = sessionId;
+
       document.title = `ClaudePad // Terminal: ${id.slice(0, 8)}`;
+
+      // For remote sessions, show remote-specific info without API fetch
+      if (type === 'remote') {
+        showRemoteInfo();
+        return;
+      }
 
       try {
         const response = await fetch(`/api/sessions/${id}`);
@@ -593,9 +670,32 @@
       }
     }
 
+    // Display remote session info (when connecting to remote server via SSH)
+    function showRemoteInfo() {
+      const { serverId, sessionId } = sessionContext;
+      document.getElementById('stat-id').textContent = sessionId.slice(0, 8) + '...';
+      document.getElementById('stat-name').textContent = `Remote on ${serverId}`;
+      document.getElementById('stat-status').textContent = '● Remote';
+      document.getElementById('stat-status').style.color = 'var(--cyan)';
+      document.getElementById('stat-started').textContent = '-';
+      document.getElementById('stat-duration').textContent = '-';
+      document.getElementById('resume-command').textContent = `claude --resume ${sessionId}`;
+
+      // Update overlay title to indicate remote session
+      const titleEl = document.querySelector('.overlay-title');
+      if (titleEl) {
+        titleEl.innerHTML = '◈ Remote Terminal';
+      }
+
+      // Update dot to show remote status
+      const dot = document.getElementById('dot');
+      dot.style.background = 'var(--cyan)';
+      dot.style.boxShadow = '0 0 8px var(--cyan)';
+    }
+
     // 显示通用信息（当 session 不存在时）
     function showGenericInfo() {
-      const id = location.pathname.split('/').pop();
+      const id = sessionContext.sessionId || location.pathname.split('/').pop();
       document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
       document.getElementById('stat-name').textContent = 'Session not found';
       document.getElementById('stat-status').textContent = 'Unknown';

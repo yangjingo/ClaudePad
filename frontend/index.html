@@ -737,6 +737,62 @@
     </div>
   </div>
 
+  <!-- Servers Panel -->
+  <div class="config-bar">
+    <div class="config-row">
+      <div class="config-item" style="flex: 1;">
+        <span class="config-label">
+          <span class="icon">▣</span> Remote Servers
+          <button class="btn-edit-model" onclick="openAddServerModal()" title="Add Remote Server">+ Add</button>
+        </span>
+        <div id="servers-list" class="servers-list" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
+          <span style="color: var(--text-muted); font-size: 0.85rem;">No servers configured</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Server Modal -->
+  <div class="edit-modal-overlay" id="add-server-modal-overlay" onclick="if(event.target === this) closeAddServerModal()">
+    <div class="edit-modal">
+      <div class="edit-modal-header">
+        <span class="edit-modal-title">◈ Add Remote Server</span>
+        <button class="edit-modal-close" onclick="closeAddServerModal()">✕</button>
+      </div>
+      <div class="edit-modal-form">
+        <div class="edit-form-group">
+          <label class="edit-form-label">Server ID (unique identifier)</label>
+          <input type="text" class="edit-form-input" id="add-server-id" placeholder="e.g. my-server-01">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">Name (optional)</label>
+          <input type="text" class="edit-form-input" id="add-server-name" placeholder="e.g. Production Server">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">Host</label>
+          <input type="text" class="edit-form-input" id="add-server-host" placeholder="e.g. 192.168.1.100 or server.example.com">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">Port</label>
+          <input type="number" class="edit-form-input" id="add-server-port" placeholder="22" value="22">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">Username</label>
+          <input type="text" class="edit-form-input" id="add-server-username" placeholder="e.g. root">
+        </div>
+        <div class="edit-form-group">
+          <label class="edit-form-label">Password</label>
+          <input type="password" class="edit-form-input" id="add-server-password" placeholder="SSH password">
+        </div>
+      </div>
+      <div class="edit-modal-footer">
+        <button class="btn btn-ghost" onclick="closeAddServerModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="testServerConnection()">Test Connection</button>
+        <button class="btn btn-primary" onclick="addServer()">Add Server</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Edit Modal -->
   <div class="edit-modal-overlay" id="edit-modal-overlay" onclick="if(event.target === this) closeEditModal()">
     <div class="edit-modal">

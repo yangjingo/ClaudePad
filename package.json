@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "node-pty": "^1.0.0",
+    "ssh2": "^1.17.0",
     "ws": "^8.19.0"
   },
   "devDependencies": {
