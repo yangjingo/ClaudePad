@@ -2,28 +2,27 @@
  * SSH Connection Manager for ClaudePad
  * Manages SSH connections to remote servers with in-memory password storage
  */
-import { Client } from 'ssh2';
+import { Client, ClientChannel } from 'ssh2';
 import { EventEmitter } from 'events';
 import { readFileSync, existsSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
+import { SSHServerConfig, SSHServer, PTYSession } from '../types/index.js';
 
 // In-memory storage for server configs (passwords are not persisted)
-const serverConfigs = new Map();
+const serverConfigs = new Map<string, SSHServerConfig>();
 
 // Active SSH connections pool
-const activeConnections = new Map();
+const activeConnections = new Map<string, Client>();
 
 // Active PTY sessions
-const activeSessions = new Map();
+const activeSessions = new Map<string, PTYSession>();
 
 /**
  * Build SSH connection config with password or SSH key
- * @param {Object} config - Server config { host, port, username, password }
- * @returns {Object} SSH connection config for ssh2
  */
-function buildSSHConfig(config) {
-  const sshConfig = {
+function buildSSHConfig(config: SSHServerConfig): any {
+  const sshConfig: any = {
     host: config.host,
     port: config.port || 22,
     username: config.username,
@@ -51,7 +50,7 @@ function buildSSHConfig(config) {
         sshConfig.privateKey = readFileSync(keyPath);
         console.log(`[SSH] Using key: ${keyPath}`);
         break;
-      } catch (e) {
+      } catch (e: any) {
         console.warn(`[SSH] Failed to read key ${keyPath}: ${e.message}`);
       }
     }
@@ -62,27 +61,24 @@ function buildSSHConfig(config) {
 
 /**
  * Add a remote server configuration
- * @param {string} id - Unique server ID
- * @param {Object} config - Server config { host, port, username, password }
  */
-export function addServer(id, config) {
+export function addServer(id: string, config: SSHServerConfig): void {
   serverConfigs.set(id, {
     host: config.host,
     port: config.port || 22,
     username: config.username,
-    password: config.password,  // Stored only in memory
+    password: config.password,
     name: config.name || config.host
   });
 }
 
 /**
  * Remove a server configuration
- * @param {string} id - Server ID
  */
-export function removeServer(id) {
+export function removeServer(id: string): boolean {
   // Close any active connections
   if (activeConnections.has(id)) {
-    const conn = activeConnections.get(id);
+    const conn = activeConnections.get(id)!;
     conn.end();
     activeConnections.delete(id);
   }
@@ -92,8 +88,8 @@ export function removeServer(id) {
 /**
  * Get all configured servers (without passwords)
  */
-export function getServers() {
-  const servers = [];
+export function getServers(): SSHServer[] {
+  const servers: SSHServer[] = [];
   for (const [id, config] of serverConfigs) {
     servers.push({
       id,
@@ -109,18 +105,15 @@ export function getServers() {
 
 /**
  * Get a server config (with password, for internal use)
- * @param {string} id - Server ID
  */
-export function getServerConfig(id) {
+export function getServerConfig(id: string): SSHServerConfig | undefined {
   return serverConfigs.get(id);
 }
 
 /**
  * Test SSH connection to a server
- * @param {string} id - Server ID
- * @returns {Promise<boolean>}
  */
-export function testConnection(id) {
+export function testConnection(id: string): Promise<boolean> {
   return new Promise((resolve, reject) => {
     const config = serverConfigs.get(id);
     if (!config) {
@@ -135,7 +128,7 @@ export function testConnection(id) {
       resolve(true);
     });
 
-    conn.on('error', (err) => {
+    conn.on('error', (err: Error) => {
       reject(err);
     });
 
@@ -145,11 +138,8 @@ export function testConnection(id) {
 
 /**
  * Execute a command on remote server via SSH
- * @param {string} id - Server ID
- * @param {string} command - Command to execute
- * @returns {Promise<{stdout: string, stderr: string}>}
  */
-export function execCommand(id, command) {
+export function execCommand(id: string, command: string): Promise<{ stdout: string; stderr: string; code?: number; signal?: string }> {
   return new Promise((resolve, reject) => {
     const config = serverConfigs.get(id);
     if (!config) {
@@ -162,29 +152,29 @@ export function execCommand(id, command) {
     let stderr = '';
 
     conn.on('ready', () => {
-      conn.exec(command, (err, stream) => {
+      conn.exec(command, (err: Error | undefined, stream: ClientChannel) => {
         if (err) {
           conn.end();
           reject(err);
           return;
         }
 
-        stream.on('close', (code, signal) => {
+        stream.on('close', (code: number | null, signal: string | null) => {
           conn.end();
-          resolve({ stdout, stderr, code, signal });
+          resolve({ stdout, stderr, code: code ?? undefined, signal: signal ?? undefined });
         });
 
-        stream.on('data', (data) => {
+        stream.on('data', (data: Buffer) => {
           stdout += data.toString();
         });
 
-        stream.stderr.on('data', (data) => {
+        stream.stderr.on('data', (data: Buffer) => {
           stderr += data.toString();
         });
       });
     });
 
-    conn.on('error', (err) => {
+    conn.on('error', (err: Error) => {
       reject(err);
     });
 
@@ -194,10 +184,8 @@ export function execCommand(id, command) {
 
 /**
  * Get Claude sessions from a remote server
- * @param {string} id - Server ID
- * @returns {Promise<Array>}
  */
-export async function getRemoteSessions(id) {
+export async function getRemoteSessions(id: string): Promise<any[]> {
   const config = serverConfigs.get(id);
   if (!config) {
     throw new Error('Server not found');
@@ -205,7 +193,7 @@ export async function getRemoteSessions(id) {
 
   try {
     // Try multiple sources for session discovery
-    const sources = [];
+    const sources: { id: string; source: string }[] = [];
 
     // 1. Check session-env directory (older format)
     const { stdout: sessionEnvOut } = await execCommand(
@@ -229,7 +217,7 @@ export async function getRemoteSessions(id) {
     }
 
     // 3. Get history for session names and metadata
-    let historyData = [];
+    let historyData: any[] = [];
     try {
       const { stdout: historyRaw } = await execCommand(
         id,
@@ -251,12 +239,12 @@ export async function getRemoteSessions(id) {
       // History not available
     }
 
-    const sessions = [];
+    const sessions: any[] = [];
     for (const { id: sessionId, source } of sources) {
       const history = historyData.find(h => h.sessionId === sessionId);
       const timestamp = history?.timestamp || Date.now();
       const ageMs = Date.now() - timestamp;
-      let status;
+      let status: 'running' | 'idle' | 'completed';
       if (ageMs < 30 * 60 * 1000) { // 30 minutes
         status = 'running';
       } else if (ageMs < 2 * 60 * 60 * 1000) { // 2 hours
@@ -283,7 +271,7 @@ export async function getRemoteSessions(id) {
     return sessions.sort((a, b) =>
       new Date(b.startTime).getTime() - new Date(a.startTime).getTime()
     );
-  } catch (err) {
+  } catch (err: any) {
     console.error('Failed to get remote sessions:', err);
     return [];
   }
@@ -291,11 +279,8 @@ export async function getRemoteSessions(id) {
 
 /**
  * Create an interactive PTY session for claude --resume
- * @param {string} serverId - Server ID
- * @param {string} sessionId - Claude session ID to resume
- * @returns {Promise<{stream: Object, conn: Client}>}
  */
-export function createPTYSession(serverId, sessionId) {
+export function createPTYSession(serverId: string, sessionId: string): Promise<PTYSession> {
   return new Promise((resolve, reject) => {
     const config = serverConfigs.get(serverId);
     if (!config) {
@@ -311,7 +296,7 @@ export function createPTYSession(serverId, sessionId) {
         term: 'xterm-256color',
         cols: 120,
         rows: 30
-      }, (err, stream) => {
+      }, (err: Error | undefined, stream: ClientChannel) => {
         if (err) {
           conn.end();
           reject(err);
@@ -319,7 +304,7 @@ export function createPTYSession(serverId, sessionId) {
         }
 
         // Store the session
-        const session = {
+        const session: PTYSession = {
           conn,
           stream,
           serverId,
@@ -330,7 +315,7 @@ export function createPTYSession(serverId, sessionId) {
         console.log(`[SSH] PTY session created: ${sessionKey}`);
 
         // Handle stream events
-        stream.on('data', (data) => {
+        stream.on('data', (data: Buffer) => {
           console.log(`[SSH] Stream data (${data.length} bytes): ${data.toString().substring(0, 30).replace(/\n/g, '\\n')}...`);
           session.emitter.emit('data', data.toString());
         });
@@ -341,7 +326,7 @@ export function createPTYSession(serverId, sessionId) {
           conn.end();
         });
 
-        stream.on('error', (err) => {
+        stream.on('error', (err: Error) => {
           session.emitter.emit('error', err);
         });
 
@@ -354,7 +339,7 @@ export function createPTYSession(serverId, sessionId) {
       });
     });
 
-    conn.on('error', (err) => {
+    conn.on('error', (err: Error) => {
       reject(err);
     });
 
@@ -368,11 +353,8 @@ export function createPTYSession(serverId, sessionId) {
 
 /**
  * Write data to a PTY session
- * @param {string} serverId - Server ID
- * @param {string} sessionId - Claude session ID
- * @param {string} data - Data to write
  */
-export function writeToPTY(serverId, sessionId, data) {
+export function writeToPTY(serverId: string, sessionId: string, data: string): boolean {
   const sessionKey = `${serverId}:${sessionId}`;
   const session = activeSessions.get(sessionKey);
   if (session && session.stream) {
@@ -384,10 +366,8 @@ export function writeToPTY(serverId, sessionId, data) {
 
 /**
  * Close a PTY session
- * @param {string} serverId - Server ID
- * @param {string} sessionId - Claude session ID
  */
-export function closePTYSession(serverId, sessionId) {
+export function closePTYSession(serverId: string, sessionId: string): void {
   const sessionKey = `${serverId}:${sessionId}`;
   const session = activeSessions.get(sessionKey);
   if (session) {
@@ -403,22 +383,16 @@ export function closePTYSession(serverId, sessionId) {
 
 /**
  * Get an active PTY session
- * @param {string} serverId - Server ID
- * @param {string} sessionId - Claude session ID
  */
-export function getPTYSession(serverId, sessionId) {
+export function getPTYSession(serverId: string, sessionId: string): PTYSession | undefined {
   const sessionKey = `${serverId}:${sessionId}`;
   return activeSessions.get(sessionKey);
 }
 
 /**
  * Resize PTY terminal
- * @param {string} serverId - Server ID
- * @param {string} sessionId - Claude session ID
- * @param {number} cols - Columns
- * @param {number} rows - Rows
  */
-export function resizePTY(serverId, sessionId, cols, rows) {
+export function resizePTY(serverId: string, sessionId: string, cols: number, rows: number): void {
   const sessionKey = `${serverId}:${sessionId}`;
   const session = activeSessions.get(sessionKey);
   if (session && session.stream) {

@@ -3,13 +3,15 @@
     "target": "ES2022",
     "module": "Node16",
     "moduleResolution": "Node16",
-    "outDir": ".",
-    "rootDir": ".",
+    "outDir": "./dist",
+    "rootDir": "./backend",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true
   },
-  "include": ["*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["backend/**/*.ts"],
+  "exclude": ["node_modules", "dist", "frontend"]
 }

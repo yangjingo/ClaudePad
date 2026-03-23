@@ -2,10 +2,12 @@
   "name": "claudepad",
   "version": "0.2.0",
   "type": "module",
+  "description": "Claude Code Session Monitor - Web-based terminal for Claude Code",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch server.ts",
-    "start": "node server.js"
+    "dev": "tsx watch backend/index.ts",
+    "start": "node dist/backend/index.js",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "node-pty": "^1.0.0",
@@ -14,9 +16,13 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "@types/ssh2": "^1.15.5",
     "@types/ws": "^8.18.1",
     "playwright": "^1.58.2",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
