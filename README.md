@@ -4,6 +4,8 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 
 ## Update
 
+- **v0.3.0** - Major backend refactoring with modular architecture. Split monolithic server into organized layers: routes, services, websocket handlers. Added TypeScript types, SSH key auth support. New project structure with `backend/` and `frontend/` directories.
+
 - **v0.3.08.2** - Redesigned Agent Playground with software development team theme. Link (PM) coordinates with Revali (Analyst), Mipha (Frontend), Urbosa (Backend), and Daruk (QA). Added Westworld-style character wandering, dialogue system, and Hyrule landscape elements (mountains, hills, trees) to the Canvas map.
 
 - **v0.3.08** - Added Agent Playground with Zelda-themed activity monitoring. Features Link as Commander with Mipha (Healer), Revali (Scout), Urbosa (Assault), and Daruk (Defense) as sub-agents. Real-time status tracking, activity logs, and command center interface with Sheikah Slate theme.
@@ -34,7 +36,13 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 ## Quick Start
 
 ```bash
+# Install dependencies
 npm install
+
+# Development (with hot reload)
+npm run dev
+
+# Production build
 npm run build
 npm start
 ```
