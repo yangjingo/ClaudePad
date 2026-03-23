@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, WebSocket } from 'ws';
 import * as pty from 'node-pty';
 import { homedir, userInfo, networkInterfaces } from 'node:os';
+import * as sshManager from './ssh-manager.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '8080');
@@ -89,41 +90,132 @@ async function saveToFileCache(sessions: any[]): Promise<void> {
 
 // 计算特定 session 的 token 数量
 async function getTokenCount(sessionId: string): Promise<number> {
-  try {
-    const sessionDir = join(CLAUDE_DIR, 'session-env', sessionId);
-    const files = await readdir(sessionDir);
-    const logFiles = files.filter(f => f.endsWith('.jsonl'));
+  // 尝试多个可能的 session 日志位置
+  const possiblePaths = [
+    join(CLAUDE_DIR, 'sessions', `${sessionId}.jsonl`),           // 新版本: sessions/{id}.jsonl
+    join(CLAUDE_DIR, 'session-env', sessionId),                   // 旧版本: session-env/{id}/*.jsonl
+  ];
 
-    let totalTokens = 0;
-    for (const file of logFiles) {
-      const content = await readFile(join(sessionDir, file), 'utf-8');
-      for (const line of content.trim().split('\n').filter(l => l)) {
-        try {
-          const entry = JSON.parse(line);
-          totalTokens += entry.usage?.input_tokens || 0;
-          totalTokens += entry.usage?.output_tokens || 0;
-        } catch (parseErr) {
-          // 忽略无法解析的行
-          continue;
+  for (const sessionPath of possiblePaths) {
+    try {
+      // 检查是文件还是目录
+      const stat = await import('node:fs/promises').then(fs => fs.stat(sessionPath));
+
+      if (stat.isFile() && sessionPath.endsWith('.jsonl')) {
+        // 新版本: 单个 jsonl 文件
+        const content = await readFile(sessionPath, 'utf-8');
+        return countTokensFromJsonl(content);
+      } else if (stat.isDirectory()) {
+        // 旧版本: 目录下的多个 jsonl 文件
+        const files = await readdir(sessionPath);
+        const logFiles = files.filter(f => f.endsWith('.jsonl'));
+
+        let totalTokens = 0;
+        for (const file of logFiles) {
+          const content = await readFile(join(sessionPath, file), 'utf-8');
+          totalTokens += countTokensFromJsonl(content);
         }
+        return totalTokens;
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  // 尝试从 projects 目录查找
+  try {
+    const projectsDir = join(CLAUDE_DIR, 'projects');
+    const projects = await readdir(projectsDir);
+
+    for (const project of projects) {
+      const sessionFile = join(projectsDir, project, `${sessionId}.jsonl`);
+      try {
+        const content = await readFile(sessionFile, 'utf-8');
+        return countTokensFromJsonl(content);
+      } catch {
+        continue;
       }
     }
-    return totalTokens;
-  } catch (e) {
-    console.error(`Failed to calculate token count for session ${sessionId}:`, e.message);
-    return 0;
+  } catch {
+    // projects 目录不存在
   }
+
+  return 0;
+}
+
+function countTokensFromJsonl(content: string): number {
+  let totalTokens = 0;
+  for (const line of content.trim().split('\n').filter(l => l)) {
+    try {
+      const entry = JSON.parse(line);
+      totalTokens += entry.usage?.input_tokens || 0;
+      totalTokens += entry.usage?.output_tokens || 0;
+    } catch {
+      continue;
+    }
+  }
+  return totalTokens;
+}
+
+// 发现所有 session ID (支持多版本)
+async function discoverSessions(): Promise<Set<string>> {
+  const sessionIds = new Set<string>();
+
+  // 1. 从 history.jsonl 获取所有已知的 session ID
+  const history = await parseHistory();
+  history.forEach((_, id) => sessionIds.add(id));
+
+  // 2. 从 sessions/ 目录发现 (新版本)
+  try {
+    const sessionsDir = join(CLAUDE_DIR, 'sessions');
+    const files = await readdir(sessionsDir);
+    files.filter(f => f.endsWith('.jsonl')).forEach(f => {
+      sessionIds.add(f.replace('.jsonl', ''));
+    });
+  } catch {
+    // sessions 目录不存在
+  }
+
+  // 3. 从 session-env/ 目录发现 (旧版本)
+  try {
+    const sessionEnvDir = join(CLAUDE_DIR, 'session-env');
+    const dirs = await readdir(sessionEnvDir);
+    dirs.forEach(id => sessionIds.add(id));
+  } catch {
+    // session-env 目录不存在
+  }
+
+  // 4. 从 projects/ 目录发现
+  try {
+    const projectsDir = join(CLAUDE_DIR, 'projects');
+    const projects = await readdir(projectsDir);
+
+    for (const project of projects) {
+      try {
+        const projectDir = join(projectsDir, project);
+        const files = await readdir(projectDir);
+        files.filter(f => f.endsWith('.jsonl')).forEach(f => {
+          sessionIds.add(f.replace('.jsonl', ''));
+        });
+      } catch {
+        continue;
+      }
+    }
+  } catch {
+    // projects 目录不存在
+  }
+
+  return sessionIds;
 }
 
 // 从磁盘加载 session 数据的函数
 async function loadSessionsFromDisk(): Promise<any[]> {
   const startTime = Date.now();
   try {
-    const dir = join(CLAUDE_DIR, 'session-env');
-    const ids = await readdir(dir);
+    const ids = await discoverSessions();
     const history = await parseHistory();
 
-    const sessions = await Promise.all(ids.map(async id => {
+    const sessions = await Promise.all(Array.from(ids).map(async id => {
       const h = history.get(id);
       const ts = h?.timestamp || Date.now();
       // 基于时间戳判断状态：
@@ -437,6 +529,81 @@ const server = createServer(async (req, res) => {
       stats: cacheStats
     });
   }
+
+  // ========== SSH Server Management APIs ==========
+  // GET /api/servers - List all configured servers
+  if (url === '/api/servers' && method === 'GET') {
+    return json(res, { servers: sshManager.getServers() });
+  }
+
+  // POST /api/servers - Add a new server
+  if (url === '/api/servers' && method === 'POST') {
+    try {
+      const body = await new Promise<any>((resolve, reject) => {
+        let data = '';
+        req.on('data', chunk => data += chunk);
+        req.on('end', () => { try { resolve(JSON.parse(data)); } catch { reject(new Error('Invalid JSON')); } });
+        req.on('error', reject);
+      });
+      if (!body.id || !body.host || !body.username) {
+        return json(res, { error: 'Missing required fields: id, host, username' }, 400);
+      }
+      sshManager.addServer(body.id, body);
+      console.log(`[SSH] Added server: ${body.id} (${body.host})`);
+      return json(res, { status: 'added', id: body.id });
+    } catch (e: any) { return json(res, { error: e.message }, 400); }
+  }
+
+  // DELETE /api/servers/:id - Remove a server
+  const serverDeleteMatch = url.match(/^\/api\/servers\/([^\/]+)$/);
+  if (serverDeleteMatch && method === 'DELETE') {
+    const serverId = serverDeleteMatch[1];
+    const removed = sshManager.removeServer(serverId);
+    console.log(`[SSH] Removed server: ${serverId}`);
+    return json(res, removed ? { status: 'removed' } : { error: 'Server not found' }, removed ? 200 : 404);
+  }
+
+  // POST /api/servers/:id/test - Test SSH connection
+  const serverTestMatch = url.match(/^\/api\/servers\/([^\/]+)\/test$/);
+  if (serverTestMatch && method === 'POST') {
+    const serverId = serverTestMatch[1];
+    try {
+      await sshManager.testConnection(serverId);
+      console.log(`[SSH] Connection test passed: ${serverId}`);
+      return json(res, { status: 'connected', serverId });
+    } catch (e: any) {
+      console.error(`[SSH] Connection test failed: ${serverId}`, e.message);
+      return json(res, { status: 'failed', error: e.message }, 400);
+    }
+  }
+
+  // GET /api/servers/:id/sessions - Get remote sessions
+  const serverSessionsMatch = url.match(/^\/api\/servers\/([^\/]+)\/sessions$/);
+  if (serverSessionsMatch && method === 'GET') {
+    const serverId = serverSessionsMatch[1];
+    try {
+      const sessions = await sshManager.getRemoteSessions(serverId);
+      console.log(`[SSH] Fetched ${sessions.length} sessions from ${serverId}`);
+      return json(res, { sessions, serverId });
+    } catch (e: any) {
+      return json(res, { error: e.message }, 500);
+    }
+  }
+
+  // POST /api/servers/:serverId/sessions/:sessionId/terminal - Start remote terminal
+  const remoteTerminalMatch = url.match(/^\/api\/servers\/([^\/]+)\/sessions\/([^\/]+)\/terminal$/);
+  if (remoteTerminalMatch && method === 'POST') {
+    const [, serverId, sessionId] = remoteTerminalMatch;
+    try {
+      const session = await sshManager.createPTYSession(serverId, sessionId);
+      console.log(`[SSH] Started PTY session: ${serverId}/${sessionId}`);
+      return json(res, { status: 'started', serverId, sessionId });
+    } catch (e: any) {
+      console.error(`[SSH] Failed to start PTY: ${e.message}`);
+      return json(res, { error: e.message }, 500);
+    }
+  }
+
   if (url === '/api/terminal-pool' && method === 'GET') {
     return json(res, {
       pool: terminalPool,
@@ -470,12 +637,43 @@ const server = createServer(async (req, res) => {
 
     // 启动新终端
     try {
+      // 设置 git-bash 路径（Windows 需要）
+      const env = { ...process.env, TERM: 'xterm-256color', CLAUDECODE: undefined };
+
+      if (process.platform === 'win32' && !process.env.CLAUDE_CODE_GIT_BASH_PATH) {
+        const homedir = (await import('node:os')).homedir();
+        const fs = await import('node:fs/promises');
+
+        // 直接使用已知的 Git 安装路径，不依赖 PATH
+        const possiblePaths = [
+          // Scoop 安装路径
+          join(homedir, 'scoop', 'apps', 'git', 'current', 'bin', 'bash.exe'),
+          // 标准安装路径
+          'C:\\Program Files\\Git\\bin\\bash.exe',
+          'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+          join(process.env.LOCALAPPDATA || '', 'Programs', 'Git', 'bin', 'bash.exe'),
+        ].filter(Boolean);
+
+        for (const p of possiblePaths) {
+          try {
+            await fs.access(p);
+            env.CLAUDE_CODE_GIT_BASH_PATH = p;
+            console.log(`[Terminal] Using git-bash: ${p}`);
+            break;
+          } catch {}
+        }
+
+        if (!env.CLAUDE_CODE_GIT_BASH_PATH) {
+          console.warn('[Terminal] Warning: Could not find git-bash, using default');
+        }
+      }
+
       const proc = pty.spawn(process.env.SHELL || 'bash', ['-c', `unset CLAUDECODE && claude --resume ${sessionId}`], {
         name: 'xterm-256color',
         cols: 120,
         rows: 30,
         cwd: process.cwd(),
-        env: { ...process.env, TERM: 'xterm-256color', CLAUDECODE: undefined }
+        env
       });
 
       // 设置 onData 处理器
@@ -490,6 +688,12 @@ const server = createServer(async (req, res) => {
 
       proc.onExit(({ exitCode }) => {
         console.log(`[Terminal] Session ${sessionId} exited with code ${exitCode}`);
+        // 通知 WebSocket 客户端
+        const t = terminals.get(sessionId);
+        if (t?.ws?.readyState === WebSocket.OPEN) {
+          t.ws.send(JSON.stringify({ type: 'exit', code: exitCode }));
+          t.ws.close();
+        }
         terminals.delete(sessionId);
         // 从池中移除
         const idx = terminalPool.indexOf(sessionId);
@@ -505,8 +709,38 @@ const server = createServer(async (req, res) => {
   if (url === '/' || url === '/index.html') { const html = await readFile(join(__dirname, 'frontend', 'index.html')).catch(() => null); if (html) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } }
   if (url === '/idea.html' || url === '/ideas') { const html = await readFile(join(__dirname, 'frontend', 'idea.html')).catch(() => null); if (html) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } }
   if (url === '/tips.html' || url === '/tips') { const html = await readFile(join(__dirname, 'frontend', 'tips.html')).catch(() => null); if (html) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } }
-  const tm = url.match(/^\/terminal\/([^\/]+)/);
+  if (url === '/playground.html' || url === '/playground') { const html = await readFile(join(__dirname, 'frontend', 'playground.html')).catch(() => null); if (html) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } }
+  const tm = url.match(/^\/terminal\/(.+)/);
   if (tm) { const html = await readFile(join(__dirname, 'frontend', 'terminal.html')).catch(() => null); if (html) { res.writeHead(200, { 'Content-Type': 'text/html' }); res.end(html); return; } }
+
+  // 静态文件服务：asserts 目录
+  if (url.startsWith('/asserts/')) {
+    const filePath = join(__dirname, url);
+    try {
+      const fileContent = await readFile(filePath);
+      const ext = filePath.split('.').pop();
+      const contentType = {
+        'html': 'text/html',
+        'css': 'text/css',
+        'js': 'application/javascript',
+        'json': 'application/json',
+        'md': 'text/markdown',
+        'txt': 'text/plain',
+        'png': 'image/png',
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'gif': 'image/gif',
+        'svg': 'image/svg+xml',
+        'ico': 'image/x-icon'
+      }[ext] || 'application/octet-stream';
+
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(fileContent);
+      return;
+    } catch (e) {
+      console.log(`Asserts file not found: ${filePath}`);
+    }
+  }
 
   // 静态文件服务：docs目录
   if (url.startsWith('/docs/')) {
@@ -536,7 +770,67 @@ const server = createServer(async (req, res) => {
 
 const wss = new WebSocketServer({ server });
 wss.on('connection', (ws, req) => {
-  const m = (req.url || '').match(/^\/ws\/terminal\/([^\/]+)/);
+  const url = req.url || '';
+
+  // ========== SSH Remote Terminal WebSocket ==========
+  const sshMatch = url.match(/^\/ws\/ssh\/([^\/]+)\/([^\/]+)/);
+  if (sshMatch) {
+    const [, serverId, sessionId] = sshMatch;
+    console.log(`[WebSocket SSH] Connecting to ${serverId}/${sessionId}`);
+
+    // Check if PTY session exists
+    const session = sshManager.getPTYSession(serverId, sessionId);
+    if (!session) {
+      ws.send(JSON.stringify({ type: 'error', data: 'PTY session not found. Start it first via POST /api/servers/:serverId/sessions/:sessionId/terminal' }));
+      ws.close();
+      return;
+    }
+
+    // Send output from SSH stream to WebSocket
+    session.emitter.on('data', (data: string) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'output', data }));
+      }
+    });
+
+    session.emitter.on('close', () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'close' }));
+        ws.close();
+      }
+    });
+
+    session.emitter.on('error', (err: Error) => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'error', data: err.message }));
+      }
+    });
+
+    // Handle input from WebSocket to SSH stream
+    ws.on('message', data => {
+      try {
+        const msg = JSON.parse(data.toString());
+        if (msg.type === 'input') {
+          sshManager.writeToPTY(serverId, sessionId, msg.data);
+        } else if (msg.type === 'resize') {
+          sshManager.resizePTY(serverId, sessionId, msg.cols || 120, msg.rows || 30);
+        }
+      } catch {
+        sshManager.writeToPTY(serverId, sessionId, data.toString());
+      }
+    });
+
+    ws.on('close', () => {
+      console.log(`[WebSocket SSH] Disconnected from ${serverId}/${sessionId}`);
+      // Don't close PTY session on WebSocket close - allow reconnection
+    });
+
+    ws.send(JSON.stringify({ type: 'connected', serverId, sessionId }));
+    return;
+  }
+
+  // ========== Local Terminal WebSocket ==========
+  const m = url.match(/^\/ws\/terminal\/([^\/]+)/);
   if (!m) { ws.close(); return; }
 
   // 检查是否有已预启动的终端
@@ -547,6 +841,7 @@ wss.on('connection', (ws, req) => {
     // 不关闭连接，等待终端启动
   } else {
     term.ws = ws;
+    ws.send(JSON.stringify({ type: 'connected', sessionId: m[1] }));
     console.log(`[WebSocket] Connected to pre-warmed terminal ${m[1]}`);
   }
 

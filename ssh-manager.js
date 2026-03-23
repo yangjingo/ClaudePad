@@ -4,6 +4,9 @@
  */
 import { Client } from 'ssh2';
 import { EventEmitter } from 'events';
+import { readFileSync, existsSync } from 'fs';
+import { homedir } from 'os';
+import { join } from 'path';
 
 // In-memory storage for server configs (passwords are not persisted)
 const serverConfigs = new Map();
@@ -13,6 +16,49 @@ const activeConnections = new Map();
 
 // Active PTY sessions
 const activeSessions = new Map();
+
+/**
+ * Build SSH connection config with password or SSH key
+ * @param {Object} config - Server config { host, port, username, password }
+ * @returns {Object} SSH connection config for ssh2
+ */
+function buildSSHConfig(config) {
+  const sshConfig = {
+    host: config.host,
+    port: config.port || 22,
+    username: config.username,
+    readyTimeout: 10000
+  };
+
+  // If password provided, use password auth
+  if (config.password) {
+    sshConfig.password = config.password;
+    return sshConfig;
+  }
+
+  // Otherwise, try SSH key authentication
+  const home = homedir();
+  const keyPaths = [
+    join(home, '.ssh', 'id_ed25519'),
+    join(home, '.ssh', 'id_rsa'),
+    join(home, '.ssh', 'id_ecdsa'),
+    join(home, '.ssh', 'id_dsa')
+  ];
+
+  for (const keyPath of keyPaths) {
+    if (existsSync(keyPath)) {
+      try {
+        sshConfig.privateKey = readFileSync(keyPath);
+        console.log(`[SSH] Using key: ${keyPath}`);
+        break;
+      } catch (e) {
+        console.warn(`[SSH] Failed to read key ${keyPath}: ${e.message}`);
+      }
+    }
+  }
+
+  return sshConfig;
+}
 
 /**
  * Add a remote server configuration
@@ -93,13 +139,7 @@ export function testConnection(id) {
       reject(err);
     });
 
-    conn.connect({
-      host: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-      readyTimeout: 10000
-    });
+    conn.connect(buildSSHConfig(config));
   });
 }
 
@@ -148,13 +188,7 @@ export function execCommand(id, command) {
       reject(err);
     });
 
-    conn.connect({
-      host: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-      readyTimeout: 10000
-    });
+    conn.connect(buildSSHConfig(config));
   });
 }
 
@@ -170,13 +204,31 @@ export async function getRemoteSessions(id) {
   }
 
   try {
-    // Try to get sessions from remote server's session-env directory
-    const { stdout } = await execCommand(
-      id,
-      'ls -la ~/.claude/session-env/ 2>/dev/null || echo "[]"'
-    );
+    // Try multiple sources for session discovery
+    const sources = [];
 
-    // Also try to get history for session names
+    // 1. Check session-env directory (older format)
+    const { stdout: sessionEnvOut } = await execCommand(
+      id,
+      'ls ~/.claude/session-env/ 2>/dev/null || echo ""'
+    );
+    const sessionEnvIds = sessionEnvOut.trim().split('\n').filter(s => s && !s.startsWith('.'));
+    sources.push(...sessionEnvIds.map(s => ({ id: s, source: 'session-env' })));
+
+    // 2. Check sessions directory (newer format - .jsonl files)
+    const { stdout: sessionsOut } = await execCommand(
+      id,
+      'ls ~/.claude/sessions/*.jsonl 2>/dev/null | xargs -n1 basename | sed "s/.jsonl$//" || echo ""'
+    );
+    const sessionsIds = sessionsOut.trim().split('\n').filter(s => s && !s.startsWith('.'));
+    // Add only if not already in list
+    for (const s of sessionsIds) {
+      if (!sources.find(src => src.id === s)) {
+        sources.push({ id: s, source: 'sessions' });
+      }
+    }
+
+    // 3. Get history for session names and metadata
     let historyData = [];
     try {
       const { stdout: historyRaw } = await execCommand(
@@ -200,16 +252,18 @@ export async function getRemoteSessions(id) {
     }
 
     const sessions = [];
-    const sessionIds = stdout
-      .split('\n')
-      .filter(line => line.includes('drwx'))
-      .map(line => line.split(/\s+/).pop())
-      .filter(id => id && !id.startsWith('.') && id !== 'session-env');
-
-    for (const sessionId of sessionIds) {
+    for (const { id: sessionId, source } of sources) {
       const history = historyData.find(h => h.sessionId === sessionId);
       const timestamp = history?.timestamp || Date.now();
-      const status = timestamp > Date.now() - 3600000 ? 'running' : 'completed';
+      const ageMs = Date.now() - timestamp;
+      let status;
+      if (ageMs < 30 * 60 * 1000) { // 30 minutes
+        status = 'running';
+      } else if (ageMs < 2 * 60 * 60 * 1000) { // 2 hours
+        status = 'idle';
+      } else {
+        status = 'completed';
+      }
 
       sessions.push({
         id: sessionId,
@@ -273,9 +327,11 @@ export function createPTYSession(serverId, sessionId) {
           emitter: new EventEmitter()
         };
         activeSessions.set(sessionKey, session);
+        console.log(`[SSH] PTY session created: ${sessionKey}`);
 
         // Handle stream events
         stream.on('data', (data) => {
+          console.log(`[SSH] Stream data (${data.length} bytes): ${data.toString().substring(0, 30).replace(/\n/g, '\\n')}...`);
           session.emitter.emit('data', data.toString());
         });
 
@@ -306,13 +362,7 @@ export function createPTYSession(serverId, sessionId) {
       activeSessions.delete(sessionKey);
     });
 
-    conn.connect({
-      host: config.host,
-      port: config.port,
-      username: config.username,
-      password: config.password,
-      readyTimeout: 10000
-    });
+    conn.connect(buildSSHConfig(config));
   });
 }
 

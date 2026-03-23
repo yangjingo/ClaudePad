@@ -568,9 +568,15 @@
         };
 
         ws.onmessage = e => {
-          const { type, data } = JSON.parse(e.data);
+          const { type, data, code } = JSON.parse(e.data);
           if (type === 'output') term.write(data);
           else if (type === 'waiting') term.writeln(`\x1b[90m${data}\x1b[0m\r\n`);
+          else if (type === 'exit') {
+            term.writeln(`\r\n\x1b[33m⚠ Terminal exited with code ${code}\x1b[0m`);
+            term.writeln('\x1b[90mThe session may have ended or an error occurred.\x1b[0m');
+            document.getElementById('dot').className = 'dot';
+            document.getElementById('status').textContent = 'Exited';
+          }
         };
 
         ws.onclose = () => {

@@ -244,6 +244,91 @@
       box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
     }
 
+    .session-card.remote-session {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+    }
+
+    /* Server Tag Styles */
+    .server-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .server-tag:hover {
+      border-color: var(--cyan-dim);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
+    }
+
+    .server-tag .server-status {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-muted);
+    }
+
+    .server-tag .server-status.connected {
+      background: var(--status-done);
+      box-shadow: 0 0 6px var(--status-done);
+    }
+
+    .server-tag .server-name {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .server-tag .server-host {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+    }
+
+    .server-tag .btn-delete-server {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0 2px;
+      font-size: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .server-tag:hover .btn-delete-server {
+      opacity: 1;
+    }
+
+    .server-tag .btn-delete-server:hover {
+      color: var(--status-error);
+    }
+
+    .server-sessions {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--slate-bg-lighter);
+      border-radius: var(--radius-sm);
+      padding: 8px;
+    }
+
+    .remote-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      background: rgba(0, 212, 255, 0.15);
+      color: var(--cyan);
+      border-radius: 3px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
     .session-info {
       flex: 1;
     }
@@ -922,6 +1007,202 @@
     }
 
     // ============================================
+    // SSH Server Management Functions
+    // ============================================
+    async function loadServers() {
+      try {
+        const response = await fetch('/api/servers');
+        const data = await response.json();
+        const servers = data.servers || [];
+        const container = document.getElementById('servers-list');
+
+        if (servers.length === 0) {
+          container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No servers configured</span>';
+          return;
+        }
+
+        container.innerHTML = servers.map(server => `
+          <div class="server-tag" onclick="toggleServerSessions('${escapeHtml(server.id)}')" data-server-id="${escapeHtml(server.id)}">
+            <span class="server-status ${server.connected ? 'connected' : ''}"></span>
+            <span class="server-name">${escapeHtml(server.name || server.id)}</span>
+            <span class="server-host">${escapeHtml(server.host)}</span>
+            <button class="btn-delete-server" onclick="event.stopPropagation(); deleteServer('${escapeHtml(server.id)}')" title="Delete server">✕</button>
+          </div>
+          <div id="server-sessions-${escapeHtml(server.id)}" class="server-sessions" style="display: none;"></div>
+        `).join('');
+      } catch (error) {
+        console.error('Failed to load servers:', error);
+      }
+    }
+
+    function openAddServerModal() {
+      document.getElementById('add-server-modal-overlay').classList.add('active');
+      // Clear form
+      document.getElementById('add-server-id').value = '';
+      document.getElementById('add-server-name').value = '';
+      document.getElementById('add-server-host').value = '';
+      document.getElementById('add-server-port').value = '22';
+      document.getElementById('add-server-username').value = '';
+      document.getElementById('add-server-password').value = '';
+    }
+
+    function closeAddServerModal() {
+      document.getElementById('add-server-modal-overlay').classList.remove('active');
+    }
+
+    async function addServer() {
+      const id = document.getElementById('add-server-id').value.trim();
+      const name = document.getElementById('add-server-name').value.trim();
+      const host = document.getElementById('add-server-host').value.trim();
+      const port = parseInt(document.getElementById('add-server-port').value) || 22;
+      const username = document.getElementById('add-server-username').value.trim();
+      const password = document.getElementById('add-server-password').value;
+
+      if (!id || !host || !username || !password) {
+        alert('Please fill in all required fields: ID, Host, Username, Password');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/servers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, host, port, username, password })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Failed to add server');
+        }
+
+        closeAddServerModal();
+        loadServers();
+        showToast(`Server "${id}" added successfully`);
+      } catch (error) {
+        alert('Failed to add server: ' + error.message);
+      }
+    }
+
+    async function deleteServer(serverId) {
+      if (!confirm(`Delete server "${serverId}"? This will remove the server configuration.`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/servers/${serverId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Failed to delete server');
+
+        loadServers();
+        showToast(`Server "${serverId}" deleted`);
+      } catch (error) {
+        alert('Failed to delete server: ' + error.message);
+      }
+    }
+
+    async function testServerConnection() {
+      const id = document.getElementById('add-server-id').value.trim();
+      const name = document.getElementById('add-server-name').value.trim();
+      const host = document.getElementById('add-server-host').value.trim();
+      const port = parseInt(document.getElementById('add-server-port').value) || 22;
+      const username = document.getElementById('add-server-username').value.trim();
+      const password = document.getElementById('add-server-password').value;
+
+      if (!id || !host || !username || !password) {
+        alert('Please fill in all required fields first');
+        return;
+      }
+
+      // First add the server (temporarily)
+      try {
+        await fetch('/api/servers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name, host, port, username, password })
+        });
+
+        // Then test connection
+        const response = await fetch(`/api/servers/${id}/test`, { method: 'POST' });
+        const result = await response.json();
+
+        if (result.status === 'connected') {
+          showToast('✓ Connection successful!', 'success');
+        } else {
+          showToast('✕ Connection failed: ' + result.error, 'error');
+        }
+      } catch (error) {
+        showToast('✕ Test failed: ' + error.message, 'error');
+      }
+    }
+
+    async function toggleServerSessions(serverId) {
+      const container = document.getElementById(`server-sessions-${serverId}`);
+      if (!container) return;
+
+      if (container.style.display === 'block') {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+      container.innerHTML = '<div style="padding: 8px; color: var(--text-muted);">Loading sessions...</div>';
+
+      try {
+        const response = await fetch(`/api/servers/${serverId}/sessions`);
+        const data = await response.json();
+        const sessions = data.sessions || [];
+
+        if (sessions.length === 0) {
+          container.innerHTML = '<div style="padding: 8px; color: var(--text-muted);">No sessions found on this server</div>';
+          return;
+        }
+
+        container.innerHTML = sessions.map(session => `
+          <div class="session-card remote-session" onclick="viewRemoteSession('${escapeHtml(serverId)}', '${escapeHtml(session.id)}')">
+            <div class="session-info">
+              <div class="session-header">
+                <span class="session-status ${session.status || ''}"></span>
+                <span class="session-id">${escapeHtml(session.id.slice(0, 8))}...</span>
+                <span class="remote-badge">REMOTE</span>
+              </div>
+              <div class="session-name">${escapeHtml(session.name || 'Session')}</div>
+              <div class="session-meta">
+                <span class="session-meta-label">Status:</span>
+                <span class="session-meta-value">${getStatusText(session.status)}</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        container.innerHTML = `<div style="padding: 8px; color: var(--status-error);">Failed to load sessions: ${error.message}</div>`;
+      }
+    }
+
+    function viewRemoteSession(serverId, sessionId) {
+      window.location.href = `/terminal/${serverId}/${sessionId}`;
+    }
+
+    function showToast(message, type = 'info') {
+      // Create toast if not exists
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = 'position: fixed; bottom: 24px; right: 24px; background: var(--slate-panel); border: 1px solid var(--cyan-dim); border-radius: 6px; padding: 14px 20px; z-index: 1000; transition: all 0.3s; opacity: 0; transform: translateY(20px);';
+        document.body.appendChild(toast);
+      }
+
+      toast.textContent = message;
+      toast.style.borderColor = type === 'error' ? 'var(--status-error)' : 'var(--cyan-dim)';
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateY(0)';
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+      }, 3000);
+    }
+
+    // ============================================
     // Session Functions
     // ============================================
     async function load() {
@@ -1204,6 +1485,7 @@
     (function init() {
       loadConfig();
       load();
+      loadServers();
     })();
 
     // Auto-refresh every 10 seconds
