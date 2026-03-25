@@ -278,6 +278,19 @@ export async function getRemoteSessions(id: string): Promise<any[]> {
 }
 
 /**
+ * Helper to translate raw SSH errors into user-friendly messages
+ */
+function translateSSHError(err: any): string {
+  if (err.code === 'ENOTFOUND') return `Host not found: ${err.hostname}`;
+  if (err.code === 'ECONNREFUSED') return `Connection refused at ${err.address}:${err.port}`;
+  if (err.code === 'ETIMEDOUT') return `Connection timed out. Check your firewall and server status.`;
+  if (err.level === 'client-authentication') return `Authentication failed. Check your password or SSH keys.`;
+  if (err.level === 'client-timeout') return `Connection handshake timed out.`;
+  
+  return err.message || 'Unknown SSH error';
+}
+
+/**
  * Create an interactive PTY session for claude --resume
  */
 export function createPTYSession(serverId: string, sessionId: string): Promise<PTYSession> {
@@ -299,7 +312,7 @@ export function createPTYSession(serverId: string, sessionId: string): Promise<P
       }, (err: Error | undefined, stream: ClientChannel) => {
         if (err) {
           conn.end();
-          reject(err);
+          reject(new Error(`Failed to open shell: ${err.message}`));
           return;
         }
 
@@ -316,7 +329,6 @@ export function createPTYSession(serverId: string, sessionId: string): Promise<P
 
         // Handle stream events
         stream.on('data', (data: Buffer) => {
-          console.log(`[SSH] Stream data (${data.length} bytes): ${data.toString().substring(0, 30).replace(/\n/g, '\\n')}...`);
           session.emitter.emit('data', data.toString());
         });
 
@@ -327,27 +339,34 @@ export function createPTYSession(serverId: string, sessionId: string): Promise<P
         });
 
         stream.on('error', (err: Error) => {
-          session.emitter.emit('error', err);
+          const friendlyMsg = translateSSHError(err);
+          session.emitter.emit('error', new Error(friendlyMsg));
         });
 
         // Execute claude --resume after a short delay to let shell initialize
         setTimeout(() => {
           stream.write(`claude --resume ${sessionId}\r`);
-        }, 500);
+        }, 800); // Slightly longer delay for remote shells
 
         resolve(session);
       });
     });
 
-    conn.on('error', (err: Error) => {
-      reject(err);
+    conn.on('error', (err: any) => {
+      const friendlyMsg = translateSSHError(err);
+      console.error(`[SSH] Connection error (${serverId}):`, friendlyMsg);
+      reject(new Error(friendlyMsg));
     });
 
     conn.on('end', () => {
       activeSessions.delete(sessionKey);
     });
 
-    conn.connect(buildSSHConfig(config));
+    try {
+      conn.connect(buildSSHConfig(config));
+    } catch (err: any) {
+      reject(new Error(`Failed to initiate connection: ${err.message}`));
+    }
   });
 }
 

@@ -31,12 +31,25 @@ export async function handleSessionsRoutes(
   if (singleMatch && method === 'GET') {
     const sessionId = singleMatch[1];
     const allSessions = await sessionCache.getSessions();
-    const session = allSessions.find(s => s.id === sessionId);
-    if (session) {
-      json(res, session);
-    } else {
-      json(res, { error: 'Session not found' }, 404);
+    let session = allSessions.find(s => s.id === sessionId);
+    
+    // Fallback: If session not found in cache, provide a minimal placeholder
+    // so the frontend can still show the ID and attempt to start it.
+    if (!session) {
+      console.log(`[API] Session ${sessionId} not found in cache, providing placeholder`);
+      session = {
+        id: sessionId,
+        name: `Session ${sessionId.slice(0, 8)}`,
+        status: 'idle',
+        startTime: new Date().toISOString(),
+        projectPath: process.cwd(),
+        lastActivity: new Date().toISOString(),
+        duration: 0,
+        tokenCount: 0
+      };
     }
+    
+    json(res, session);
     return true;
   }
 

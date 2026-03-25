@@ -6,9 +6,9 @@ import { WebSocket } from 'ws';
 import * as terminalPool from '../services/terminal-pool.js';
 
 export function handleLocalTerminalWS(ws: WebSocket, sessionId: string): void {
-  const term = terminalPool.getTerminal(sessionId);
+  const exists = terminalPool.hasTerminal(sessionId);
 
-  if (!term) {
+  if (!exists) {
     ws.send(JSON.stringify({ type: 'waiting', data: 'Waiting for terminal to start...' }));
   } else {
     terminalPool.setTerminalWs(sessionId, ws);

@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClaudePad | Terminal</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/css/xterm.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@xterm/xterm@5.3.0/lib/xterm.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.8.0/lib/addon-fit.min.js"></script>
+  <link rel="stylesheet" href="/asserts/lib/xterm/xterm.css" />
+  <script src="/asserts/lib/xterm/xterm.js"></script>
+  <script src="/asserts/lib/xterm/addon-fit.js"></script>
   <style>
     /* ============================================
      * SHEIKAH SLATE THEME
@@ -447,13 +447,18 @@
 
     function getResumeCommand() {
       const { type, serverId, sessionId } = sessionContext;
+      const id = sessionId || 'SESSION_ID';
       if (type === 'remote' && serverId) {
-        return `ssh ${serverId} "claude --resume ${sessionId}"`;
+        return `ssh ${serverId} "claude --resume ${id}"`;
       }
-      return `claude --resume ${sessionId}`;
+      return `claude --resume ${id}`;
     }
 
     function startTerminal() {
+      if (!sessionContext.sessionId) {
+        alert('Error: No session ID found in URL. Cannot start terminal.');
+        return;
+      }
       document.getElementById('overlay').innerHTML = `
         <div style="text-align:center;padding:40px 20px">
           <div class="spinner"></div>
@@ -466,6 +471,20 @@
     // Parse URL to determine session type and IDs
     function parseSessionUrl() {
       const path = location.pathname;
+      const searchParams = new URLSearchParams(location.search);
+      
+      const qSessionId = searchParams.get('sessionId');
+      const qServerId = searchParams.get('serverId');
+
+      if (qSessionId) {
+        sessionContext = {
+          type: qServerId ? 'remote' : 'local',
+          serverId: qServerId,
+          sessionId: qSessionId
+        };
+        return sessionContext;
+      }
+
       // Local session: /terminal/:sessionId
       // Remote session: /terminal/:serverId/:sessionId
       const parts = path.split('/').filter(p => p);
@@ -492,31 +511,49 @@
 
     // Get the appropriate API endpoint for starting the terminal
     function getStartEndpoint() {
+      const { serverId, sessionId } = sessionContext;
       if (sessionContext.type === 'remote') {
-        return `/api/servers/${sessionContext.serverId}/sessions/${sessionContext.sessionId}/terminal`;
+        return `/api/servers/${serverId}/sessions/${sessionId}/terminal`;
       }
-      return `/api/sessions/${sessionContext.sessionId}/terminal`;
+      return `/api/sessions/${sessionId}/terminal`;
     }
 
     // Get the appropriate WebSocket URL
     function getWebSocketUrl() {
       const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = location.host;
+      const { serverId, sessionId } = sessionContext;
       if (sessionContext.type === 'remote') {
-        return `${protocol}//${host}/ws/ssh/${sessionContext.serverId}/${sessionContext.sessionId}`;
+        return `${protocol}//${host}/ws/ssh/${serverId}/${sessionId}`;
       }
-      return `${protocol}//${host}/ws/terminal/${sessionContext.sessionId}`;
+      return `${protocol}//${host}/ws/terminal/${sessionId}`;
     }
 
     // 初始化终端
     async function initTerminal() {
+      console.log('[Terminal] Initializing...');
       // Parse session context from URL
       parseSessionUrl();
       const { type, serverId, sessionId } = sessionContext;
+      
+      if (!sessionId) {
+        console.error('[Terminal] No session ID provided');
+        alert('Error: No session ID found.');
+        return;
+      }
+
+      // 检查库是否加载
+      if (typeof window.Terminal === 'undefined') {
+        const err = 'Error: xterm.js library not loaded yet. Please refresh the page.';
+        console.error(err);
+        alert(err);
+        return;
+      }
+
       const id = sessionId;
 
       // 初始化 xterm.js
-      const term = new Terminal({
+      const term = new window.Terminal({
         cursorBlink: true,
         fontSize: 14,
         fontFamily: '"SF Mono", "Fira Code", Consolas, monospace',
@@ -528,15 +565,29 @@
         }
       });
 
-      const fit = new FitAddon.FitAddon();
-      term.loadAddon(fit);
-      term.open(document.getElementById('terminal'));
-      fit.fit();
+      // 兼容不同的 FitAddon 加载方式
+      let fit;
+      try {
+        if (window.FitAddon && window.FitAddon.FitAddon) {
+          fit = new window.FitAddon.FitAddon();
+        } else if (window.FitAddon) {
+          fit = new window.FitAddon();
+        }
+        
+        if (fit) {
+          term.loadAddon(fit);
+        }
+      } catch (e) {
+        console.warn('[Terminal] FitAddon failed to load:', e);
+      }
 
-      let ws = null; // Declare ws in outer scope for the resize listener
+      term.open(document.getElementById('terminal'));
+      if (fit) fit.fit();
+
+      let ws = null;
 
       function handleResize() {
-        fit.fit();
+        if (fit) fit.fit();
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ 
             type: 'resize', 
@@ -555,17 +606,34 @@
         term.writeln('\x1b[90mStarting local session...\x1b[0m\r\n');
       }
 
+      // 设置一个总的超时保护 (20秒)
+      const timeoutId = setTimeout(() => {
+        if (document.getElementById('status').textContent === 'Starting...') {
+          const err = 'Terminal startup timed out (20s). Check server logs.';
+          console.error(err);
+          document.getElementById('overlay').innerHTML = `
+            <div class="overlay-content">
+              <h2 class="overlay-title" style="color:var(--status-error)">✕ Timeout</h2>
+              <p style="color:var(--text);margin-bottom:16px;">The terminal took too long to start. This usually means the backend is stuck or blocked.</p>
+              <button class="btn btn-primary btn-block" onclick="location.reload()">Retry</button>
+            </div>
+          `;
+        }
+      }, 20000);
+
       try {
+        console.log('[Terminal] Requesting session start...');
         document.getElementById('status').textContent = 'Starting...';
 
         // 启动终端会话
         const endpoint = getStartEndpoint();
         const startResponse = await fetch(endpoint, { method: 'POST' });
         if (!startResponse.ok) {
-          throw new Error('Failed to start: ' + startResponse.statusText);
+          throw new Error('Server failed to start terminal: ' + startResponse.statusText);
         }
         await startResponse.json();
 
+        console.log('[Terminal] Session started on server, connecting WebSocket...');
         term.writeln('\x1b[90mSession started, connecting...\x1b[0m\r\n');
 
         // 连接WebSocket
@@ -573,42 +641,58 @@
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
+          clearTimeout(timeoutId);
+          console.log('[Terminal] WebSocket connected.');
           document.getElementById('dot').className = 'dot connected';
           document.getElementById('status').textContent = 'Connected';
           document.getElementById('overlay').classList.add('hidden');
           term.writeln('\x1b[32m✓ Connected\x1b[0m\r\n');
           term.focus();
+          
+          // 发送初始尺寸
+          handleResize();
         };
 
         ws.onmessage = e => {
-          const { type, data, code } = JSON.parse(e.data);
-          if (type === 'output') term.write(data);
-          else if (type === 'waiting') term.writeln(`\x1b[90m${data}\x1b[0m\r\n`);
-          else if (type === 'exit') {
-            term.writeln(`\r\n\x1b[33m⚠ Terminal exited with code ${code}\x1b[0m`);
-            term.writeln('\x1b[90mThe session may have ended or an error occurred.\x1b[0m');
-            document.getElementById('dot').className = 'dot';
-            document.getElementById('status').textContent = 'Exited';
+          try {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'output') term.write(msg.data);
+            else if (msg.type === 'waiting') term.writeln(`\x1b[90m${msg.data}\x1b[0m\r\n`);
+            else if (msg.type === 'exit') {
+              term.writeln(`\r\n\x1b[33m⚠ Terminal exited with code ${msg.code}\x1b[0m`);
+              document.getElementById('dot').className = 'dot';
+              document.getElementById('status').textContent = 'Exited';
+            } else if (msg.type === 'error') {
+              term.writeln(`\r\n\x1b[31m✕ Error: ${msg.data}\x1b[0m`);
+            }
+          } catch (e) {
+            // Fallback for non-JSON data
+            term.write(e.data);
           }
         };
 
         ws.onclose = () => {
+          clearTimeout(timeoutId);
+          console.log('[Terminal] WebSocket closed.');
           document.getElementById('dot').className = 'dot';
           document.getElementById('status').textContent = 'Disconnected';
           term.writeln('\r\n\x1b[31m✗ Disconnected\x1b[0m');
         };
 
-        ws.onerror = () => {
+        ws.onerror = err => {
+          console.error('[Terminal] WebSocket error:', err);
           document.getElementById('status').textContent = 'Error';
         };
 
         term.onData(data => {
-          if (ws.readyState === WebSocket.OPEN) {
+          if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'input', data }));
           }
         });
 
       } catch (err) {
+        clearTimeout(timeoutId);
+        console.error('[Terminal] Startup error:', err);
         document.getElementById('overlay').innerHTML = `
           <div class="overlay-content">
             <h2 class="overlay-title" style="color:var(--status-error)">✕ Error</h2>
@@ -629,11 +713,22 @@
       const { type, serverId, sessionId } = sessionContext;
       const id = sessionId;
 
-      document.title = `ClaudePad // Terminal: ${id.slice(0, 8)}`;
+      if (id) {
+        document.title = `ClaudePad // Terminal: ${id.slice(0, 8)}`;
+        document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
+        document.getElementById('resume-command').textContent = `claude --resume ${id}`;
+      } else {
+        document.title = `ClaudePad // Terminal`;
+      }
 
       // For remote sessions, show remote-specific info without API fetch
       if (type === 'remote') {
         showRemoteInfo();
+        return;
+      }
+
+      if (!id) {
+        showGenericInfo();
         return;
       }
 
@@ -647,7 +742,6 @@
         const data = await response.json();
 
         // 更新页面元素中的session信息
-        document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
         document.getElementById('stat-name').textContent = data.name || 'Unnamed Session';
 
         // 状态显示
@@ -680,9 +774,10 @@
           dot.style.animation = 'none';
         }
 
-        document.getElementById('stat-started').textContent = new Date(data.startTime).toLocaleString();
-        document.getElementById('stat-duration').textContent = formatDuration(data.duration);
-        document.getElementById('resume-command').textContent = `claude --resume ${data.id}`;
+        if (data.startTime) document.getElementById('stat-started').textContent = new Date(data.startTime).toLocaleString();
+        if (data.duration !== undefined) document.getElementById('stat-duration').textContent = formatDuration(data.duration);
+        // Use data.id if available, fallback to id from URL
+        document.getElementById('resume-command').textContent = `claude --resume ${data.id || id}`;
       } catch (err) {
         console.error('Failed to load session info:', err);
         showGenericInfo();
@@ -692,13 +787,14 @@
     // Display remote session info (when connecting to remote server via SSH)
     function showRemoteInfo() {
       const { serverId, sessionId } = sessionContext;
-      document.getElementById('stat-id').textContent = sessionId.slice(0, 8) + '...';
-      document.getElementById('stat-name').textContent = `Remote on ${serverId}`;
+      const id = sessionId || 'UNKNOWN';
+      document.getElementById('stat-id').textContent = id.length > 8 ? id.slice(0, 8) + '...' : id;
+      document.getElementById('stat-name').textContent = `Remote on ${serverId || 'Unknown Server'}`;
       document.getElementById('stat-status').textContent = '● Remote';
       document.getElementById('stat-status').style.color = 'var(--cyan)';
       document.getElementById('stat-started').textContent = '-';
       document.getElementById('stat-duration').textContent = '-';
-      document.getElementById('resume-command').textContent = `claude --resume ${sessionId}`;
+      document.getElementById('resume-command').textContent = `claude --resume ${id}`;
 
       // Update overlay title to indicate remote session
       const titleEl = document.querySelector('.overlay-title');
@@ -714,8 +810,8 @@
 
     // 显示通用信息（当 session 不存在时）
     function showGenericInfo() {
-      const id = sessionContext.sessionId || location.pathname.split('/').pop();
-      document.getElementById('stat-id').textContent = id.slice(0, 8) + '...';
+      const id = sessionContext.sessionId || location.pathname.split('/').pop() || 'UNKNOWN';
+      document.getElementById('stat-id').textContent = id.length > 8 ? id.slice(0, 8) + '...' : id;
       document.getElementById('stat-name').textContent = 'Session not found';
       document.getElementById('stat-status').textContent = 'Unknown';
       document.getElementById('stat-status').style.color = 'var(--text-muted)';
