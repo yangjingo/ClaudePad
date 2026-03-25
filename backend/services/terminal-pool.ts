@@ -109,6 +109,19 @@ export function writeToTerminal(sessionId: string, data: string): boolean {
   return false;
 }
 
+export function resizeTerminal(sessionId: string, cols: number, rows: number): boolean {
+  const term = terminals.get(sessionId);
+  if (term && term.pty) {
+    try {
+      term.pty.resize(cols, rows);
+      return true;
+    } catch (err) {
+      console.error(`[Terminal] Failed to resize pty for session ${sessionId}:`, err);
+    }
+  }
+  return false;
+}
+
 // ========== Pool Management ==========
 
 export function getPoolStatus() {

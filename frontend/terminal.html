@@ -533,7 +533,20 @@
       term.open(document.getElementById('terminal'));
       fit.fit();
 
-      window.addEventListener('resize', () => fit.fit());
+      let ws = null; // Declare ws in outer scope for the resize listener
+
+      function handleResize() {
+        fit.fit();
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ 
+            type: 'resize', 
+            cols: term.cols, 
+            rows: term.rows 
+          }));
+        }
+      }
+
+      window.addEventListener('resize', handleResize);
 
       term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
       if (type === 'remote') {
@@ -557,7 +570,7 @@
 
         // 连接WebSocket
         const wsUrl = getWebSocketUrl();
-        const ws = new WebSocket(wsUrl);
+        ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
           document.getElementById('dot').className = 'dot connected';

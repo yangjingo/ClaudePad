@@ -21,6 +21,10 @@ export function handleLocalTerminalWS(ws: WebSocket, sessionId: string): void {
       const msg = JSON.parse(data.toString());
       if (msg.type === 'input') {
         terminalPool.writeToTerminal(sessionId, msg.data);
+      } else if (msg.type === 'resize') {
+        const cols = msg.cols || 120;
+        const rows = msg.rows || 30;
+        terminalPool.resizeTerminal(sessionId, cols, rows);
       }
     } catch {
       terminalPool.writeToTerminal(sessionId, data.toString());
