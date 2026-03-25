@@ -135,6 +135,40 @@
       color: var(--text-dark);
     }
 
+    /* Remote Discovery UI */
+    .scanner-text {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px;
+      animation: pulse 1.5s infinite;
+    }
+
+    .mini-ora {
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--bronze-dim);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    .stagger-in {
+      opacity: 0;
+      transform: translateY(5px);
+      animation: slideIn 0.3s forwards;
+    }
+
+    @keyframes slideIn {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
     /* Animations */
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -407,15 +441,54 @@
 
     async function toggleServerSessions(id) {
       const el = document.getElementById(`server-sessions-${id}`);
-      if (el.style.display === 'block') { el.style.display = 'none'; return; }
-      el.style.display = 'block'; el.innerHTML = 'Loading...';
-      const res = await fetch(`/api/servers/${id}/sessions`);
-      const data = await res.json();
-      el.innerHTML = (data.sessions || []).map(s => `
-        <div class="session-card" onclick="location.href='/terminal/${id}/${s.id}'" style="margin:4px 0">
-          <div style="font-size:0.8rem">◈ ${escapeHtml(s.name || s.id.slice(0,8))} <span class="remote-badge">REMOTE</span></div>
+      if (el.style.display === 'block') {
+        el.style.display = 'none';
+        return;
+      }
+      
+      el.style.display = 'block';
+      // Ora-style loading state
+      el.innerHTML = `
+        <div class="scanner-text">
+          <div class="mini-ora"></div>
+          <span>◈ Scanning remote sectors...</span>
         </div>
-      `).join('');
+      `;
+      
+      try {
+        const res = await fetch(`/api/servers/${id}/sessions`);
+        const data = await res.json();
+        const sessions = data.sessions || [];
+        
+        if (sessions.length === 0) {
+          el.innerHTML = '<div style="padding:10px; color:var(--text-dark); font-size:0.8rem;">No active sessions found.</div>';
+          return;
+        }
+
+        // Clear loading and render with staggered animation
+        el.innerHTML = '';
+        sessions.forEach((s, index) => {
+          const card = document.createElement('div');
+          card.className = 'session-card stagger-in';
+          card.style.margin = '4px 0';
+          card.style.animationDelay = `${index * 50}ms`; // 50ms stagger
+          card.onclick = () => location.href = `/terminal/${id}/${s.id}`;
+          
+          card.innerHTML = `
+            <div style="font-size:0.8rem; display:flex; align-items:center; gap:8px; width:100%">
+              <span class="session-status ${s.status}"></span>
+              <div style="flex:1">
+                <div style="color:var(--cyan); font-weight:500;">${escapeHtml(s.name || s.id.slice(0,8))}</div>
+                <div style="font-size:0.7rem; color:var(--text-dark)">ID: ${s.id.slice(0,8)}...</div>
+              </div>
+              <span class="remote-badge">REMOTE</span>
+            </div>
+          `;
+          el.appendChild(card);
+        });
+      } catch (e) {
+        el.innerHTML = '<div style="color:var(--status-error); font-size:0.8rem; padding:10px;">✕ Sector scan failed.</div>';
+      }
     }
 
     function openEditModal() { document.getElementById('edit-modal-overlay').classList.add('active'); }
