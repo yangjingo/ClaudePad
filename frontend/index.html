@@ -7,1495 +7,428 @@
   <style>
     /* ============================================
      * SHEIKAH SLATE THEME
-     * Ancient Futurism - Bronze & Cyan
      * ============================================ */
     :root {
-      /* Background - Sheikah Slate colors */
       --slate-bg: #0a0a0f;
       --slate-bg-light: #111118;
       --slate-bg-lighter: #1a1a24;
       --slate-panel: #13131a;
-
-      /* Bronze/Copper Ancient Metal */
       --bronze: #8B7355;
       --bronze-light: #A0826D;
       --bronze-dark: #6b5b4f;
       --bronze-dim: #4a3f37;
-
-      /* Cyan Glow - Tech Energy */
       --cyan: #00d4ff;
       --cyan-bright: #00f0ff;
       --cyan-dim: #00a8cc;
       --cyan-glow: rgba(0, 212, 255, 0.3);
-
-      /* Text */
       --text: #e0e0e0;
       --text-muted: #888;
       --text-dark: #666;
-
-      /* Status Colors */
       --status-active: #00d4ff;
       --status-done: #4ade80;
       --status-error: #ef4444;
       --status-pending: #666;
-
-      /* Typography */
       --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
       --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-
-      /* Spacing */
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 16px;
-      --space-lg: 24px;
-
-      /* Border Radius */
       --radius-sm: 4px;
       --radius-md: 6px;
       --radius-lg: 8px;
       --radius-full: 9999px;
     }
 
-    /* ============================================
-     * Reset & Base
-     * ============================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font-sans); background: var(--slate-bg); color: var(--text); min-height: 100vh; line-height: 1.5; }
 
-    body {
-      font-family: var(--font-sans);
-      background: var(--slate-bg);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.5;
-    }
+    /* Header */
+    .header { background: var(--slate-bg-light); border-bottom: 1px solid var(--bronze-dim); padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .logo-icon { color: var(--cyan); font-size: 1.5rem; text-shadow: 0 0 10px var(--cyan-glow); }
+    .logo-text { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 600; color: var(--bronze-light); }
+    .nav-links { display: flex; gap: 12px; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-family: var(--font-mono); font-size: 0.85rem; padding: 6px 12px; border-radius: var(--radius-sm); transition: all 0.2s; }
+    .nav-link:hover { color: var(--cyan); background: var(--cyan-glow); }
+    .nav-link.active { color: var(--cyan); border: 1px solid var(--cyan-dim); }
 
-    /* ============================================
-     * Header / Navigation
-     * ============================================ */
-    .header {
-      background: var(--slate-bg-light);
-      border-bottom: 1px solid var(--bronze-dim);
-      padding: 12px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
-    .logo-icon {
-      color: var(--cyan);
-      font-size: 1.5rem;
-      text-shadow: 0 0 10px var(--cyan-glow);
-    }
-
-    .logo-text {
+    /* Version Badge */
+    .version-badge {
       font-family: var(--font-mono);
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--bronze-light);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 12px;
-    }
-
-    .nav-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      transition: all 0.2s;
-    }
-
-    .nav-link:hover {
-      color: var(--cyan);
-      background: var(--cyan-glow);
-    }
-
-    .nav-link.active {
-      color: var(--cyan);
-      border: 1px solid var(--cyan-dim);
-    }
-
-    /* ============================================
-     * Buttons
-     * ============================================ */
-    .btn {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      padding: 8px 16px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-primary {
-      background: transparent;
-      color: var(--cyan);
-      box-shadow: inset 0 0 0 1px var(--cyan-dim);
-    }
-
-    .btn-primary:hover {
-      background: var(--cyan-glow);
-      box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow);
-    }
-
-    .btn-ghost {
-      background: transparent;
-      color: var(--bronze-light);
-      box-shadow: inset 0 0 0 1px var(--bronze-dim);
-      text-decoration: none;
-    }
-
-    .btn-ghost:hover {
-      color: var(--cyan);
-      box-shadow: inset 0 0 0 1px var(--cyan-dim);
-    }
-
-    .btn-sm {
-      padding: 6px 12px;
-      font-size: 0.8rem;
-    }
-
-    /* ============================================
-     * Main Container
-     * ============================================ */
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px 20px;
-    }
-
-    /* ============================================
-     * Sheikah Panel
-     * ============================================ */
-    .panel {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
-      margin-bottom: 24px;
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 20px;
-      background: var(--slate-bg-lighter);
-      border-bottom: 1px solid var(--bronze-dim);
-    }
-
-    .panel-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--bronze-light);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .panel-count {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    /* ============================================
-     * Session List & Cards
-     * ============================================ */
-    .session-list {
-      padding: 8px;
-    }
-
-    .session-card {
-      background: var(--slate-bg-light);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-md);
-      padding: 16px 20px;
-      margin: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .session-card:hover {
-      border-color: var(--cyan-dim);
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.1);
-    }
-
-    .session-card.remote-session {
-      border-color: var(--cyan-dim);
-      box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
-    }
-
-    /* Server Tag Styles */
-    .server-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 12px;
-      background: var(--slate-bg-light);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-sm);
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .server-tag:hover {
-      border-color: var(--cyan-dim);
-      box-shadow: 0 0 10px rgba(0, 212, 255, 0.1);
-    }
-
-    .server-tag .server-status {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text-muted);
-    }
-
-    .server-tag .server-status.connected {
-      background: var(--status-done);
-      box-shadow: 0 0 6px var(--status-done);
-    }
-
-    .server-tag .server-name {
-      font-weight: 500;
-      color: var(--text);
-    }
-
-    .server-tag .server-host {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-    }
-
-    .server-tag .btn-delete-server {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 0 2px;
-      font-size: 0.75rem;
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
-    .server-tag:hover .btn-delete-server {
-      opacity: 1;
-    }
-
-    .server-tag .btn-delete-server:hover {
-      color: var(--status-error);
-    }
-
-    .server-sessions {
-      width: 100%;
-      margin-top: 8px;
-      background: var(--slate-bg-lighter);
-      border-radius: var(--radius-sm);
-      padding: 8px;
-    }
-
-    .remote-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      background: rgba(0, 212, 255, 0.15);
-      color: var(--cyan);
-      border-radius: 3px;
       font-size: 0.7rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-    }
-
-    .session-info {
-      flex: 1;
-    }
-
-    .session-header {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim);
+      color: var(--bronze-light);
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: 6px;
+      cursor: default; /* Quiet by default */
     }
-
-    .session-status {
-      width: 8px;
-      height: 8px;
-      border-radius: var(--radius-full);
-      background: var(--text-muted);
-      flex-shrink: 0;
-    }
-
-    .session-status.running {
-      background: var(--cyan);
-      box-shadow: 0 0 8px var(--cyan);
+    .version-badge.update-ready {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      cursor: pointer;
       animation: pulse 2s ease-in-out infinite;
     }
+    .version-badge.update-ready:hover { background: var(--cyan-glow); }
 
-    .session-status.completed {
-      background: var(--status-done);
-    }
+    /* Layout Containers */
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+    .panel { background: var(--slate-panel); border: 1px solid var(--bronze-dim); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: var(--slate-bg-lighter); border-bottom: 1px solid var(--bronze-dim); }
+    .panel-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--bronze-light); text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; }
 
-    .session-status.stopped {
-      background: var(--status-error);
-    }
+    /* Session List */
+    .session-list { padding: 8px; }
+    .session-card { background: var(--slate-bg-light); border: 1px solid var(--bronze-dim); border-radius: var(--radius-md); padding: 16px 20px; margin: 8px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; }
+    .session-card:hover { border-color: var(--cyan-dim); box-shadow: 0 0 20px rgba(0, 212, 255, 0.1); }
+    .session-card.remote-session { border-color: var(--cyan-dim); }
 
-    .session-id {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--bronze);
-    }
+    /* Config Bar */
+    .config-bar { background: var(--slate-bg-lighter); border-bottom: 1px solid var(--bronze-dim); padding: 12px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .config-item { display: flex; flex-direction: column; gap: 4px; }
+    .config-label { font-size: 0.65rem; color: var(--bronze); text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); }
+    .config-value { font-size: 0.8rem; color: var(--text); font-family: var(--font-mono); display: flex; align-items: center; gap: 6px; }
+    .config-value code { background: rgba(0, 212, 255, 0.1); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); }
 
-    .session-name {
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--text);
-      margin: 8px 0;
-    }
+    /* Modals */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 2000; backdrop-filter: blur(8px); }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--slate-panel); border: 1px solid var(--bronze); border-radius: var(--radius-lg); padding: 24px; width: 100%; max-width: 450px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--bronze-dim); }
+    .modal-title { font-family: var(--font-mono); font-size: 0.9rem; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.1em; }
+    .modal-close { background: transparent; border: 1px solid var(--bronze-dim); color: var(--text-muted); cursor: pointer; font-size: 0.8rem; padding: 4px 10px; border-radius: var(--radius-sm); font-family: var(--font-mono); }
 
-    .session-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+    .btn { font-family: var(--font-mono); font-size: 0.85rem; padding: 8px 16px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.2s; border: none; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-primary { background: transparent; color: var(--cyan); box-shadow: inset 0 0 0 1px var(--cyan-dim); }
+    .btn-primary:hover { background: var(--cyan-glow); box-shadow: inset 0 0 0 1px var(--cyan), 0 0 20px var(--cyan-glow); }
+    .btn-ghost { background: transparent; color: var(--bronze-light); box-shadow: inset 0 0 0 1px var(--bronze-dim); text-decoration: none; }
+    .btn-edit-model { background: transparent; border: 1px solid var(--bronze-dim); color: var(--bronze-light); font-size: 0.7rem; padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; font-family: var(--font-mono); }
 
-    .session-meta-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .session-meta-label {
-      color: var(--bronze-light);
-    }
-
-    .session-meta-value {
-      color: var(--text);
-    }
-
-    /* ============================================
-     * Loading & Empty States
-     * ============================================ */
-    .loading, .empty {
+    /* Elegant Progress UI */
+    .update-status-container {
       text-align: center;
-      padding: 60px 20px;
-      color: var(--text-muted);
+      padding: 30px 10px;
     }
 
-    .spinner {
-      width: 40px;
-      height: 40px;
+    .ora-spinner {
+      width: 48px;
+      height: 48px;
       border: 3px solid var(--bronze-dim);
-      border-top-color: var(--cyan);
-      border-radius: var(--radius-full);
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
+      border-top: 3px solid var(--cyan);
+      border-left: 3px solid var(--cyan);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      box-shadow: 0 0 15px var(--cyan-glow);
     }
 
-    .empty-icon {
-      font-size: 2rem;
-      color: var(--bronze);
-      margin-bottom: 16px;
-      opacity: 0.5;
-    }
-
-    /* ============================================
-     * Animations
-     * ============================================ */
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    /* ============================================
-     * Modal
-     * ============================================ */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal-overlay.active {
-      display: flex;
-    }
-
-    .modal {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      width: 100%;
-      max-width: 450px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: scaleIn 0.2s ease-out;
-    }
-
-    .modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--bronze-dim);
-    }
-
-    .modal-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .modal-close {
-      background: transparent;
-      border: 1px solid var(--bronze-dim);
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      transition: all 0.2s;
-    }
-
-    .modal-close:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    /* ============================================
-     * Modal Footer
-     * ============================================ */
-    .modal-footer {
-      margin-top: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .empty-tip {
-      text-align: center;
-      padding: 30px 20px;
-      color: var(--text-muted);
-    }
-
-    .empty-tip-icon {
-      font-size: 2rem;
-      color: var(--bronze);
-      margin-bottom: 12px;
-      opacity: 0.7;
-    }
-
-    /* ============================================
-     * Scrollbar
-     * ============================================ */
-    ::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: var(--slate-bg);
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--bronze-dim);
-      border-radius: var(--radius-full);
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--bronze);
-    }
-
-    /* ============================================
-     * Config Bar - New UI Area
-     * ============================================ */
-    .config-bar {
-      background: var(--slate-bg-lighter);
-      border-bottom: 1px solid var(--bronze-dim);
-      padding: 12px 20px;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .config-item {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .config-label {
-      font-size: 0.65rem;
-      color: var(--bronze);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-family: var(--font-mono);
-    }
-
-    .config-value {
-      font-size: 0.8rem;
-      color: var(--text);
-      font-family: var(--font-mono);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .config-value .icon {
-      color: var(--cyan);
-      font-size: 0.9rem;
-    }
-
-    .config-value code {
-      background: rgba(0, 212, 255, 0.1);
-      padding: 2px 6px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--bronze-dim);
-    }
-
-    /* ============================================
-     * Model Config - Enhanced Design
-     * ============================================ */
-    .config-model-container {
-      position: relative;
-    }
-
-    .config-model-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .config-model-row .item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 8px;
-      background: rgba(0, 212, 255, 0.08);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-sm);
-    }
-
-    .config-model-row .item:hover {
-      border-color: var(--cyan-dim);
-      background: rgba(0, 212, 255, 0.12);
-    }
-
-    .config-model-row .icon {
-      color: var(--cyan);
-      font-size: 0.85rem;
-      flex-shrink: 0;
-    }
-
-    .config-model-row code {
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      color: var(--text);
-      background: transparent;
-      border: none;
-      padding: 0;
-    }
-
-    .config-model-row .divider {
-      color: var(--bronze);
-      font-size: 0.8rem;
-      opacity: 0.5;
-    }
-
-    .btn-edit-model {
-      background: transparent;
-      border: 1px solid var(--bronze-dim);
-      color: var(--bronze-light);
-      font-size: 0.7rem;
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-family: var(--font-mono);
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .btn-edit-model:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 10px var(--cyan-glow);
-    }
-
-    /* ============================================
-     * Edit Modal
-     * ============================================ */
-    .edit-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-    }
-
-    .edit-modal-overlay.active {
-      display: flex;
-    }
-
-    .edit-modal {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze);
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: scaleIn 0.2s ease-out;
-    }
-
-    .edit-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--bronze-dim);
-    }
-
-    .edit-modal-title {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--cyan);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .edit-modal-close {
-      background: transparent;
-      border: 1px solid var(--bronze-dim);
-      color: var(--text-muted);
-      cursor: pointer;
-      font-size: 0.8rem;
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-family: var(--font-mono);
-      transition: all 0.2s;
-    }
-
-    .edit-modal-close:hover {
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    .edit-modal-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .edit-form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .edit-form-label {
-      font-size: 0.7rem;
-      color: var(--bronze);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      font-family: var(--font-mono);
-    }
-
-    .edit-form-input {
-      background: var(--slate-bg-light);
-      border: 1px solid var(--bronze-dim);
-      border-radius: var(--radius-sm);
-      padding: 10px 12px;
-      color: var(--text);
+    .status-step {
       font-family: var(--font-mono);
       font-size: 0.85rem;
-      transition: all 0.2s;
+      color: var(--cyan);
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
     }
 
-    .edit-form-input:focus {
-      outline: none;
-      border-color: var(--cyan);
-      box-shadow: 0 0 10px var(--cyan-glow);
+    .status-sub {
+      font-size: 0.75rem;
+      color: var(--text-dark);
     }
 
-    .edit-modal-footer {
-      margin-top: 20px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      padding-top: 16px;
-      border-top: 1px solid var(--bronze-dim);
-    }
+    /* Animations */
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 40px; height: 40px; border: 3px solid var(--bronze-dim); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
 
-    /* ============================================
-     * Config Bar - New UI Area
-     * ============================================ */
-     </style>
+    /* Server Tags */
+    .server-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--slate-bg-light); border: 1px solid var(--bronze-dim); border-radius: var(--radius-sm); font-size: 0.85rem; cursor: pointer; }
+    .server-status { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+    .server-status.connected { background: var(--status-done); box-shadow: 0 0 6px var(--status-done); }
+    .btn-delete-server { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; }
+    .server-sessions { width: 100%; margin-top: 8px; background: var(--slate-bg-lighter); border-radius: var(--radius-sm); padding: 8px; }
+    .remote-badge { display: inline-flex; padding: 2px 8px; background: rgba(0, 212, 255, 0.15); color: var(--cyan); border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+
+    .session-status { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+    .session-status.running { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: pulse 2s ease-in-out infinite; }
+  </style>
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <a href="/" class="logo">
       <span class="logo-icon">◈</span>
       <span class="logo-text">ClaudePad</span>
     </a>
-
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <a href="/" class="nav-link active" style="color: var(--bronze-light);">🐱 Sessions</a>
-      <a href="/idea.html" class="nav-link" style="color: var(--bronze-light);">💡 Ideas</a>
-      <a href="/tips.html" class="nav-link"  style="color: var(--bronze-light);">🔧 Tips</a>
-      <a href="/playground.html" class="nav-link" style="color: var(--bronze-light);">🎮 Playground</a>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <div id="version-badge" class="version-badge" onclick="handleBadgeClick()">◈ v...</div>
+      <a href="/" class="nav-link active">🐱 Sessions</a>
+      <a href="/idea.html" class="nav-link">💡 Ideas</a>
+      <a href="/tips.html" class="nav-link">🔧 Tips</a>
+      <a href="/playground.html" class="nav-link">🎮 Playground</a>
     </div>
   </header>
 
-  <!-- Config Bar - New UI Area -->
-  <div class="config-bar" id="config-bar">
+  <div class="config-bar">
     <div class="config-item">
       <span class="config-label">◈ Claude Path</span>
-      <span class="config-value" id="config-path"><span class="icon">⟳</span> Loading...</span>
+      <span class="config-value" id="config-path">Loading...</span>
     </div>
-    <div class="config-item config-model-container">
+    <div class="config-item">
       <span class="config-label">Model Config</span>
-      <div class="config-model-row">
-        <div class="item">
-          <span class="icon">◈</span>
-          <code id="config-model">-</code>
-        </div>
-        <span class="divider">|</span>
-        <button class="btn-edit-model" onclick="openEditModal()" title="Edit Model Configuration">✎ Edit</button>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <code id="config-model" style="background: rgba(0,212,255,0.1); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.8rem; color: var(--cyan);">claude-3-5-sonnet-latest</code>
+        <button class="btn-edit-model" onclick="openEditModal()">✎ Edit</button>
       </div>
     </div>
     <div class="config-item">
       <span class="config-label">Host / User</span>
-      <span class="config-value" id="config-host-user"><span class="icon">◉</span> <code id="config-host">-</code> <span style="color: var(--bronze);">|</span> <span class="icon">◈</span> <code id="config-user">-</code></span>
+      <span class="config-value"><code id="config-host">-</code> | <code id="config-user">-</code></span>
     </div>
   </div>
 
-  <!-- Servers Panel -->
-  <div class="config-bar">
-    <div class="config-row">
-      <div class="config-item" style="flex: 1;">
-        <span class="config-label">
-          <span class="icon">▣</span> Remote Servers
-          <button class="btn-edit-model" onclick="openAddServerModal()" title="Add Remote Server">+ Add</button>
-        </span>
-        <div id="servers-list" class="servers-list" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;">
-          <span style="color: var(--text-muted); font-size: 0.85rem;">No servers configured</span>
+  <div class="config-bar" style="border-top: none;">
+    <div class="config-item" style="grid-column: span 3;">
+      <span class="config-label">▣ Remote Servers <button class="btn-edit-model" onclick="openAddServerModal()">+ Add</button></span>
+      <div id="servers-list" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
+    </div>
+  </div>
+
+  <main class="container">
+    <section class="panel">
+      <div class="panel-header">
+        <span class="panel-title">◈ Active Sessions</span>
+        <div style="display: flex; gap: 12px; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
+          <span id="page-info">Page 1</span>
+          <span id="count">-</span>
+          <span id="total-duration"></span>
         </div>
+      </div>
+      <div id="list" class="session-list">
+        <div class="loading" style="text-align:center; padding: 40px;"><div class="spinner"></div></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Update Modal -->
+  <div class="modal-overlay" id="update-modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">◈ Update Claude Code</span>
+        <button class="modal-close" onclick="closeUpdateModal()">✕</button>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 12px;">New version available. Choose method:</p>
+        <div style="background: rgba(0,212,255,0.05); padding: 12px; border-radius: 4px; border: 1px solid var(--bronze-dim); font-size: 0.8rem; font-family: var(--font-mono);">
+          Current: <span id="update-current-ver">-</span><br>
+          Latest: <span id="update-latest-ver" style="color: var(--cyan);">-</span>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button class="btn btn-primary" onclick="executeUpdate('npm')" style="justify-content: center;">🚀 Update via NPM Mirror</button>
+        <button class="btn btn-ghost" onclick="executeUpdate('cli')" style="justify-content: center;">🐚 Update via Official CLI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Config Modal -->
+  <div class="modal-overlay" id="edit-modal-overlay" onclick="if(event.target === this) closeEditModal()">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">◈ Edit Config</span><button class="modal-close" onclick="closeEditModal()">✕</button></div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <input type="text" id="edit-model" class="btn-ghost" style="padding: 10px; width:100%" placeholder="Model">
+        <input type="text" id="edit-apiurl" class="btn-ghost" style="padding: 10px; width:100%" placeholder="API URL">
+        <input type="password" id="edit-apikey" class="btn-ghost" style="padding: 10px; width:100%" placeholder="API Key">
+        <button class="btn btn-primary" onclick="saveConfig()" style="justify-content: center;">Save Changes</button>
       </div>
     </div>
   </div>
 
   <!-- Add Server Modal -->
-  <div class="edit-modal-overlay" id="add-server-modal-overlay" onclick="if(event.target === this) closeAddServerModal()">
-    <div class="edit-modal">
-      <div class="edit-modal-header">
-        <span class="edit-modal-title">◈ Add Remote Server</span>
-        <button class="edit-modal-close" onclick="closeAddServerModal()">✕</button>
-      </div>
-      <div class="edit-modal-form">
-        <div class="edit-form-group">
-          <label class="edit-form-label">Server ID (unique identifier)</label>
-          <input type="text" class="edit-form-input" id="add-server-id" placeholder="e.g. my-server-01">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">Name (optional)</label>
-          <input type="text" class="edit-form-input" id="add-server-name" placeholder="e.g. Production Server">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">Host</label>
-          <input type="text" class="edit-form-input" id="add-server-host" placeholder="e.g. 192.168.1.100 or server.example.com">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">Port</label>
-          <input type="number" class="edit-form-input" id="add-server-port" placeholder="22" value="22">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">Username</label>
-          <input type="text" class="edit-form-input" id="add-server-username" placeholder="e.g. root">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">Password</label>
-          <input type="password" class="edit-form-input" id="add-server-password" placeholder="SSH password">
-        </div>
-      </div>
-      <div class="edit-modal-footer">
-        <button class="btn btn-ghost" onclick="closeAddServerModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="testServerConnection()">Test Connection</button>
-        <button class="btn btn-primary" onclick="addServer()">Add Server</button>
+  <div class="modal-overlay" id="add-server-modal-overlay">
+    <div class="modal">
+      <div class="modal-header"><span class="modal-title">◈ Add Server</span><button class="modal-close" onclick="closeAddServerModal()">✕</button></div>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <input type="text" id="add-server-id" class="btn-ghost" style="padding: 8px;" placeholder="Server ID">
+        <input type="text" id="add-server-host" class="btn-ghost" style="padding: 8px;" placeholder="Host">
+        <input type="text" id="add-server-username" class="btn-ghost" style="padding: 8px;" placeholder="User">
+        <input type="password" id="add-server-password" class="btn-ghost" style="padding: 8px;" placeholder="Password">
+        <button class="btn btn-primary" onclick="addServer()" style="justify-content: center;">Add Server</button>
       </div>
     </div>
   </div>
-
-  <!-- Edit Modal -->
-  <div class="edit-modal-overlay" id="edit-modal-overlay" onclick="if(event.target === this) closeEditModal()">
-    <div class="edit-modal">
-      <div class="edit-modal-header">
-        <span class="edit-modal-title">◈ Edit Model Configuration</span>
-        <button class="edit-modal-close" onclick="closeEditModal()">✕</button>
-      </div>
-      <div class="edit-modal-form">
-        <div class="edit-form-group">
-          <label class="edit-form-label">Model</label>
-          <input type="text" class="edit-form-input" id="edit-model" placeholder="e.g. opus[1m]">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">API URL</label>
-          <input type="text" class="edit-form-input" id="edit-apiurl" placeholder="e.g. https://api.anthropic.com">
-        </div>
-        <div class="edit-form-group">
-          <label class="edit-form-label">API Key</label>
-          <input type="password" class="edit-form-input" id="edit-apikey" placeholder="sk-...">
-        </div>
-      </div>
-      <div class="edit-modal-footer">
-        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="saveConfig()">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <main class="container">
-    <!-- Sessions Panel -->
-    <section class="panel">
-      <div class="panel-header">
-        <span class="panel-title">◈ Active Sessions</span>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <!-- 分页控件 -->
-          <div id="header-pagination" style="display: flex; align-items: center; gap: 6px; margin-right: 12px;">
-            <button class="btn btn-ghost btn-sm" id="prev-btn" onclick="changePage(-1)" style="opacity:0.4;cursor:not-allowed;">← Prev</button>
-            <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-mono);" id="page-info">Page 1</span>
-            <button class="btn btn-ghost btn-sm" id="next-btn" onclick="changePage(1)" style="opacity:0.4;cursor:not-allowed;">Next →</button>
-          </div>
-          <!-- 状态统计 -->
-          <span id="status-stats" style="font-size: 0.75rem; color: var(--text-muted); display: flex; gap: 8px;"></span>
-          <span style="color: var(--bronze);">|</span>
-          <!-- Session 数量 -->
-          <span id="count" class="panel-count">-</span>
-          <span style="color: var(--bronze);">|</span>
-          <!-- 总时长 -->
-          <span id="total-duration" style="font-size: 0.75rem; color: var(--text-muted);"></span>
-        </div>
-      </div>
-      <div id="list" class="session-list">
-        <div class="loading">
-          <div class="spinner"></div>
-          <div>Fetching Claude sessions...</div>
-        </div>
-      </div>
-    </section>
-  </main>
 
   <script>
-    // ============================================
-    // State
-    // ============================================
     let currentConfig = {};
-    let pagination = {
-      offset: 0,
-      limit: 20,
-      total: 0
-    };
-    let refreshInterval;
+    let pagination = { offset: 0, limit: 20, total: 0 };
 
-    // ============================================
-    // Config Functions
-    // ============================================
-    async function loadConfig() {
+    function handleBadgeClick() {
+      const badge = document.getElementById('version-badge');
+      if (!badge || !badge.classList.contains('update-ready')) return;
+      
+      const current = badge.dataset.current;
+      const latest = badge.dataset.latest;
+      
+      document.getElementById('update-current-ver').textContent = 'v' + current;
+      document.getElementById('update-latest-ver').textContent = 'v' + latest;
+      document.getElementById('update-modal-overlay').classList.add('active');
+    }
+
+    async function checkVersion() {
       try {
-        const response = await fetch('/api/config');
-        const config = await response.json();
-        currentConfig = config;
-
-        document.getElementById('config-path').innerHTML = `<span class="icon">◈</span> <code>${escapeHtml(config.claudePath)}</code>`;
-        document.getElementById('config-model').textContent = escapeHtml(config.model);
-        document.getElementById('config-host').textContent = `${escapeHtml(config.ip)}:${config.port}`;
-        document.getElementById('config-user').textContent = escapeHtml(config.user);
-      } catch (error) {
-        console.error('Failed to load config:', error);
-        document.getElementById('config-path').textContent = 'Failed to load';
-      }
-    }
-
-    function openEditModal() {
-      document.getElementById('edit-model').value = currentConfig.model || '';
-      document.getElementById('edit-apiurl').value = currentConfig.apiUrl || '';
-      document.getElementById('edit-apikey').value = '';
-      document.getElementById('edit-modal-overlay').classList.add('active');
-    }
-
-    function closeEditModal() {
-      document.getElementById('edit-modal-overlay').classList.remove('active');
-    }
-
-    async function saveConfig() {
-      const newConfig = {
-        model: document.getElementById('edit-model').value,
-        apiUrl: document.getElementById('edit-apiurl').value,
-        apiKey: document.getElementById('edit-apikey').value
-      };
-
-      try {
-        const response = await fetch('/api/config', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(newConfig)
-        });
-
-        if (!response.ok) {
-          throw new Error(await response.text());
-        }
-
-        closeEditModal();
-        loadConfig();
-        alert('Configuration saved successfully!');
-      } catch (error) {
-        alert('Failed to save configuration: ' + error.message);
-      }
-    }
-
-    // ============================================
-    // SSH Server Management Functions
-    // ============================================
-    async function loadServers() {
-      try {
-        const response = await fetch('/api/servers');
+        const response = await fetch('/api/system/version');
         const data = await response.json();
-        const servers = data.servers || [];
-        const container = document.getElementById('servers-list');
+        const badge = document.getElementById('version-badge');
+        if (!badge) return;
 
-        if (servers.length === 0) {
-          container.innerHTML = '<span style="color: var(--text-muted); font-size: 0.85rem;">No servers configured</span>';
-          return;
-        }
+        badge.dataset.current = data.current;
+        badge.dataset.latest = data.latest;
 
-        container.innerHTML = servers.map(server => `
-          <div class="server-tag" onclick="toggleServerSessions('${escapeHtml(server.id)}')" data-server-id="${escapeHtml(server.id)}">
-            <span class="server-status ${server.connected ? 'connected' : ''}"></span>
-            <span class="server-name">${escapeHtml(server.name || server.id)}</span>
-            <span class="server-host">${escapeHtml(server.host)}</span>
-            <button class="btn-delete-server" onclick="event.stopPropagation(); deleteServer('${escapeHtml(server.id)}')" title="Delete server">✕</button>
-          </div>
-          <div id="server-sessions-${escapeHtml(server.id)}" class="server-sessions" style="display: none;"></div>
-        `).join('');
-      } catch (error) {
-        console.error('Failed to load servers:', error);
-      }
-    }
-
-    function openAddServerModal() {
-      document.getElementById('add-server-modal-overlay').classList.add('active');
-      // Clear form
-      document.getElementById('add-server-id').value = '';
-      document.getElementById('add-server-name').value = '';
-      document.getElementById('add-server-host').value = '';
-      document.getElementById('add-server-port').value = '22';
-      document.getElementById('add-server-username').value = '';
-      document.getElementById('add-server-password').value = '';
-    }
-
-    function closeAddServerModal() {
-      document.getElementById('add-server-modal-overlay').classList.remove('active');
-    }
-
-    async function addServer() {
-      const id = document.getElementById('add-server-id').value.trim();
-      const name = document.getElementById('add-server-name').value.trim();
-      const host = document.getElementById('add-server-host').value.trim();
-      const port = parseInt(document.getElementById('add-server-port').value) || 22;
-      const username = document.getElementById('add-server-username').value.trim();
-      const password = document.getElementById('add-server-password').value;
-
-      if (!id || !host || !username || !password) {
-        alert('Please fill in all required fields: ID, Host, Username, Password');
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/servers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, host, port, username, password })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Failed to add server');
-        }
-
-        closeAddServerModal();
-        loadServers();
-        showToast(`Server "${id}" added successfully`);
-      } catch (error) {
-        alert('Failed to add server: ' + error.message);
-      }
-    }
-
-    async function deleteServer(serverId) {
-      if (!confirm(`Delete server "${serverId}"? This will remove the server configuration.`)) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/api/servers/${serverId}`, { method: 'DELETE' });
-        if (!response.ok) throw new Error('Failed to delete server');
-
-        loadServers();
-        showToast(`Server "${serverId}" deleted`);
-      } catch (error) {
-        alert('Failed to delete server: ' + error.message);
-      }
-    }
-
-    async function testServerConnection() {
-      const id = document.getElementById('add-server-id').value.trim();
-      const name = document.getElementById('add-server-name').value.trim();
-      const host = document.getElementById('add-server-host').value.trim();
-      const port = parseInt(document.getElementById('add-server-port').value) || 22;
-      const username = document.getElementById('add-server-username').value.trim();
-      const password = document.getElementById('add-server-password').value;
-
-      if (!id || !host || !username || !password) {
-        alert('Please fill in all required fields first');
-        return;
-      }
-
-      // First add the server (temporarily)
-      try {
-        await fetch('/api/servers', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, name, host, port, username, password })
-        });
-
-        // Then test connection
-        const response = await fetch(`/api/servers/${id}/test`, { method: 'POST' });
-        const result = await response.json();
-
-        if (result.status === 'connected') {
-          showToast('✓ Connection successful!', 'success');
+        if (data.needsUpdate && data.current !== 'unknown') {
+          badge.innerHTML = `◈ v${data.current} <span style="color:var(--cyan);">(Update!)</span>`;
+          badge.classList.add('update-ready');
+          badge.onclick = () => {
+            document.getElementById('update-current-ver').textContent = 'v' + data.current;
+            document.getElementById('update-latest-ver').textContent = 'v' + data.latest;
+            document.getElementById('update-modal-overlay').classList.add('active');
+          };
         } else {
-          showToast('✕ Connection failed: ' + result.error, 'error');
+          badge.innerHTML = `◈ v${data.current}`;
+          badge.classList.remove('update-ready');
+          badge.onclick = null;
         }
-      } catch (error) {
-        showToast('✕ Test failed: ' + error.message, 'error');
-      }
+      } catch (e) { console.warn('Version check failed', e); }
     }
 
-    async function toggleServerSessions(serverId) {
-      const container = document.getElementById(`server-sessions-${serverId}`);
-      if (!container) return;
+    async function executeUpdate(method) {
+      const modal = document.querySelector('#update-modal-overlay .modal');
+      const latestVer = document.getElementById('update-latest-ver').textContent;
+      
+      // Step 1: Initialize
+      modal.innerHTML = `
+        <div class="update-status-container">
+          <div class="ora-spinner"></div>
+          <div class="status-step" id="update-step">Initializing Update...</div>
+          <div class="status-sub">Method: ${method === 'npm' ? 'NPM Mirror' : 'Official CLI'}</div>
+        </div>
+      `;
 
-      if (container.style.display === 'block') {
-        container.style.display = 'none';
-        return;
-      }
-
-      container.style.display = 'block';
-      container.innerHTML = '<div style="padding: 8px; color: var(--text-muted);">Loading sessions...</div>';
-
-      try {
-        const response = await fetch(`/api/servers/${serverId}/sessions`);
-        const data = await response.json();
-        const sessions = data.sessions || [];
-
-        if (sessions.length === 0) {
-          container.innerHTML = '<div style="padding: 8px; color: var(--text-muted);">No sessions found on this server</div>';
-          return;
-        }
-
-        container.innerHTML = sessions.map(session => `
-          <div class="session-card remote-session" onclick="viewRemoteSession('${escapeHtml(serverId)}', '${escapeHtml(session.id)}')">
-            <div class="session-info">
-              <div class="session-header">
-                <span class="session-status ${session.status || ''}"></span>
-                <span class="session-id">${escapeHtml(session.id.slice(0, 8))}...</span>
-                <span class="remote-badge">REMOTE</span>
-              </div>
-              <div class="session-name">${escapeHtml(session.name || 'Session')}</div>
-              <div class="session-meta">
-                <span class="session-meta-label">Status:</span>
-                <span class="session-meta-value">${getStatusText(session.status)}</span>
-              </div>
-            </div>
-          </div>
-        `).join('');
-      } catch (error) {
-        container.innerHTML = `<div style="padding: 8px; color: var(--status-error);">Failed to load sessions: ${error.message}</div>`;
-      }
-    }
-
-    function viewRemoteSession(serverId, sessionId) {
-      window.location.href = `/terminal/${serverId}/${sessionId}`;
-    }
-
-    function showToast(message, type = 'info') {
-      // Create toast if not exists
-      let toast = document.getElementById('toast');
-      if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'toast';
-        toast.style.cssText = 'position: fixed; bottom: 24px; right: 24px; background: var(--slate-panel); border: 1px solid var(--cyan-dim); border-radius: 6px; padding: 14px 20px; z-index: 1000; transition: all 0.3s; opacity: 0; transform: translateY(20px);';
-        document.body.appendChild(toast);
-      }
-
-      toast.textContent = message;
-      toast.style.borderColor = type === 'error' ? 'var(--status-error)' : 'var(--cyan-dim)';
-      toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
-
+      // Step 2: Set Step Info
       setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateY(20px)';
-      }, 3000);
-    }
-
-    // ============================================
-    // Session Functions
-    // ============================================
-    async function load() {
-      const list = document.getElementById('list');
-      const count = document.getElementById('count');
-      const statusStats = document.getElementById('status-stats');
-
-      // 如果是首次加载或刷新，显示 loading
-      if (!document.querySelector('.session-card')) {
-        list.innerHTML = `
-          <div class="loading">
-            <div class="spinner"></div>
-            <div>Fetching sessions...</div>
-          </div>
-        `;
-      }
+        const stepEl = document.getElementById('update-step');
+        if (stepEl) stepEl.textContent = `Downloading & Installing ${latestVer}...`;
+      }, 1500);
 
       try {
-        const response = await fetch(`/api/sessions?limit=${pagination.limit}&offset=${pagination.offset}`);
-        const data = await response.json();
-        const sessions = data.sessions || [];
-        pagination.total = data.pagination?.total || sessions.length;
-
-        count.textContent = `${sessions.length} session${sessions.length !== 1 ? 's' : ''}`;
-
-        // 统计各状态数量
-        const statusCounts = {
-          running: 0,
-          idle: 0,
-          completed: 0,
-          stopped: 0,
-          unknown: 0
-        };
-
-        sessions.forEach(session => {
-          const status = session.status;
-          if (statusCounts.hasOwnProperty(status)) {
-            statusCounts[status]++;
-          } else {
-            statusCounts.unknown++;
-          }
+        const res = await fetch('/api/system/update', { 
+          method: 'POST', 
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ method }) 
         });
-
-        // 显示状态统计
-        const statusLabels = {
-          running: { text: 'Running', color: 'var(--status-active)' },
-          idle: { text: 'Idle', color: 'var(--status-pending)' },
-          completed: { text: 'Completed', color: 'var(--status-done)' },
-          stopped: { text: 'Stopped', color: 'var(--status-error)' },
-          unknown: { text: 'Unknown', color: 'var(--text-muted)' }
-        };
-
-        statusStats.innerHTML = Object.entries(statusCounts)
-          .filter(([_, count]) => count > 0)
-          .map(([status, count]) => {
-            const label = statusLabels[status] || statusLabels.unknown;
-            return `<span style="color: ${label.color}; display: flex; align-items: center; gap: 4px;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: ${label.color};"></span>
-              ${count}
-            </span>`;
-          })
-          .join('');
-
-        if (sessions.length === 0) {
-          list.innerHTML = `
-            <div class="empty">
-              <div class="empty-icon">◈</div>
-              <p>No active sessions found</p>
-              <p style="font-size: 0.85rem; margin-top: 8px; color: var(--text-muted);">
-                Run "claude" in your terminal to start a session
-              </p>
+        const result = await res.json();
+        
+        if (result.status === 'success') {
+          // Success State
+          modal.innerHTML = `
+            <div class="update-status-container">
+              <div class="ora-spinner" style="border-color: var(--status-done); animation: none; box-shadow: 0 0 20px var(--status-done);"></div>
+              <div class="status-step" style="color: var(--status-done)">Update Successful!</div>
+              <div class="status-sub">Claude Code is now at ${latestVer}</div>
+              <div class="status-sub" style="margin-top:10px">Refreshing system in 2s...</div>
             </div>
           `;
-          renderPagination();
-          return;
+          setTimeout(() => location.reload(), 2000);
+        } else {
+          throw new Error(result.error);
         }
-
-        // 按开始时间倒序排序（最新的在前）
-        sessions.sort((a, b) => {
-          const timeA = new Date(a.startTime).getTime();
-          const timeB = new Date(b.startTime).getTime();
-          return timeB - timeA;
-        });
-
-        // 统计总 Duration（动态计算 running session 的 duration）
-        const totalDuration = sessions.reduce((sum, s) => {
-          let duration = s.duration || 0;
-          // 如果是 running 状态，动态计算 duration
-          if (s.status === 'running' && s.startTime) {
-            const startTime = new Date(s.startTime).getTime();
-            duration = Math.floor((Date.now() - startTime) / 1000);
-          }
-          return sum + duration;
-        }, 0);
-
-        // 显示总持续时间到顶部
-        document.getElementById('total-duration').innerHTML = `Total: <span style="color: var(--cyan); font-family: var(--font-mono);">${formatDurationSec(totalDuration)}</span>`;
-
-        list.innerHTML = sessions.map(session => `
-          <div class="session-card" onclick="viewSession('${escapeHtml(session.id)}')" data-session-id="${escapeHtml(session.id)}" data-status="${session.status}" data-start="${new Date(session.startTime).getTime()}">
-            <div class="session-info">
-              <div class="session-header">
-                <span class="session-status ${session.status || ''}"></span>
-                <span class="session-id">${escapeHtml(session.id)}</span>
-              </div>
-              <div class="session-name">${escapeHtml(session.name || 'Session')}</div>
-              <div class="session-meta">
-                <div class="session-meta-item">
-                  <span class="session-meta-label">Status:</span>
-                  <span class="session-meta-value">${getStatusText(session.status)}</span>
-                </div>
-                <div class="session-meta-item">
-                  <span class="session-meta-label">Started:</span>
-                  <span class="session-meta-value">${new Date(session.startTime).toLocaleString()}</span>
-                </div>
-                <div class="session-meta-item">
-                  <span class="session-meta-label">Duration:</span>
-                  <span class="session-meta-value duration" data-status="${session.status}" data-start="${new Date(session.startTime).getTime()}">${formatDurationWithStatus(session.duration, session.status, new Date(session.startTime).getTime())}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        `).join('');
-
-        renderPagination();
-
-        // 启动 Duration 实时更新
-        startDurationUpdates();
-
-      } catch (error) {
-        list.innerHTML = `
-          <div class="empty">
-            <div class="empty-icon">⚠</div>
-            <p>Failed to load sessions</p>
-            <button class="btn btn-primary" onclick="load()" style="margin-top: 16px;">Retry</button>
+      } catch (e) {
+        // Error State
+        modal.innerHTML = `
+          <div class="update-status-container">
+            <div class="ora-spinner" style="border-color: var(--status-error); animation: none;"></div>
+            <div class="status-step" style="color: var(--status-error)">Update Failed</div>
+            <div class="status-sub">${e.message}</div>
+            <button class="btn btn-ghost" onclick="location.reload()" style="margin-top: 20px;">Close & Retry</button>
           </div>
         `;
       }
     }
 
-    // 格式化 Duration（支持动态计算）
-    function formatDurationWithStatus(staticDuration, status, startTimeMs) {
-      let duration = staticDuration || 0;
-      // 如果是 running 状态，动态计算 duration
-      if (status === 'running' && startTimeMs) {
-        duration = Math.floor((Date.now() - startTimeMs) / 1000);
-      }
-      return formatDurationSec(duration);
+    function closeUpdateModal() { document.getElementById('update-modal-overlay').classList.remove('active'); }
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/sessions?limit=${pagination.limit}&offset=${pagination.offset}`);
+        const data = await res.json();
+        const sessions = data.sessions || [];
+        document.getElementById('count').textContent = `${sessions.length} sessions`;
+        document.getElementById('list').innerHTML = sessions.map(s => `
+          <div class="session-card" onclick="location.href='/terminal/${s.id}'">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span class="session-status ${s.status}"></span>
+                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${s.id.slice(0,8)}...</span>
+              </div>
+              <div style="margin:4px 0; font-weight:500;">${escapeHtml(s.name || 'Untitled')}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted)">Started: ${new Date(s.startTime).toLocaleString()}</div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) { document.getElementById('list').innerHTML = '<div style="text-align:center;padding:20px">Error loading sessions</div>'; }
     }
 
-    // 启动 Duration 实时更新（仅针对 running session）
-    function startDurationUpdates() {
-      // 清除之前的 interval（如果有）
-      if (window.durationUpdateInterval) {
-        clearInterval(window.durationUpdateInterval);
-      }
-
-      // 每秒更新一次 running session 的 duration
-      window.durationUpdateInterval = setInterval(() => {
-        const durationElements = document.querySelectorAll('.duration[data-status="running"]');
-        durationElements.forEach(el => {
-          const startTimeMs = parseInt(el.getAttribute('data-start'));
-          if (startTimeMs) {
-            const duration = Math.floor((Date.now() - startTimeMs) / 1000);
-            el.textContent = formatDurationSec(duration);
-          }
-        });
-
-        // 更新顶部的总 duration
-        updateTotalDuration();
-      }, 1000);
-    }
-
-    // 更新总 duration
-    function updateTotalDuration() {
-      const durationElements = document.querySelectorAll('.duration[data-status="running"]');
-      let runningTotal = 0;
-
-      durationElements.forEach(el => {
-        const startTimeMs = parseInt(el.getAttribute('data-start'));
-        if (startTimeMs) {
-          runningTotal += Math.floor((Date.now() - startTimeMs) / 1000);
-        }
-      });
-
-      // 加上 completed/stopped session 的静态 duration
-      const staticDurations = document.querySelectorAll('.duration:not([data-status="running"])');
-      let staticTotal = 0;
-      staticDurations.forEach(el => {
-        const text = el.textContent;
-        const parts = text.split(':').map(Number);
-        if (parts.length === 3) {
-          staticTotal += parts[0] * 3600 + parts[1] * 60 + parts[2];
-        }
-      });
-
-      const totalDuration = runningTotal + staticTotal;
-      document.getElementById('total-duration').innerHTML = `Total: <span style="color: var(--cyan); font-family: var(--font-mono);">${formatDurationSec(totalDuration)}</span>`;
-    }
-
-    // 渲染分页控件（在 header 中）
-    function renderPagination() {
-      const currentPage = Math.floor(pagination.offset / pagination.limit) + 1;
-      const totalPages = Math.ceil(pagination.total / pagination.limit) || 1;
-
-      // 更新页面信息
-      document.getElementById('page-info').textContent = `Page ${currentPage} / ${totalPages}`;
-
-      // 更新按钮状态
-      const prevBtn = document.getElementById('prev-btn');
-      const nextBtn = document.getElementById('next-btn');
-
-      if (pagination.offset === 0) {
-        prevBtn.style.opacity = '0.4';
-        prevBtn.style.cursor = 'not-allowed';
-        prevBtn.removeAttribute('onclick');
-      } else {
-        prevBtn.style.opacity = '1';
-        prevBtn.style.cursor = 'pointer';
-        prevBtn.setAttribute('onclick', 'changePage(-1)');
-      }
-
-      const hasNext = pagination.offset + pagination.limit < pagination.total;
-      if (!hasNext) {
-        nextBtn.style.opacity = '0.4';
-        nextBtn.style.cursor = 'not-allowed';
-        nextBtn.removeAttribute('onclick');
-      } else {
-        nextBtn.style.opacity = '1';
-        nextBtn.style.cursor = 'pointer';
-        nextBtn.setAttribute('onclick', 'changePage(1)');
+    async function loadConfig() {
+      try {
+        const res = await fetch('/api/config');
+        currentConfig = await res.json();
+        
+        document.getElementById('config-path').textContent = currentConfig.claudePath || '~/.claude';
+        document.getElementById('config-model').textContent = currentConfig.model || 'not set';
+        
+        // Fix IP and User display
+        const ip = currentConfig.ip || '127.0.0.1';
+        const user = currentConfig.user || 'unknown';
+        document.getElementById('config-host').textContent = ip;
+        document.getElementById('config-user').textContent = user;
+      } catch (e) {
+        console.error('Failed to load config:', e);
       }
     }
 
-    // 处理分页按钮点击
-    function changePage(delta) {
-      const newOffset = pagination.offset + (delta * pagination.limit);
-      if (newOffset >= 0 && newOffset < pagination.total) {
-        pagination.offset = newOffset;
-        load();
-      }
+    async function loadServers() {
+      const res = await fetch('/api/servers');
+      const data = await res.json();
+      document.getElementById('servers-list').innerHTML = (data.servers || []).map(s => `
+        <div class="server-tag" onclick="toggleServerSessions('${s.id}')">
+          <span class="server-status ${s.connected ? 'connected' : ''}"></span>
+          <span>${s.name || s.id}</span>
+        </div>
+        <div id="server-sessions-${s.id}" style="display:none; width:100%; padding:10px;"></div>
+      `).join('');
     }
 
-    function getStatusText(status) {
-      const statusMap = {
-        'running': 'Running',
-        'completed': 'Completed',
-        'stopped': 'Stopped'
-      };
-      return statusMap[status] || status || 'Unknown';
+    async function toggleServerSessions(id) {
+      const el = document.getElementById(`server-sessions-${id}`);
+      if (el.style.display === 'block') { el.style.display = 'none'; return; }
+      el.style.display = 'block'; el.innerHTML = 'Loading...';
+      const res = await fetch(`/api/servers/${id}/sessions`);
+      const data = await res.json();
+      el.innerHTML = (data.sessions || []).map(s => `
+        <div class="session-card" onclick="location.href='/terminal/${id}/${s.id}'" style="margin:4px 0">
+          <div style="font-size:0.8rem">◈ ${escapeHtml(s.name || s.id.slice(0,8))} <span class="remote-badge">REMOTE</span></div>
+        </div>
+      `).join('');
     }
 
-    function formatDurationSec(secs) {
-      if (secs === undefined || secs === null) return '-';
-      const hours = Math.floor(secs / 3600);
-      const minutes = Math.floor((secs % 3600) / 60);
-      const seconds = secs % 60;
-      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
+    function openEditModal() { document.getElementById('edit-modal-overlay').classList.add('active'); }
+    function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('active'); }
+    function openAddServerModal() { document.getElementById('add-server-modal-overlay').classList.add('active'); }
+    function closeAddServerModal() { document.getElementById('add-server-modal-overlay').classList.remove('active'); }
+    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-    function viewSession(id) {
-      // 直接跳转到 terminal 页面，无需等待
-      // terminal 页面会自动连接或启动 session
-      window.location.href = `/terminal/${id}`;
-    }
-
-    // ============================================
-    // Utilities
-    // ============================================
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    // ============================================
-    // Initialization
-    // ============================================
-    // 等待 DOM 加载完成后再初始化
     (function init() {
-      loadConfig();
-      load();
-      loadServers();
+      loadConfig(); load(); loadServers(); checkVersion();
+      setInterval(checkVersion, 3600000);
+      setInterval(load, 15000);
     })();
-
-    // Auto-refresh every 10 seconds
-    setInterval(() => {
-      // 清除 duration 更新 interval，避免重复
-      if (window.durationUpdateInterval) {
-        clearInterval(window.durationUpdateInterval);
-      }
-      load();
-    }, 10000);
   </script>
 </body>
 </html>

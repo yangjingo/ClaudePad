@@ -32,9 +32,20 @@ export async function getConfig(): Promise<AppConfig> {
     if (ip !== '127.0.0.1') break;
   }
 
+  // Try to find model in order of priority: 
+  // 1. System Environment Variables
+  // 2. Local settings.json fields
+  // 3. Fallback default
+  const model = process.env.ANTHROPIC_DEFAULT_SONNET_MODEL || 
+                process.env.ANTHROPIC_MODEL ||
+                settings.model || 
+                settings.env?.ANTHROPIC_DEFAULT_SONNET_MODEL || 
+                settings.env?.ANTHROPIC_MODEL || 
+                'claude-3-5-sonnet-latest';
+
   return {
     claudePath: CLAUDE_DIR,
-    model: settings.model || 'unknown',
+    model: model,
     apiUrl: settings.env?.ANTHROPIC_BASE_URL || 'https://api.anthropic.com',
     apiKey: settings.env?.ANTHROPIC_AUTH_TOKEN
       ? settings.env.ANTHROPIC_AUTH_TOKEN.slice(0, 8) + '...' + settings.env.ANTHROPIC_AUTH_TOKEN.slice(-4)
