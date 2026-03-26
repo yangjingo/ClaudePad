@@ -4,6 +4,10 @@ Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips
 
 ## Update
 
+- **v0.3.26** - Redesigned symmetric sector-based layout with environment-aware config editing and independent version tracking for local/remote environments. Added custom Sheikah scrollbars and guided empty states.
+
+See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
+
 - **v0.3.0** - Major backend refactoring with modular architecture. Split monolithic server into organized layers: routes, services, websocket handlers. Added TypeScript types, SSH key auth support. New project structure with `backend/` and `frontend/` directories.
 
 - **v0.3.08.2** - Redesigned Agent Playground with software development team theme. Link (PM) coordinates with Revali (Analyst), Mipha (Frontend), Urbosa (Backend), and Daruk (QA). Added Westworld-style character wandering, dialogue system, and Hyrule landscape elements (mountains, hills, trees) to the Canvas map.
