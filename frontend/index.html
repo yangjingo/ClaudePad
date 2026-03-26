@@ -625,7 +625,7 @@
         if (isRemote) {
           const remoteBar = document.getElementById('remote-config-bar');
           if (remoteBar) {
-            remoteBar.style.display = 'flex';
+            remoteBar.style.display = 'grid'; // MUST be grid to match CSS class
             const pathLabel = remoteBar.querySelector('.config-label');
             if (pathLabel) pathLabel.textContent = `🌐 ${serverId} Path`;
           }
