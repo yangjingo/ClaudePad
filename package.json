@@ -3,6 +3,23 @@
   "version": "0.2.0",
   "type": "module",
   "description": "Claude Code Session Monitor - Web-based terminal for Claude Code",
+  "author": "yangjing",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yangjingo/ClaudePad.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yangjingo/ClaudePad/issues"
+  },
+  "homepage": "https://github.com/yangjingo/ClaudePad#readme",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "terminal",
+    "monitor",
+    "ssh"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch backend/index.ts",
@@ -30,7 +47,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "bin": "dist/index.js",
+  "files": [
+    "dist/",
+    "frontend/",
+    "asserts/"
+  ],
+  "bin": {
+    "claudepad": "dist/index.js"
+  },
   "pkg": {
     "assets": [
       "frontend/**/*",

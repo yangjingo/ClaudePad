@@ -20,6 +20,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm install
@@ -56,6 +57,11 @@ jobs:
         with:
           name: claudepad-win-x64
           path: build/claudepad-v*-win-x64.exe
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release:
     needs: build
@@ -100,6 +106,12 @@ jobs:
             ### Downloads
             - Linux x64: `claudepad-v${{ steps.version.outputs.VERSION }}-linux-x64`
             - Windows x64: `claudepad-v${{ steps.version.outputs.VERSION }}-win-x64.exe`
+
+            ### npm
+            ```bash
+            npm install -g claudepad
+            claudepad
+            ```
 
             ### Usage
             ```bash
