@@ -18,6 +18,7 @@ import { handleServersRoutes } from './routes/servers.js';
 import { handleConfigRoutes } from './routes/config.js';
 import { handleCacheRoutes } from './routes/cache.js';
 import { handleTerminalRoutes } from './routes/terminals.js';
+import { handleSystemRoutes } from './routes/system.js';
 
 // WebSocket
 import { handleLocalTerminalWS } from './websocket/terminal.js';
@@ -67,6 +68,17 @@ const server = createServer(async (req, res) => {
   handled = await handleTerminalRoutes(url, method, req, res);
   if (handled) return;
 
+  // System routes (version/update)
+  handled = await handleSystemRoutes(url, method, req, res);
+  if (handled) return;
+
+  // Simple health probe for startup verification
+  if (url === '/healthz' && method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, port: PORT, ts: Date.now() }));
+    return;
+  }
+
   // Static files
   handled = await serveStaticFiles(url, res);
   if (handled) return;
@@ -110,6 +122,19 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
       return true;
+    }
+  }
+
+  // Browser default favicon request
+  if (url === '/favicon.ico') {
+    const filePath = join(projectRoot, 'asserts', 'zelda-icon', 'link.png');
+    try {
+      const content = await readFile(filePath);
+      res.writeHead(200, { 'Content-Type': 'image/png' });
+      res.end(content);
+      return true;
+    } catch {
+      console.log(`Favicon file not found: ${filePath}`);
     }
   }
 

@@ -17,17 +17,23 @@ export function handleLocalTerminalWS(ws: WebSocket, sessionId: string): void {
   }
 
   ws.on('message', (data) => {
+    const dataStr = data.toString();
     try {
-      const msg = JSON.parse(data.toString());
-      if (msg.type === 'input') {
-        terminalPool.writeToTerminal(sessionId, msg.data);
-      } else if (msg.type === 'resize') {
-        const cols = msg.cols || 120;
-        const rows = msg.rows || 30;
-        terminalPool.resizeTerminal(sessionId, cols, rows);
+      if (dataStr.startsWith('{') && dataStr.endsWith('}')) {
+        const msg = JSON.parse(dataStr);
+        if (msg.type === 'input') {
+          terminalPool.writeToTerminal(sessionId, msg.data);
+          return;
+        } else if (msg.type === 'resize') {
+          const cols = msg.cols || 120;
+          const rows = msg.rows || 30;
+          terminalPool.resizeTerminal(sessionId, cols, rows);
+          return;
+        }
       }
+      terminalPool.writeToTerminal(sessionId, dataStr);
     } catch {
-      terminalPool.writeToTerminal(sessionId, data.toString());
+      terminalPool.writeToTerminal(sessionId, dataStr);
     }
   });
 

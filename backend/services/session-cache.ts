@@ -1,6 +1,6 @@
 /**
  * Session Cache Service
- * Handles session discovery, caching, and token counting
+ * Handles session discovery and caching
  */
 import { readFile, readdir, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -15,11 +15,29 @@ const FILE_CACHE_TTL = 300000;      // 5 minutes
 
 let sessionCache: CachedData | null = null;
 let cacheStats: CacheStats = { hits: 0, misses: 0 };
+const UUID_PATTERN = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+
+function normalizeSession(session: any): SessionInfo {
+  return {
+    id: session.id,
+    name: session.name,
+    status: session.status,
+    startTime: session.startTime,
+    projectPath: session.projectPath,
+    lastActivity: session.lastActivity,
+    duration: session.duration,
+    remote: session.remote,
+    serverId: session.serverId,
+    serverName: session.serverName
+  };
+}
 
 // ========== History Parsing ==========
 
-async function parseHistory(): Promise<Map<string, { name: string; timestamp: number; project: string }>> {
-  const sessions = new Map();
+type HistoryMeta = { name: string; timestamp: number; project: string };
+
+async function parseHistory(): Promise<Map<string, HistoryMeta>> {
+  const sessions = new Map<string, HistoryMeta>();
   try {
     const content = await readFile(join(CLAUDE_DIR, 'history.jsonl'), 'utf-8');
     content.trim().split('\n').filter(l => l).forEach(line => {
@@ -45,7 +63,10 @@ async function loadFromFileCache(): Promise<{ sessions: SessionInfo[]; timestamp
     const content = await readFile(CACHE_FILE, 'utf-8');
     const data = JSON.parse(content);
     if (Date.now() - data.timestamp < FILE_CACHE_TTL) {
-      return data;
+      return {
+        timestamp: data.timestamp,
+        sessions: Array.isArray(data.sessions) ? data.sessions.map(normalizeSession) : []
+      };
     }
   } catch {
     // Cache not found or corrupted
@@ -62,95 +83,57 @@ async function saveToFileCache(sessions: SessionInfo[]): Promise<void> {
   }
 }
 
-// ========== Token Counting ==========
+function extractSessionIdFromText(content: string): string | null {
+  const match = content.match(UUID_PATTERN);
+  return match ? match[0] : null;
+}
 
-async function getTokenCount(sessionId: string): Promise<number> {
-  const possiblePaths = [
-    join(CLAUDE_DIR, 'sessions', `${sessionId}.jsonl`),
-    join(CLAUDE_DIR, 'session-env', sessionId),
-  ];
-
-  for (const sessionPath of possiblePaths) {
-    try {
-      const { stat } = await import('node:fs/promises');
-      const s = await stat(sessionPath);
-
-      if (s.isFile() && sessionPath.endsWith('.jsonl')) {
-        const content = await readFile(sessionPath, 'utf-8');
-        return countTokensFromJsonl(content);
-      } else if (s.isDirectory()) {
-        const files = await readdir(sessionPath);
-        const logFiles = files.filter(f => f.endsWith('.jsonl'));
-        let totalTokens = 0;
-        for (const file of logFiles) {
-          const content = await readFile(join(sessionPath, file), 'utf-8');
-          totalTokens += countTokensFromJsonl(content);
-        }
-        return totalTokens;
-      }
-    } catch {
-      continue;
-    }
-  }
-
-  // Try projects directory
+async function discoverSessionIdsFromSessionsDir(): Promise<Set<string>> {
+  const sessionIds = new Set<string>();
   try {
-    const projectsDir = join(CLAUDE_DIR, 'projects');
-    const projects = await readdir(projectsDir);
-    for (const project of projects) {
-      const sessionFile = join(projectsDir, project, `${sessionId}.jsonl`);
+    const sessionsDir = join(CLAUDE_DIR, 'sessions');
+    const files = await readdir(sessionsDir);
+    for (const file of files) {
+      if (!file.endsWith('.jsonl') && !file.endsWith('.json')) continue;
+
+      const base = file.replace(/\.(jsonl|json)$/i, '');
+      if (UUID_PATTERN.test(base)) {
+        sessionIds.add(base);
+        continue;
+      }
+
+      if (!file.endsWith('.json')) continue;
+
       try {
-        const content = await readFile(sessionFile, 'utf-8');
-        return countTokensFromJsonl(content);
+        const content = await readFile(join(sessionsDir, file), 'utf-8');
+        const extractedId = extractSessionIdFromText(content);
+        if (extractedId) sessionIds.add(extractedId);
       } catch {
         continue;
       }
     }
   } catch {
-    // projects directory not found
+    // sessions directory not found
   }
-
-  return 0;
+  return sessionIds;
 }
 
-function countTokensFromJsonl(content: string): number {
-  let totalTokens = 0;
-  for (const line of content.trim().split('\n').filter(l => l)) {
-    try {
-      const entry = JSON.parse(line);
-      totalTokens += entry.usage?.input_tokens || 0;
-      totalTokens += entry.usage?.output_tokens || 0;
-    } catch {
-      continue;
-    }
-  }
-  return totalTokens;
-}
-
-// ========== Session Discovery ==========
-
-async function discoverSessions(): Promise<Set<string>> {
+async function discoverSessionIdsFromSessionEnv(): Promise<Set<string>> {
   const sessionIds = new Set<string>();
-  const history = await parseHistory();
-  history.forEach((_, id) => sessionIds.add(id));
-
-  // sessions/ directory (new format)
-  try {
-    const sessionsDir = join(CLAUDE_DIR, 'sessions');
-    const files = await readdir(sessionsDir);
-    files.filter(f => f.endsWith('.jsonl')).forEach(f => {
-      sessionIds.add(f.replace('.jsonl', ''));
-    });
-  } catch {}
-
-  // session-env/ directory (old format)
   try {
     const sessionEnvDir = join(CLAUDE_DIR, 'session-env');
     const dirs = await readdir(sessionEnvDir);
-    dirs.forEach(id => sessionIds.add(id));
-  } catch {}
+    dirs.forEach(id => {
+      if (id) sessionIds.add(id);
+    });
+  } catch {
+    // session-env directory not found
+  }
+  return sessionIds;
+}
 
-  // projects/ directory
+async function discoverSessionIdsFromProjects(): Promise<Set<string>> {
+  const sessionIds = new Set<string>();
   try {
     const projectsDir = join(CLAUDE_DIR, 'projects');
     const projects = await readdir(projectsDir);
@@ -159,13 +142,54 @@ async function discoverSessions(): Promise<Set<string>> {
         const projectDir = join(projectsDir, project);
         const files = await readdir(projectDir);
         files.filter(f => f.endsWith('.jsonl')).forEach(f => {
-          sessionIds.add(f.replace('.jsonl', ''));
+          sessionIds.add(f.replace(/\.jsonl$/i, ''));
         });
       } catch {
         continue;
       }
     }
-  } catch {}
+  } catch {
+    // projects directory not found
+  }
+  return sessionIds;
+}
+
+async function discoverSessionIdsFromFileHistory(): Promise<Set<string>> {
+  const sessionIds = new Set<string>();
+  try {
+    const fileHistoryDir = join(CLAUDE_DIR, 'file-history');
+    const dirs = await readdir(fileHistoryDir);
+    dirs.forEach(dirName => {
+      if (UUID_PATTERN.test(dirName)) sessionIds.add(dirName);
+    });
+  } catch {
+    // file-history directory not found
+  }
+  return sessionIds;
+}
+
+// ========== Session Discovery ==========
+
+async function discoverSessions(): Promise<Set<string>> {
+  const history = await parseHistory();
+  const historyIds = new Set(history.keys());
+
+  const artifactSources = await Promise.all([
+    discoverSessionIdsFromSessionsDir(),
+    discoverSessionIdsFromSessionEnv(),
+    discoverSessionIdsFromProjects(),
+    discoverSessionIdsFromFileHistory()
+  ]);
+
+  const artifactIds = new Set<string>();
+  for (const ids of artifactSources) {
+    ids.forEach(id => artifactIds.add(id));
+  }
+
+  const sessionIds = new Set<string>();
+  historyIds.forEach(id => {
+    if (artifactIds.has(id)) sessionIds.add(id);
+  });
 
   return sessionIds;
 }
@@ -185,8 +209,6 @@ async function loadSessionsFromDisk(): Promise<SessionInfo[]> {
       else if (ageMinutes < 120) status = 'idle';
       else status = 'completed';
 
-      const tokenCount = await getTokenCount(id);
-
       return {
         id,
         name: h?.name || id.slice(0, 8),
@@ -194,8 +216,7 @@ async function loadSessionsFromDisk(): Promise<SessionInfo[]> {
         startTime: new Date(ts).toISOString(),
         projectPath: h?.project || process.cwd(),
         lastActivity: new Date(ts).toISOString(),
-        duration: Math.floor((Date.now() - ts) / 1000),
-        tokenCount
+        duration: Math.floor((Date.now() - ts) / 1000)
       };
     }));
 
@@ -219,21 +240,17 @@ async function loadSessionsFromDisk(): Promise<SessionInfo[]> {
 
 // ========== Main API ==========
 
-export async function getSessions(limit?: number, offset?: number): Promise<SessionInfo[]> {
+async function getAllSessions(): Promise<SessionInfo[]> {
   const now = Date.now();
 
-  // Check memory cache
   if (sessionCache && now < sessionCache.expiresAt) {
     cacheStats.hits++;
     console.log(`[Cache HIT] Memory (${cacheStats.hits}/${cacheStats.hits + cacheStats.misses})`);
-    const start = offset || 0;
-    const end = limit ? start + limit : sessionCache.sessions.length;
-    return sessionCache.sessions.slice(start, end);
+    return sessionCache.sessions;
   }
 
   cacheStats.misses++;
 
-  // Check file cache
   const fileCache = await loadFromFileCache();
   if (fileCache) {
     console.log(`[Cache HIT] File (${cacheStats.hits}/${cacheStats.hits + cacheStats.misses})`);
@@ -242,20 +259,31 @@ export async function getSessions(limit?: number, offset?: number): Promise<Sess
       timestamp: now,
       expiresAt: now + MEMORY_CACHE_TTL
     };
-    const start = offset || 0;
-    const end = limit ? start + limit : fileCache.sessions.length;
-    return fileCache.sessions.slice(start, end);
+    return fileCache.sessions;
   }
 
-  // Load from disk
   console.log(`[Cache MISS] Loading from disk (${cacheStats.hits}/${cacheStats.hits + cacheStats.misses})`);
   const allSessions = await loadSessionsFromDisk();
   sessionCache = { sessions: allSessions, timestamp: now, expiresAt: now + MEMORY_CACHE_TTL };
   await saveToFileCache(allSessions);
+  return allSessions;
+}
 
+export async function getSessions(limit?: number, offset?: number): Promise<SessionInfo[]> {
+  const allSessions = await getAllSessions();
   const start = offset || 0;
   const end = limit ? start + limit : allSessions.length;
   return allSessions.slice(start, end);
+}
+
+export async function getSessionsPage(limit?: number, offset?: number): Promise<{ sessions: SessionInfo[]; total: number }> {
+  const allSessions = await getAllSessions();
+  const start = offset || 0;
+  const end = limit ? start + limit : allSessions.length;
+  return {
+    sessions: allSessions.slice(start, end),
+    total: allSessions.length
+  };
 }
 
 export async function clearCache(): Promise<void> {

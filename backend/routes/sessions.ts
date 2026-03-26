@@ -21,8 +21,8 @@ export async function handleSessionsRoutes(
     const limit = parseInt(urlObj.searchParams.get('limit') || '20');
     const offset = parseInt(urlObj.searchParams.get('offset') || '0');
     console.log(`[API] GET /api/sessions limit=${limit} offset=${offset}`);
-    const sessions = await sessionCache.getSessions(limit, offset);
-    json(res, { sessions, pagination: { limit, offset, total: sessions.length } });
+    const { sessions, total } = await sessionCache.getSessionsPage(limit, offset);
+    json(res, { sessions, pagination: { limit, offset, total } });
     return true;
   }
 
@@ -44,8 +44,7 @@ export async function handleSessionsRoutes(
         startTime: new Date().toISOString(),
         projectPath: process.cwd(),
         lastActivity: new Date().toISOString(),
-        duration: 0,
-        tokenCount: 0
+        duration: 0
       };
     }
     

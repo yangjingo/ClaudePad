@@ -14,7 +14,6 @@ export interface SessionInfo {
   projectPath: string;
   lastActivity: string;
   duration: number;
-  tokenCount: number;
   remote?: boolean;
   serverId?: string;
   serverName?: string;
@@ -63,6 +62,9 @@ export interface PTYSession {
   serverId: string;
   sessionId: string;
   emitter: NodeJS.EventEmitter;
+  outputBuffer: string[];
+  outputBufferBytes: number;
+  resumeReady?: boolean;
 }
 
 // ========== Config Types ==========

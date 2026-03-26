@@ -6,8 +6,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsx watch backend/index.ts",
-    "start": "node dist/backend/index.js",
-    "clean": "rm -rf dist"
+    "start": "node dist/index.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{ recursive: true, force: true })\""
   },
   "dependencies": {
     "node-pty": "^1.0.0",

@@ -86,9 +86,15 @@ export async function handleServersRoutes(
   if (terminalMatch && method === 'POST') {
     const [, serverId, sessionId] = terminalMatch;
     try {
-      await sshManager.createPTYSession(serverId, sessionId);
+      const startupHint = await sshManager.getRemoteSessionStartupHint(serverId, sessionId);
+      await sshManager.createPTYSession(serverId, sessionId, { awaitReady: false });
       console.log(`[SSH] Started PTY session: ${serverId}/${sessionId}`);
-      json(res, { status: 'started', serverId, sessionId });
+      json(res, {
+        status: 'started',
+        serverId,
+        sessionId,
+        trustedWorkspace: startupHint.trustedWorkspace
+      });
     } catch (e: any) {
       console.error(`[SSH] Failed to start PTY: ${e.message}`);
       json(res, { error: e.message }, 500);
