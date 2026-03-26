@@ -23,6 +23,9 @@ All notable changes to this project will be documented in this file.
 - Bug where remote configuration couldn't be edited or wasn't correctly identified.
 - Version check logic to support multiple badge instances across different environments.
 
+### Assets
+![v0.3.26 Live Demo](./asserts/version/Claudepad-v0326-live.gif)
+
 ## [0.3.08.2] - 2026-03-25
 ### Added
 - Redesigned Agent Playground with software development team theme.
@@ -41,3 +44,36 @@ All notable changes to this project will be documented in this file.
 - Major backend refactoring with modular architecture.
 - Split monolithic server into routes, services, and websocket handlers.
 - Added TypeScript types and SSH key auth support.
+
+## [0.2.31] - 2026-03-18
+### Added
+- Multi-level caching (memory + file cache) for session loading.
+- Pagination support.
+### Changed
+- Optimized session loading performance.
+- Enhanced terminal UI for better session information display.
+### Fixed
+- Token counting and improved error handling.
+
+## [0.2.30] - 2026-03-17
+### Added
+- CC Tips page for browsing Claude Code tips.
+- Features random tip display, full-text search, and copy to clipboard.
+
+## [0.2.29] - 2026-03-16
+### Changed
+- Updated navigation bar with unified style for all links.
+
+## [0.2.28] - 2026-03-15
+### Added
+- CC Ideas page for capturing and managing inspiration.
+- Session monitoring with real-time status, token count, and duration.
+
+## [0.2.27] - 2026-03-14
+### Changed
+- Updated theme to Sheikah Slate.
+- Loads session information directly from `~/.claude/` directory.
+
+## [0.2.26] - 2026-03-13
+### Added
+- Implemented basic features with a unified color scheme.
