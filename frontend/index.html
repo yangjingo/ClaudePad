@@ -82,6 +82,16 @@
     .session-card { background: var(--slate-bg-light); border: 1px solid var(--bronze-dim); border-radius: var(--radius-md); padding: 16px 20px; margin: 8px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: flex-start; }
     .session-card:hover { border-color: var(--cyan-dim); box-shadow: 0 0 20px rgba(0, 212, 255, 0.1); }
     .session-card.remote-session { border-color: var(--cyan-dim); }
+    .session-card.invalid-session {
+      opacity: 0.45;
+      filter: grayscale(0.9);
+      border-color: #5f5f5f !important;
+      cursor: not-allowed;
+    }
+    .session-card.invalid-session:hover {
+      box-shadow: none;
+      border-color: #5f5f5f !important;
+    }
 
     /* Config Bar */
     .config-bar { background: var(--slate-bg-lighter); border-bottom: 1px solid var(--bronze-dim); padding: 12px 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -172,28 +182,155 @@
     /* Animations */
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes flicker {
+      0% { opacity: 0.8; }
+      5% { opacity: 0.5; }
+      10% { opacity: 0.9; }
+      15% { opacity: 0.6; }
+      25% { opacity: 0.8; }
+      100% { opacity: 0.9; }
+    }
+    
     .spinner { width: 40px; height: 40px; border: 3px solid var(--bronze-dim); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px; }
 
-    /* Server Tags */
-    .server-tag { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--slate-bg-light); border: 1px solid var(--bronze-dim); border-radius: var(--radius-sm); font-size: 0.85rem; cursor: pointer; }
-    .server-status { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
-    .server-status.connected { background: var(--status-done); box-shadow: 0 0 6px var(--status-done); }
-    .btn-delete-server { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; }
-    .server-sessions { width: 100%; margin-top: 8px; background: var(--slate-bg-lighter); border-radius: var(--radius-sm); padding: 8px; }
-    .remote-badge { display: inline-flex; padding: 2px 8px; background: rgba(0, 212, 255, 0.15); color: var(--cyan); border-radius: 3px; font-size: 0.7rem; font-weight: 600; }
+    /* Layout - Single Column Vertical Sectoring */
+    .content-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+      margin-top: 32px;
+    }
 
-    .session-status { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
-    .session-status.running { background: var(--cyan); box-shadow: 0 0 8px var(--cyan); animation: pulse 2s ease-in-out infinite; }
+    /* Sector Panel Styling */
+    .panel {
+      background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 0 20px rgba(0,212,255,0.02);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .panel:hover {
+      border-color: var(--bronze-dark);
+      box-shadow: 0 15px 50px rgba(0,0,0,0.6), inset 0 0 30px rgba(0,212,255,0.03);
+    }
+    
+    /* Ancient Tech Decorative Elements */
+    .panel::after {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.2) 50%), 
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 2px, 3px 100%;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0.3;
+    }
+
+    /* Server Grid & Interactive Tags */
+    .server-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 24px;
+      background: rgba(0, 212, 255, 0.01);
+      border-bottom: 1px solid var(--bronze-dim);
+    }
+    .server-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.3s;
+      color: var(--text-muted);
+      position: relative;
+    }
+    .server-tag:hover {
+      background: var(--slate-bg-lighter);
+      border-color: var(--cyan-dim);
+      color: var(--text);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.1);
+    }
+    .server-tag.active {
+      background: var(--cyan-glow);
+      border-color: var(--cyan);
+      color: var(--cyan-bright);
+      box-shadow: 0 0 20px var(--cyan-glow);
+      animation: flicker 4s infinite;
+    }
+
+    .server-status { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
+    .server-status.connected { background: var(--status-done); box-shadow: 0 0 8px var(--status-done); }
+
+    /* Uniform Session Card Style */
+    .session-card {
+      background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-md);
+      padding: 18px 24px;
+      margin: 12px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+    .session-card:hover {
+      background: var(--slate-bg-lighter);
+      border-color: var(--cyan-dim);
+      transform: scale(1.01);
+      box-shadow: 0 5px 20px rgba(0, 212, 255, 0.05);
+    }
+    
+    .remote-badge {
+      display: inline-flex;
+      padding: 3px 10px;
+      background: rgba(0, 212, 255, 0.08);
+      color: var(--cyan);
+      border-radius: 4px;
+      font-size: 0.65rem;
+      font-weight: 800;
+      border: 1px solid rgba(0, 212, 255, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .remote-badge.invalid { background: rgba(128, 128, 128, 0.05); color: #777; border-color: #333; }
+
+    .session-status { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+    .session-status.running { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: pulse 2s ease-in-out infinite; }
+
+    /* Custom Sheikah Scrollbar */
+    .session-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .session-list::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-full);
+    }
+    .session-list::-webkit-scrollbar-thumb {
+      background: var(--bronze-dim);
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(0, 212, 255, 0.1);
+    }
+    .session-list::-webkit-scrollbar-thumb:hover {
+      background: var(--bronze);
+      box-shadow: 0 0 10px var(--cyan-glow);
+    }
   </style>
 </head>
 <body>
   <header class="header">
     <a href="/" class="logo">
-      <span class="logo-icon">◈</span>
+      <span class="logo-icon" style="color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow);">◈</span>
       <span class="logo-text">ClaudePad</span>
     </a>
-    <div style="display: flex; gap: 12px; align-items: center;">
-      <div id="version-badge" class="version-badge" onclick="handleBadgeClick()">◈ v...</div>
+    <div style="display: flex; gap: 16px; align-items: center;">
       <a href="/" class="nav-link active">🐱 Sessions</a>
       <a href="/idea.html" class="nav-link">💡 Ideas</a>
       <a href="/tips.html" class="nav-link">🔧 Tips</a>
@@ -201,43 +338,82 @@
     </div>
   </header>
 
-  <div class="config-bar">
-    <div class="config-item">
-      <span class="config-label">◈ Claude Path</span>
-      <span class="config-value" id="config-path">Loading...</span>
-    </div>
-    <div class="config-item">
-      <span class="config-label">Model Config</span>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <code id="config-model" style="background: rgba(0,212,255,0.1); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.8rem; color: var(--cyan);">claude-3-5-sonnet-latest</code>
-        <button class="btn-edit-model" onclick="openEditModal()">✎ Edit</button>
-      </div>
-    </div>
-    <div class="config-item">
-      <span class="config-label">Host / User</span>
-      <span class="config-value"><code id="config-host">-</code> | <code id="config-user">-</code></span>
-    </div>
-  </div>
-
-  <div class="config-bar" style="border-top: none;">
-    <div class="config-item" style="grid-column: span 3;">
-      <span class="config-label">▣ Remote Servers <button class="btn-edit-model" onclick="openAddServerModal()">+ Add</button></span>
-      <div id="servers-list" style="margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px;"></div>
-    </div>
-  </div>
-
-  <main class="container">
+  <main class="container content-stack">
+    <!-- LOCAL SECTOR -->
     <section class="panel">
-      <div class="panel-header">
-        <span class="panel-title">◈ Active Sessions</span>
-        <div style="display: flex; gap: 12px; align-items: center; font-size: 0.8rem; color: var(--text-muted);">
-          <span id="page-info">Page 1</span>
-          <span id="count">-</span>
-          <span id="total-duration"></span>
+      <div class="panel-header" style="background: linear-gradient(90deg, var(--slate-bg-lighter), transparent);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="panel-title">◈ Local Operational Sector</span>
+          <div id="local-version-badge" class="version-badge" onclick="handleBadgeClick(this)">v...</div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center; font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+          <span id="count">0 sessions</span>
+          <span id="active-count" style="color: var(--cyan-dim);">Active 0</span>
         </div>
       </div>
-      <div id="list" class="session-list">
-        <div class="loading" style="text-align:center; padding: 40px;"><div class="spinner"></div></div>
+      
+      <!-- Local Config Sub-Bar -->
+      <div class="config-bar" style="border-top: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid var(--bronze-dim); padding: 10px 20px;">
+        <div class="config-item">
+          <span class="config-label">◈ Local Path</span>
+          <span class="config-value" id="config-path" style="font-size: 0.75rem;">Loading...</span>
+        </div>
+        <div class="config-item">
+          <span class="config-label">Model</span>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <code id="config-model" style="background: rgba(0,212,255,0.05); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.75rem; color: var(--cyan-dim);">claude-3-5-sonnet-latest</code>
+            <button class="btn-edit-model" onclick="openEditModal()">✎</button>
+          </div>
+        </div>
+        <div class="config-item">
+          <span class="config-label">Identity</span>
+          <span class="config-value" style="font-size: 0.75rem;"><code id="config-host">-</code> | <code id="config-user">-</code></span>
+        </div>
+      </div>
+
+      <div id="list" class="session-list" style="padding: 12px; max-height: 450px; overflow-y: auto;">
+        <div class="loading" style="text-align:center; padding: 60px;"><div class="spinner"></div></div>
+      </div>
+    </section>
+
+    <!-- REMOTE SECTOR -->
+    <section class="panel">
+      <div class="panel-header" style="background: linear-gradient(90deg, var(--slate-bg-lighter), transparent);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span class="panel-title">▣ Remote Link Sector</span>
+          <div id="remote-version-badge" class="version-badge" style="display:none;" onclick="handleBadgeClick(this)">v...</div>
+        </div>
+        <div style="display: flex; gap: 16px; align-items: center; font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono);">
+          <span id="remote-count">0 sessions</span>
+          <span id="remote-active-count" style="color: var(--cyan-dim);">Active 0</span>
+          <button class="btn btn-primary" onclick="openAddServerModal()" style="font-size: 0.7rem; padding: 4px 12px; margin-left: 8px;">+ Add Server</button>
+        </div>
+      </div>
+
+      <!-- Remote Config Sub-Bar -->
+      <div id="remote-config-bar" style="display:none; background: rgba(0,0,0,0.1); border-bottom: 1px solid var(--bronze-dim); padding: 10px 20px;" class="config-bar">
+        <div class="config-item">
+          <span class="config-label">🌐 Remote Path</span>
+          <span class="config-value" id="remote-config-path" style="font-size: 0.75rem; color: var(--cyan);">Loading...</span>
+        </div>
+        <div class="config-item">
+          <span class="config-label">Model</span>
+          <code id="remote-config-model" style="background: rgba(0,212,255,0.05); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.75rem; color: var(--cyan);">claude-3-5-sonnet-latest</code>
+        </div>
+        <div class="config-item">
+          <span class="config-label">Host / User</span>
+          <span class="config-value" style="font-size: 0.75rem; color: var(--cyan);"><code id="remote-config-host">-</code> | <code id="remote-config-user">-</code></span>
+        </div>
+      </div>
+      
+      <!-- Server Selection Grid -->
+      <div id="servers-list" class="server-grid">
+        <!-- Servers injected here -->
+      </div>
+
+      <!-- Unified Session List with Slide Bar (Same as Local) -->
+      <div id="remote-list" class="session-list" style="padding: 12px; max-height: 450px; overflow-y: auto; display: none;">
+        <!-- Remote Sessions injected here -->
       </div>
     </section>
   </main>
@@ -294,79 +470,78 @@
     let currentConfig = {};
     let pagination = { offset: 0, limit: 20, total: 0 };
 
-    function handleBadgeClick() {
-      const badge = document.getElementById('version-badge');
+    function handleBadgeClick(badge) {
       if (!badge || !badge.classList.contains('update-ready')) return;
       
       const current = badge.dataset.current;
       const latest = badge.dataset.latest;
+      const serverId = badge.dataset.serverId || 'local';
       
       document.getElementById('update-current-ver').textContent = 'v' + current;
       document.getElementById('update-latest-ver').textContent = 'v' + latest;
-      document.getElementById('update-modal-overlay').classList.add('active');
+      
+      const updateModal = document.getElementById('update-modal-overlay');
+      updateModal.dataset.targetServer = serverId; // Store for update execution
+      updateModal.classList.add('active');
     }
 
-    async function checkVersion() {
+    async function checkVersion(serverId = 'local', targetBadgeId = 'local-version-badge') {
       try {
-        const response = await fetch('/api/system/version');
+        const response = await fetch(`/api/system/version?serverId=${serverId}`);
         const data = await response.json();
-        const badge = document.getElementById('version-badge');
+        const badge = document.getElementById(targetBadgeId);
         if (!badge) return;
 
         badge.dataset.current = data.current;
         badge.dataset.latest = data.latest;
+        badge.dataset.isRemote = data.isRemote;
+        badge.dataset.serverId = serverId;
 
-        if (data.needsUpdate && data.current !== 'unknown') {
-          badge.innerHTML = `◈ v${data.current} <span style="color:var(--cyan);">(Update!)</span>`;
+        const current = (data.current || '').trim() || 'unknown';
+        const prefix = '◈ ';
+
+        if (data.needsUpdate && current !== 'unknown') {
+          badge.innerHTML = `v${current} <span style="color:var(--cyan);">(Update!)</span>`;
           badge.classList.add('update-ready');
-          badge.onclick = () => {
-            document.getElementById('update-current-ver').textContent = 'v' + data.current;
-            document.getElementById('update-latest-ver').textContent = 'v' + data.latest;
-            document.getElementById('update-modal-overlay').classList.add('active');
-          };
         } else {
-          badge.innerHTML = `◈ v${data.current}`;
+          badge.innerHTML = current === 'unknown' ? `Version unknown` : `v${current}`;
           badge.classList.remove('update-ready');
-          badge.onclick = null;
         }
+        
+        if (serverId !== 'local') badge.style.display = 'flex';
       } catch (e) { console.warn('Version check failed', e); }
     }
 
     async function executeUpdate(method) {
-      const modal = document.querySelector('#update-modal-overlay .modal');
+      const updateModal = document.getElementById('update-modal-overlay');
+      const serverId = updateModal.dataset.targetServer || 'local';
+      const modalContent = document.querySelector('#update-modal-overlay .modal');
       const latestVer = document.getElementById('update-latest-ver').textContent;
       
       // Step 1: Initialize
-      modal.innerHTML = `
+      modalContent.innerHTML = `
         <div class="update-status-container">
           <div class="ora-spinner"></div>
-          <div class="status-step" id="update-step">Initializing Update...</div>
+          <div class="status-step" id="update-step">Initializing Update [${serverId}]...</div>
           <div class="status-sub">Method: ${method === 'npm' ? 'NPM Mirror' : 'Official CLI'}</div>
         </div>
       `;
-
-      // Step 2: Set Step Info
-      setTimeout(() => {
-        const stepEl = document.getElementById('update-step');
-        if (stepEl) stepEl.textContent = `Downloading & Installing ${latestVer}...`;
-      }, 1500);
 
       try {
         const res = await fetch('/api/system/update', { 
           method: 'POST', 
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ method }) 
+          body: JSON.stringify({ method, serverId }) 
         });
         const result = await res.json();
         
         if (result.status === 'success') {
-          // Success State
-          modal.innerHTML = `
+          modalContent.innerHTML = `
             <div class="update-status-container">
               <div class="ora-spinner" style="border-color: var(--status-done); animation: none; box-shadow: 0 0 20px var(--status-done);"></div>
               <div class="status-step" style="color: var(--status-done)">Update Successful!</div>
-              <div class="status-sub">Claude Code is now at ${latestVer}</div>
-              <div class="status-sub" style="margin-top:10px">Refreshing system in 2s...</div>
+              <div class="status-sub">${serverId} is now at ${latestVer}</div>
+              <div class="status-sub" style="margin-top:10px">Refreshing in 2s...</div>
             </div>
           `;
           setTimeout(() => location.reload(), 2000);
@@ -374,8 +549,7 @@
           throw new Error(result.error);
         }
       } catch (e) {
-        // Error State
-        modal.innerHTML = `
+        modalContent.innerHTML = `
           <div class="update-status-container">
             <div class="ora-spinner" style="border-color: var(--status-error); animation: none;"></div>
             <div class="status-step" style="color: var(--status-error)">Update Failed</div>
@@ -394,6 +568,8 @@
         const data = await res.json();
         const sessions = data.sessions || [];
         document.getElementById('count').textContent = `${sessions.length} sessions`;
+        const activeCount = sessions.filter(s => s.status === 'running' || s.status === 'idle').length;
+        document.getElementById('active-count').textContent = `Active ${activeCount}`;
         document.getElementById('list').innerHTML = sessions.map(s => `
           <div class="session-card" onclick="location.href='/terminal/${s.id}'">
             <div>
@@ -409,86 +585,231 @@
       } catch (e) { document.getElementById('list').innerHTML = '<div style="text-align:center;padding:20px">Error loading sessions</div>'; }
     }
 
-    async function loadConfig() {
+    async function loadConfig(serverId = 'local') {
       try {
-        const res = await fetch('/api/config');
+        const res = await fetch(`/api/config?serverId=${serverId}`);
         currentConfig = await res.json();
         
-        document.getElementById('config-path').textContent = currentConfig.claudePath || '~/.claude';
-        document.getElementById('config-model').textContent = currentConfig.model || 'not set';
+        const isRemote = currentConfig.isRemote;
+        const prefix = isRemote ? 'remote-config-' : 'config-';
         
-        // Fix IP and User display
+        // Update either local bar or remote bar
+        const pathEl = document.getElementById(`${prefix}path`);
+        const modelEl = document.getElementById(`${prefix}model`);
+        const hostEl = document.getElementById(`${prefix}host`);
+        const userEl = document.getElementById(`${prefix}user`);
+
+        if (pathEl) pathEl.textContent = currentConfig.claudePath || '~/.claude';
+        if (modelEl) modelEl.textContent = currentConfig.model || 'not set';
+        
         const ip = currentConfig.ip || '127.0.0.1';
         const user = currentConfig.user || 'unknown';
-        document.getElementById('config-host').textContent = ip;
-        document.getElementById('config-user').textContent = user;
+        if (hostEl) hostEl.textContent = ip;
+        if (userEl) userEl.textContent = user;
+
+        if (isRemote) {
+          const remoteBar = document.getElementById('remote-config-bar');
+          if (remoteBar) {
+            remoteBar.style.display = 'flex';
+            const pathLabel = remoteBar.querySelector('.config-label');
+            if (pathLabel) pathLabel.textContent = `🌐 ${serverId} Path`;
+          }
+        }
       } catch (e) {
         console.error('Failed to load config:', e);
       }
     }
 
     async function loadServers() {
-      const res = await fetch('/api/servers');
-      const data = await res.json();
-      document.getElementById('servers-list').innerHTML = (data.servers || []).map(s => `
-        <div class="server-tag" onclick="toggleServerSessions('${s.id}')">
-          <span class="server-status ${s.connected ? 'connected' : ''}"></span>
-          <span>${s.name || s.id}</span>
-        </div>
-        <div id="server-sessions-${s.id}" style="display:none; width:100%; padding:10px;"></div>
-      `).join('');
+      try {
+        const res = await fetch('/api/servers');
+        const data = await res.json();
+        const servers = data.servers || [];
+        const expandedServers = JSON.parse(localStorage.getItem('expandedServers') || '[]');
+        const listEl = document.getElementById('servers-list');
+
+        if (servers.length === 0) {
+          listEl.innerHTML = `
+            <div style="width: 100%; padding: 40px 20px; text-align: center; border: 1px dashed var(--bronze-dim); border-radius: var(--radius-md); background: rgba(0,0,0,0.1); margin: 12px 0;">
+              <div style="font-size: 2rem; color: var(--bronze-dim); margin-bottom: 12px; filter: drop-shadow(0 0 5px rgba(139, 115, 85, 0.2));">▣</div>
+              <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--bronze-light); letter-spacing: 0.05em; margin-bottom: 16px;">
+                NO REMOTE LINKS DETECTED IN SECTOR
+              </div>
+              <button class="btn btn-primary" onclick="openAddServerModal()" style="font-size: 0.75rem;">
+                ◈ Initialize First Remote Link
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        listEl.innerHTML = servers.map(s => `
+          <div class="server-tag" id="tag-${s.id}" onclick="toggleServerSessions('${s.id}')">
+            <span class="server-status ${s.connected ? 'connected' : ''}"></span>
+            <span>${s.name || s.id}</span>
+          </div>
+          <div id="server-sessions-${s.id}" style="display:none; width:100%;"></div>
+        `).join('');
+
+        // Auto-expand servers that were previously open
+        servers.forEach(s => {
+          if (expandedServers.includes(s.id)) {
+            toggleServerSessions(s.id, true);
+          }
+        });
+      } catch (e) {
+        console.error('Failed to load servers:', e);
+      }
     }
 
-    async function toggleServerSessions(id) {
-      const el = document.getElementById(`server-sessions-${id}`);
-      if (el.style.display === 'block') {
+    const LOADING_TIPS = [
+      "Tip: You can copy the resume command and run it in your local terminal.",
+      "Tip: Remote sessions are automatically kept alive by the SSH connection pool.",
+      "Tip: Click the version badge to check for Claude Code updates.",
+      "Tip: Sessions older than 3 hours are marked as Idle.",
+      "Tip: The Sheikah Slate theme uses bronze and cyan to mimic ancient tech."
+    ];
+
+    const ASCII_FRAMES = [
+      "[>--------]",
+      "[->-------]",
+      "[-->------]",
+      "[--->-----]",
+      "[---->----]",
+      "[----->---]",
+      "[------>--]",
+      "[------->-]",
+      "[-------->]",
+      "[-------<-]",
+      "[------<--]",
+      "[-----<---]",
+      "[----<----]",
+      "[---<-----]",
+      "[--<------]",
+      "[-<-------]"
+    ];
+
+    async function toggleServerSessions(id, forceOpen = false) {
+      const el = document.getElementById('remote-list');
+      const tag = document.getElementById(`tag-${id}`);
+      let expandedServers = JSON.parse(localStorage.getItem('expandedServers') || '[]');
+
+      // If clicking already active server, close it
+      if (tag && tag.classList.contains('active') && !forceOpen) {
         el.style.display = 'none';
+        tag.classList.remove('active');
+        const remoteBar = document.getElementById('remote-config-bar');
+        if (remoteBar) remoteBar.style.display = 'none';
+        
+        const remoteBadge = document.getElementById('remote-version-badge');
+        if (remoteBadge) remoteBadge.style.display = 'none';
+
+        expandedServers = expandedServers.filter(s => s !== id);
+        localStorage.setItem('expandedServers', JSON.stringify(expandedServers));
+        
+        // Reset remote stats
+        document.getElementById('remote-count').textContent = '0 sessions';
+        document.getElementById('remote-active-count').textContent = 'Active 0';
         return;
       }
       
+      // Activate this tag, deactivate others
+      document.querySelectorAll('.server-tag').forEach(t => t.classList.remove('active'));
+      if(tag) tag.classList.add('active');
+
       el.style.display = 'block';
-      // Ora-style loading state
-      el.innerHTML = `
-        <div class="scanner-text">
-          <div class="mini-ora"></div>
-          <span>◈ Scanning remote sectors...</span>
-        </div>
-      `;
+      checkVersion(id, 'remote-version-badge');
+      loadConfig(id);
+      
+      if (!expandedServers.includes(id)) {
+        expandedServers = [id]; // Only keep one expanded for simplicity/symmetry
+        localStorage.setItem('expandedServers', JSON.stringify(expandedServers));
+      }
+
+      // Check cache for Optimistic UI rendering
+      const cacheKey = `remote_sessions_${id}`;
+      const cachedData = sessionStorage.getItem(cacheKey);
+      
+      let animationInterval;
+
+      if (cachedData) {
+        renderRemoteSessions(el, id, JSON.parse(cachedData), false);
+      } else {
+        const randomTip = LOADING_TIPS[Math.floor(Math.random() * LOADING_TIPS.length)];
+        el.innerHTML = `
+          <div style="text-align: center; padding: 40px 10px; font-family: var(--font-mono); background: rgba(0,212,255,0.01);">
+            <div class="spinner" style="width: 32px; height: 32px; border-width: 2px;"></div>
+            <div style="color: var(--cyan); font-size: 0.85rem; letter-spacing: 0.1em; margin-bottom: 8px;">SCANNING REMOTE SECTOR...</div>
+            <div id="ascii-radar-${id}" style="color: var(--bronze-light); font-size: 0.9rem; font-weight: bold; margin-bottom: 12px;">[--------]</div>
+            <div style="color: var(--text-dark); font-size: 0.65rem; max-width: 80%; margin: 0 auto;">${randomTip}</div>
+          </div>
+        `;
+
+        let frameIdx = 0;
+        animationInterval = setInterval(() => {
+          const radarEl = document.getElementById(`ascii-radar-${id}`);
+          if (radarEl) {
+            radarEl.textContent = ASCII_FRAMES[frameIdx];
+            frameIdx = (frameIdx + 1) % ASCII_FRAMES.length;
+          }
+        }, 80);
+      }
       
       try {
         const res = await fetch(`/api/servers/${id}/sessions`);
         const data = await res.json();
         const sessions = data.sessions || [];
         
+        if (animationInterval) clearInterval(animationInterval);
+        sessionStorage.setItem(cacheKey, JSON.stringify(sessions));
+        
         if (sessions.length === 0) {
-          el.innerHTML = '<div style="padding:10px; color:var(--text-dark); font-size:0.8rem;">No active sessions found.</div>';
+          el.innerHTML = '<div style="padding:40px; text-align:center; color:var(--text-dark); font-size:0.8rem; font-family:var(--font-mono);">◈ NO OPERATIONAL SESSIONS DETECTED ◈</div>';
+          document.getElementById('remote-count').textContent = '0 sessions';
+          document.getElementById('remote-active-count').textContent = 'Active 0';
           return;
         }
 
-        // Clear loading and render with staggered animation
-        el.innerHTML = '';
-        sessions.forEach((s, index) => {
-          const card = document.createElement('div');
-          card.className = 'session-card stagger-in';
-          card.style.margin = '4px 0';
-          card.style.animationDelay = `${index * 50}ms`; // 50ms stagger
-          card.onclick = () => location.href = `/terminal/${id}/${s.id}`;
-          
-          card.innerHTML = `
-            <div style="font-size:0.8rem; display:flex; align-items:center; gap:8px; width:100%">
-              <span class="session-status ${s.status}"></span>
-              <div style="flex:1">
-                <div style="color:var(--cyan); font-weight:500;">${escapeHtml(s.name || s.id.slice(0,8))}</div>
-                <div style="font-size:0.7rem; color:var(--text-dark)">ID: ${s.id.slice(0,8)}...</div>
-              </div>
-              <span class="remote-badge">REMOTE</span>
-            </div>
-          `;
-          el.appendChild(card);
-        });
+        renderRemoteSessions(el, id, sessions, !cachedData);
       } catch (e) {
-        el.innerHTML = '<div style="color:var(--status-error); font-size:0.8rem; padding:10px;">✕ Sector scan failed.</div>';
+        if (animationInterval) clearInterval(animationInterval);
+        if (!cachedData) {
+          el.innerHTML = '<div style="color:var(--status-error); font-size:0.8rem; padding:40px; text-align:center; font-family:var(--font-mono);">✕ SECTOR SCAN CRITICAL FAILURE</div>';
+        }
       }
+    }
+
+    function renderRemoteSessions(container, serverId, sessions, useStagger = true) {
+      const activeCount = sessions.filter(s => s.status === 'running' || s.status === 'idle').length;
+      
+      // Update the Sector Header Stats (Mirroring Local)
+      document.getElementById('remote-count').textContent = `${sessions.length} sessions`;
+      const activeEl = document.getElementById('remote-active-count');
+      activeEl.textContent = `Active ${activeCount}`;
+      activeEl.style.color = activeCount > 0 ? 'var(--cyan)' : 'var(--cyan-dim)';
+
+      container.innerHTML = sessions.map((s, index) => {
+        const invalidClass = s.invalid ? ' invalid-session' : '';
+        const staggerClass = useStagger ? ' stagger-in' : '';
+        const delay = useStagger ? `style="animation-delay: ${index * 50}ms"` : '';
+        const onclick = !s.invalid ? `onclick="location.href='/terminal/${serverId}/${s.id}'"` : `title="This remote session is invalid and cannot be resumed."`;
+        
+        return `
+          <div class="session-card${staggerClass}${invalidClass}" ${delay} ${onclick}>
+            <div style="width:100%; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="session-status ${s.status}"></span>
+                  <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${s.id.slice(0,8)}...</span>
+                </div>
+                <div style="margin:4px 0; font-weight:500; font-size:0.95rem;">${escapeHtml(s.name || 'Untitled')}</div>
+                <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">SCAN_TIME: ${new Date(s.startTime).toLocaleString()}</div>
+              </div>
+              <span class="remote-badge ${s.invalid ? 'invalid' : ''}">${s.invalid ? 'INVALID' : 'REMOTE'}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function openEditModal() { document.getElementById('edit-modal-overlay').classList.add('active'); }
