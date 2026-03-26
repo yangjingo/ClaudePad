@@ -8,12 +8,16 @@ const root = join(__dirname, '..');
 const pkgJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8'));
 const version = pkgJson.version || '0.0.0';
 
+// 支持通过参数指定架构: node package-linux.mjs arm64
+const arch = process.argv[2] || 'x64';
+const target = `node18-linux-${arch}`;
+
 const outDir = join(root, 'build');
 const pkgCache = join(root, '.cache', 'pkg-cache');
 mkdirSync(outDir, { recursive: true });
 mkdirSync(pkgCache, { recursive: true });
 
-const exeName = `claudepad-v${version}-linux-x64`;
+const exeName = `claudepad-v${version}-linux-${arch}`;
 const outPath = join(outDir, exeName);
 
 console.log(`[package] building ${exeName}`);
@@ -25,7 +29,7 @@ const cmd = [
   'pkg',
   'dist/index.js',
   '--targets',
-  'node18-linux-x64',
+  target,
   '--output',
   `"${outPath}"`
 ].join(' ');

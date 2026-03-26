@@ -7,11 +7,87 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to release (e.g., 0.2.0)'
+        description: 'Version to release (e.g., 0.3.26)'
         required: false
 
 jobs:
-  build:
+  build-linux-x64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Package Linux x64
+        run: npm run package:linux
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claudepad-linux-x64
+          path: build/claudepad-v*-linux-x64
+
+  build-linux-arm64:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Package Linux arm64
+        run: npm run package:linux-arm64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claudepad-linux-arm64
+          path: build/claudepad-v*-linux-arm64
+
+  build-windows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Package Windows x64
+        run: npm run package:win
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claudepad-win-x64
+          path: build/claudepad-v*-win-x64.exe
+
+  publish-npm:
+    needs: [build-linux-x64, build-linux-arm64, build-windows]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,45 +104,14 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Get version
-        id: version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ inputs.version }}" ]; then
-            echo "VERSION=${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Package Linux x64
-        run: npm run package:linux
-
-      - name: Package Windows x64
-        run: npm run package:win
-
-      - name: List build artifacts
-        run: ls -lh build/
-
-      - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: claudepad-linux-x64
-          path: build/claudepad-v*-linux-x64
-
-      - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: claudepad-win-x64
-          path: build/claudepad-v*-win-x64.exe
-
       - name: Publish to npm
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   release:
-    needs: build
+    needs: [build-linux-x64, build-linux-arm64, build-windows, publish-npm]
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: write
     steps:
@@ -83,10 +128,16 @@ jobs:
             echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
           fi
 
-      - name: Download Linux artifact
+      - name: Download Linux x64 artifact
         uses: actions/download-artifact@v4
         with:
           name: claudepad-linux-x64
+          path: ./artifacts
+
+      - name: Download Linux arm64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: claudepad-linux-arm64
           path: ./artifacts
 
       - name: Download Windows artifact
@@ -94,6 +145,9 @@ jobs:
         with:
           name: claudepad-win-x64
           path: ./artifacts
+
+      - name: List artifacts
+        run: ls -lh ./artifacts/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -104,8 +158,9 @@ jobs:
             ## ClaudePad v${{ steps.version.outputs.VERSION }}
 
             ### Downloads
-            - Linux x64: `claudepad-v${{ steps.version.outputs.VERSION }}-linux-x64`
-            - Windows x64: `claudepad-v${{ steps.version.outputs.VERSION }}-win-x64.exe`
+            - **Linux x64**: `claudepad-v${{ steps.version.outputs.VERSION }}-linux-x64`
+            - **Linux arm64**: `claudepad-v${{ steps.version.outputs.VERSION }}-linux-arm64`
+            - **Windows x64**: `claudepad-v${{ steps.version.outputs.VERSION }}-win-x64.exe`
 
             ### npm
             ```bash
@@ -113,13 +168,15 @@ jobs:
             claudepad
             ```
 
-            ### Usage
+            ### Usage (Linux)
             ```bash
-            # Linux
-            chmod +x claudepad-v*-linux-x64
-            ./claudepad-v*-linux-x64
+            chmod +x claudepad-v*-linux-*
+            ./claudepad-v*-linux-x64      # x64 systems
+            ./claudepad-v*-linux-arm64    # ARM64 systems (Apple Silicon, Raspberry Pi, etc.)
+            ```
 
-            # Windows
+            ### Usage (Windows)
+            ```cmd
             claudepad-v*-win-x64.exe
             ```
           files: artifacts/*

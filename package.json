@@ -1,6 +1,6 @@
 {
   "name": "claudepad",
-  "version": "0.2.0",
+  "version": "0.3.26",
   "type": "module",
   "description": "Claude Code Session Monitor - Web-based terminal for Claude Code",
   "author": "yangjing",
@@ -26,7 +26,8 @@
     "start": "node dist/index.js",
     "clean": "node -e \"require('fs').rmSync('dist',{ recursive: true, force: true })\"",
     "package:win": "node scripts/package-win.mjs",
-    "package:linux": "node scripts/package-linux.mjs"
+    "package:linux": "node scripts/package-linux.mjs x64",
+    "package:linux-arm64": "node scripts/package-linux.mjs arm64"
   },
   "dependencies": {
     "node-pty": "^1.0.0",
