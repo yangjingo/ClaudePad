@@ -562,15 +562,13 @@
 
     function closeUpdateModal() { document.getElementById('update-modal-overlay').classList.remove('active'); }
 
-    async function load() {
-      try {
-        const res = await fetch(`/api/sessions?limit=${pagination.limit}&offset=${pagination.offset}`);
-        const data = await res.json();
-        const sessions = data.sessions || [];
-        document.getElementById('count').textContent = `${sessions.length} sessions`;
-        const activeCount = sessions.filter(s => s.status === 'running' || s.status === 'idle').length;
-        document.getElementById('active-count').textContent = `Active ${activeCount}`;
-        document.getElementById('list').innerHTML = sessions.map(s => `
+    const LOCAL_SESSIONS_CACHE_KEY = 'local_sessions_cache_v1';
+
+    function renderLocalSessions(sessions) {
+      document.getElementById('count').textContent = `${sessions.length} sessions`;
+      const activeCount = sessions.filter(s => s.status === 'running' || s.status === 'idle').length;
+      document.getElementById('active-count').textContent = `Active ${activeCount}`;
+      document.getElementById('list').innerHTML = sessions.map(s => `
           <div class="session-card" onclick="location.href='/terminal/${s.id}'">
             <div>
               <div style="display:flex; align-items:center; gap:8px;">
@@ -582,6 +580,18 @@
             </div>
           </div>
         `).join('');
+    }
+
+    async function load() {
+      try {
+        const res = await fetch(`/api/sessions?limit=${pagination.limit}&offset=${pagination.offset}`);
+        const data = await res.json();
+        const sessions = data.sessions || [];
+        renderLocalSessions(sessions);
+        sessionStorage.setItem(LOCAL_SESSIONS_CACHE_KEY, JSON.stringify({
+          sessions,
+          ts: Date.now()
+        }));
       } catch (e) { document.getElementById('list').innerHTML = '<div style="text-align:center;padding:20px">Error loading sessions</div>'; }
     }
 
@@ -819,6 +829,15 @@
     function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
     (function init() {
+      const cachedLocal = sessionStorage.getItem(LOCAL_SESSIONS_CACHE_KEY);
+      if (cachedLocal) {
+        try {
+          const parsed = JSON.parse(cachedLocal);
+          if (parsed && Array.isArray(parsed.sessions)) {
+            renderLocalSessions(parsed.sessions);
+          }
+        } catch {}
+      }
       loadConfig(); load(); loadServers(); checkVersion();
       setInterval(checkVersion, 3600000);
       setInterval(load, 15000);

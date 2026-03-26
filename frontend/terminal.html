@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClaudePad | Terminal</title>
+  <link rel="icon" type="image/png" href="/asserts/zelda-icon/link.png" />
   <link rel="stylesheet" href="/asserts/lib/xterm/xterm.css" />
   <script src="/asserts/lib/xterm/xterm.js"></script>
   <script src="/asserts/lib/xterm/addon-fit.js"></script>
@@ -135,24 +136,48 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(10, 10, 15, 0.95);
+      background: rgba(10, 10, 15, 0.98);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 1000;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(10px);
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 1;
+    }
+
+    .overlay.fade-out {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .overlay-content {
       background: var(--slate-panel);
       border: 1px solid var(--bronze);
       border-radius: var(--radius-lg);
-      padding: 24px;
+      padding: 32px;
       max-width: 500px;
       width: 90%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: scaleIn 0.2s ease-out;
+      box-shadow: 0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--cyan-glow);
+      animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .boot-overlay-content {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+      width: 100vw;
+      max-width: none;
+      height: 100vh;
+      animation: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
     }
 
     @keyframes scaleIn {
@@ -311,6 +336,129 @@
       50% { opacity: 0.5; }
     }
 
+    .boot-sequence {
+      position: relative;
+      border: none;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      width: min(96vw, 1200px);
+      height: min(72vh, 680px);
+      min-height: 420px;
+      overflow: hidden;
+      box-shadow: none;
+      animation: screenFlicker 160ms infinite;
+    }
+
+    .boot-sequence::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.22) 50%),
+                  linear-gradient(90deg, rgba(255, 0, 0, 0.045), rgba(0, 255, 255, 0.025), rgba(0, 110, 255, 0.045));
+      background-size: 100% 4px, 6px 100%;
+      opacity: 0.55;
+    }
+
+    .boot-output {
+      margin: 0;
+      white-space: pre;
+      line-height: 1.18;
+      font-size: clamp(14px, 1.6vw, 20px);
+      text-align: left;
+      color: var(--text);
+      text-shadow: 0 0 2px rgba(255, 255, 255, 0.06);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transform-origin: center center;
+      z-index: 1;
+      will-change: transform;
+    }
+
+    .boot-monitor {
+      margin-top: 12px;
+      font-size: 0.72rem;
+      color: var(--text-dark);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .boot-cyan {
+      color: var(--cyan-bright);
+      text-shadow: 0 0 6px var(--cyan-glow);
+    }
+
+    .boot-gray {
+      color: #5f7777;
+    }
+
+    .boot-red {
+      color: #ff5d5d;
+      text-shadow: 0 0 5px rgba(255, 93, 93, 0.45);
+    }
+
+    .boot-footer {
+      width: min(96vw, 1200px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .boot-progress {
+      width: min(420px, 62vw);
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .boot-progress-fill {
+      width: 38%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(0, 212, 255, 0.08), rgba(0, 212, 255, 0.92), rgba(170, 244, 255, 0.18));
+      box-shadow: 0 0 12px rgba(0, 212, 255, 0.28);
+      animation: bootProgressSweep 3.4s ease-in-out infinite;
+    }
+
+    .boot-progress-fill.fast {
+      width: 52%;
+      animation-duration: 1.7s;
+    }
+
+    .boot-tip {
+      min-height: 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      letter-spacing: 0.04em;
+      text-align: center;
+    }
+
+    .boot-tip.fast {
+      color: var(--cyan);
+    }
+
+    @keyframes screenFlicker {
+      0% { opacity: 0.97; }
+      5% { opacity: 0.86; }
+      10% { opacity: 0.96; }
+      100% { opacity: 1; }
+    }
+
+    @keyframes bootProgressSweep {
+      0% { transform: translateX(-110%); opacity: 0.4; }
+      50% { opacity: 1; }
+      100% { transform: translateX(280%); opacity: 0.55; }
+    }
+
     .hidden { display: none !important; }
 
     /* ============================================
@@ -423,12 +571,154 @@
       sessionId: null
     };
 
+    // ============================================
+    // Sheikah Sound Effects System
+    // ============================================
+    let audioCtx = null;
+    let humOscillator = null;
+    let humGainNode = null;
+    let bootAnimating = false;
+    let terminalStarting = false;
+    let bootPosX = 0;
+    let bootPosY = 0;
+    let bootPhase = 0;
+    let bootTwist = 0;
+    let bootTipTimer = null;
+    let bootTipIndex = 0;
+    let bootFastPath = false;
+
+    function ensureAudioContext() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return null;
+        audioCtx = new AudioContext();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      const now = ctx.currentTime;
+
+      if (type === 'select') {
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, now);
+        oscillator.frequency.exponentialRampToValueAtTime(440, now + 0.1);
+        gainNode.gain.setValueAtTime(0.05, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        oscillator.start(now);
+        oscillator.stop(now + 0.1);
+      } else if (type === 'success') {
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(440, now);
+        oscillator.frequency.setValueAtTime(660, now + 0.08);
+        oscillator.frequency.setValueAtTime(880, now + 0.16);
+        gainNode.gain.setValueAtTime(0.05, now);
+        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        oscillator.start(now);
+        oscillator.stop(now + 0.3);
+      }
+    }
+
+    function playKeystroke() {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      const now = ctx.currentTime;
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(360 + Math.random() * 360, now);
+      gainNode.gain.setValueAtTime(0.016, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.04);
+    }
+
+    function playGlitch() {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      const now = ctx.currentTime;
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(120 + Math.random() * 190, now);
+      gainNode.gain.setValueAtTime(0.035, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.08);
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    }
+
+    function startHum() {
+      const ctx = ensureAudioContext();
+      if (!ctx || humOscillator) return;
+      humOscillator = ctx.createOscillator();
+      humGainNode = ctx.createGain();
+      humOscillator.type = 'sine';
+      humOscillator.frequency.setValueAtTime(55, ctx.currentTime);
+      humGainNode.gain.setValueAtTime(0, ctx.currentTime);
+      humGainNode.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.6);
+      humOscillator.connect(humGainNode);
+      humGainNode.connect(ctx.destination);
+      humOscillator.start();
+    }
+
+    function stopHum() {
+      if (!audioCtx || !humOscillator || !humGainNode) return;
+      const stopAt = audioCtx.currentTime + 0.2;
+      humGainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+      humGainNode.gain.linearRampToValueAtTime(0.001, stopAt);
+      humOscillator.stop(stopAt + 0.02);
+      humOscillator = null;
+      humGainNode = null;
+    }
+
+    function stopBootAnimation() {
+      bootAnimating = false;
+      bootFastPath = false;
+      stopHum();
+      if (bootTipTimer) {
+        clearInterval(bootTipTimer);
+        bootTipTimer = null;
+      }
+      const outputEl = document.getElementById('boot-output');
+      if (outputEl) outputEl.style.transform = 'translate(-50%, -50%) translate(0px, 0px) scale(1) rotate(0deg)';
+    }
+
+    function setBootFastPath(enabled) {
+      bootFastPath = !!enabled;
+      const progressEl = document.querySelector('.boot-progress-fill');
+      if (progressEl) progressEl.classList.toggle('fast', bootFastPath);
+      const tipEl = document.getElementById('boot-tip');
+      if (tipEl) {
+        tipEl.classList.toggle('fast', bootFastPath);
+        if (bootFastPath) {
+          tipEl.textContent = 'Tip: Trusted workspace cache hit. Fast-path resuming...';
+        }
+      }
+    }
+
     // 定义全局函数供HTML调用
     function closeOverlay() {
+      playSound('select');
       window.location.href = '/';
     }
 
     function copyCommand() {
+      playSound('select');
       const cmd = getResumeCommand();
       navigator.clipboard.writeText(cmd).then(() => {
         const btn = document.querySelector('button[onclick="copyCommand()"]');
@@ -454,18 +744,172 @@
       return `claude --resume ${id}`;
     }
 
-    function startTerminal() {
+    const GOLEM_ASCII_DATA = [
+`{G}
+        ___
+      _// \\_
+     ||  |  ||
+     //  |  \\\\
+    //_  |  _\\\\
+   ||_||-||-||_||
+   //   // \\\\   \\\\
+  ||  _||   ||_  ||
+  ||_//  \\_/  \\\\_||
+   \\_//   ||   \\\\_/
+          ||
+{/G}`,
+`{G}
+        ___
+      _// \\_
+     || {C}.{/C}| {C}.{/C}||
+     //  |  \\\\
+    //_  |  _\\\\
+   ||_{C}@{/C}||-||-||_{C}@{/C}||
+   //   // \\\\   \\\\
+  ||  _{C}O{/C}||   ||_  ||
+  ||_//  \\_/  \\\\_||
+   \\_//   ||   \\\\_/
+          ||
+{/G}`,
+`{G}
+        ___
+      _// \\_
+     || {C}O{/C}| {C}O{/C}||
+     //  |  \\\\
+    //_  |  _\\\\
+   ||_{C}@@{/C}||-||-||_{C}@@{/C}||
+   //   // \\\\   \\\\
+  ||  _{C}X{/C}||   ||_  ||
+  ||_{C}#{/C}//  \\_/  \\\\_{C}#{/C}||
+   \\_// {C}*{/C} || {C}*{/C} \\\\_/
+          ||
+{/G}`,
+`{G}
+        ___
+      _// \\_
+     || {C}O{/C}| {C}O{/C}||
+     // {C}011001{/C}\\\\
+    //_  |  _\\\\
+   ||_{C}@@{/C}||-||-||_{C}@@{/C}||
+   // {C}v1.3{/C}// \\\\ {C}scan{/C} \\\\
+  ||  _{C}X{/C}||   ||_  ||
+  ||_{C}#{/C}//  \\_/  \\\\_{C}#{/C}||
+   \\_{C}::{/C}//   ||   \\\\_{C}::{/C}/
+          ||
+{/G}`
+    ];
+
+    const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+    function applyBootColors(text) {
+      return text
+        .replace(/{C}/g, '<span class="boot-cyan">')
+        .replace(/{\/C}/g, '</span>')
+        .replace(/{G}/g, '<span class="boot-gray">')
+        .replace(/{\/G}/g, '</span>')
+        .replace(/{R}/g, '<span class="boot-red">')
+        .replace(/{\/R}/g, '</span>');
+    }
+
+    function renderBootFrame(outputEl, frameText) {
+      outputEl.innerHTML = applyBootColors(frameText);
+    }
+
+    function rotateBootTips() {
+      const tips = bootFastPath
+        ? [
+            'Tip: Trusted workspace cache hit. Fast-path resuming...',
+            'Tip: Reusing prior workspace trust to reduce friction.',
+            'Tip: Waiting for Claude bootstrap output...'
+          ]
+        : [
+            'Tip: Waiting for remote shell handshake...',
+            'Tip: If project path is gone, fallback to $HOME is automatic.',
+            'Tip: First response can take a few seconds on cold sessions.',
+            'Tip: Keep this window focused for faster input handoff.',
+            'Tip: WebSocket is live, waiting for Claude bootstrap output...'
+          ];
+      const tipEl = document.getElementById('boot-tip');
+      if (!tipEl) return;
+      tipEl.textContent = tips[bootTipIndex % tips.length];
+      bootTipIndex++;
+    }
+
+    async function playBootSequence() {
+      const outputEl = document.getElementById('boot-output');
+      if (!outputEl) return;
+
+      bootPosX = 0;
+      bootPosY = 0;
+      bootPhase = Math.random() * Math.PI * 2;
+      bootTwist = 0;
+      bootTipIndex = 0;
+      rotateBootTips();
+      bootTipTimer = setInterval(rotateBootTips, bootFastPath ? 1100 : 2200);
+      startHum();
+      const frameOrder = [0, 1, 2, 3, 2, 1];
+      while (bootAnimating) {
+        for (const idx of frameOrder) {
+          if (!bootAnimating) break;
+          bootPhase += 0.085;
+          const stageEl = document.querySelector('.boot-sequence');
+          const boxW = outputEl.offsetWidth || 1;
+          const boxH = outputEl.offsetHeight || 1;
+          const stageW = stageEl ? stageEl.clientWidth : 500;
+          const stageH = stageEl ? stageEl.clientHeight : 420;
+          const limitX = Math.max(14, (stageW - boxW) * 0.5 * 0.9);
+          const limitY = Math.max(12, (stageH - boxH) * 0.5 * 0.9);
+
+          const targetX = (Math.sin(bootPhase * 0.73) * 0.72 + Math.sin(bootPhase * 0.17) * 0.28) * limitX;
+          const targetY = (Math.cos(bootPhase * 0.59) * 0.75 + Math.sin(bootPhase * 0.29) * 0.25) * limitY;
+          const targetScale = 1 + Math.sin(bootPhase * 0.43) * 0.045;
+          const targetTwist = Math.sin(bootPhase * 0.35) * 1.8 + Math.cos(bootPhase * 0.11) * 0.6;
+          bootPosX += (targetX - bootPosX) * 0.22;
+          bootPosY += (targetY - bootPosY) * 0.22;
+          bootTwist += (targetTwist - bootTwist) * 0.18;
+          outputEl.style.transform = `translate(-50%, -50%) translate(${bootPosX.toFixed(2)}px, ${bootPosY.toFixed(2)}px) scale(${targetScale.toFixed(3)}) rotate(${bootTwist.toFixed(2)}deg)`;
+          if (idx !== 0) playKeystroke();
+          if (Math.random() > 0.62) playGlitch();
+          renderBootFrame(outputEl, GOLEM_ASCII_DATA[idx]);
+          await sleep((bootFastPath ? 80 : 140) + Math.random() * (bootFastPath ? 35 : 60));
+        }
+      }
+    }
+
+    async function startTerminal() {
+      if (terminalStarting) return;
       if (!sessionContext.sessionId) {
         alert('Error: No session ID found in URL. Cannot start terminal.');
         return;
       }
-      document.getElementById('overlay').innerHTML = `
-        <div style="text-align:center;padding:40px 20px">
-          <div class="spinner"></div>
-          <p style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.85rem;">Starting terminal session...</p>
+      terminalStarting = true;
+
+      const overlay = document.getElementById('overlay');
+      playSound('select');
+      stopBootAnimation();
+      overlay.innerHTML = `
+        <div class="overlay-content boot-overlay-content">
+          <div class="boot-sequence">
+            <pre id="boot-output" class="boot-output"></pre>
+          </div>
+          <div class="boot-footer">
+            <div class="boot-progress"><div class="boot-progress-fill"></div></div>
+            <div id="boot-tip" class="boot-tip"></div>
+          </div>
         </div>
       `;
-      initTerminal();
+
+      bootAnimating = true;
+      setBootFastPath(false);
+      playBootSequence().catch(() => {});
+      if (!overlay || overlay.classList.contains('hidden')) {
+        stopBootAnimation();
+        terminalStarting = false;
+        return;
+      }
+      initTerminal().finally(() => {
+        terminalStarting = false;
+      });
     }
 
     // Parse URL to determine session type and IDs
@@ -585,6 +1029,63 @@
       if (fit) fit.fit();
 
       let ws = null;
+      let resumeOraTimer = null;
+      let resumeOraFrame = 0;
+      let resumeOraActive = false;
+      let resumeOutputArrived = false;
+      let wsConnectedAt = 0;
+      const resumeOraFrames = [
+        '[>........]',
+        '[=>.......]',
+        '[==>......]',
+        '[===>.....]',
+        '[====>....]',
+        '[=====>...]',
+        '[======>..]',
+        '[=======>.]',
+        '[========>]',
+        '[.=======>]'
+      ];
+      const shortSessionId = (id || '').slice(0, 8) || 'unknown';
+      let resumeOraLabel = `[CORE/RESUME::${shortSessionId.toUpperCase()}]`;
+      const uiTraceId = `${type}:${serverId || 'local'}:${id || 'unknown'}`;
+
+      function startResumeOra(label = resumeOraLabel) {
+        if (resumeOraActive) return;
+        resumeOraLabel = label;
+        resumeOraActive = true;
+        term.write(`\x1b[36m${resumeOraLabel}\x1b[0m \x1b[90m${resumeOraFrames[0]}\x1b[0m`);
+        resumeOraTimer = setInterval(() => {
+          if (!resumeOraActive) return;
+          resumeOraFrame = (resumeOraFrame + 1) % resumeOraFrames.length;
+          term.write(`\r\x1b[36m${resumeOraLabel}\x1b[0m \x1b[90m${resumeOraFrames[resumeOraFrame]}\x1b[0m`);
+        }, 80);
+      }
+
+      function stopResumeOra(doneText = '') {
+        if (!resumeOraActive) return;
+        resumeOraActive = false;
+        if (resumeOraTimer) {
+          clearInterval(resumeOraTimer);
+          resumeOraTimer = null;
+        }
+        term.write('\r\x1b[2K');
+        if (doneText) term.writeln(`\x1b[90m${doneText}\x1b[0m`);
+      }
+
+      function markResumeReady() {
+        if (resumeOutputArrived) return;
+        resumeOutputArrived = true;
+        const tNow = performance.now();
+        let doneLine = '[CORE LINK STABLE]';
+        if (wsConnectedAt > 0) {
+          const elapsed = (tNow - wsConnectedAt).toFixed(1);
+          console.log(`[Perf][UI][${uiTraceId}] first_output_after_connected=${elapsed}ms`);
+          doneLine = `[CORE LINK STABLE ${elapsed}ms]`;
+        }
+        stopResumeOra(doneLine);
+        document.getElementById('status').textContent = 'Connected';
+      }
 
       function handleResize() {
         if (fit) fit.fit();
@@ -606,11 +1107,12 @@
         term.writeln('\x1b[90mStarting local session...\x1b[0m\r\n');
       }
 
-      // 设置一个总的超时保护 (20秒)
+      // 设置一个总的超时保护。现在远端启动会尽快返回，这里只兜底真正卡死的情况。
       const timeoutId = setTimeout(() => {
         if (document.getElementById('status').textContent === 'Starting...') {
-          const err = 'Terminal startup timed out (20s). Check server logs.';
+          const err = 'Terminal startup timed out (12s). Check server logs.';
           console.error(err);
+          stopBootAnimation();
           document.getElementById('overlay').innerHTML = `
             <div class="overlay-content">
               <h2 class="overlay-title" style="color:var(--status-error)">✕ Timeout</h2>
@@ -619,7 +1121,7 @@
             </div>
           `;
         }
-      }, 20000);
+      }, 12000);
 
       try {
         console.log('[Terminal] Requesting session start...');
@@ -629,9 +1131,17 @@
         const endpoint = getStartEndpoint();
         const startResponse = await fetch(endpoint, { method: 'POST' });
         if (!startResponse.ok) {
-          throw new Error('Server failed to start terminal: ' + startResponse.statusText);
+          let details = startResponse.statusText;
+          try {
+            const payload = await startResponse.json();
+            details = payload.details || payload.error || details;
+          } catch {}
+          throw new Error('Server failed to start terminal: ' + details);
         }
-        await startResponse.json();
+        const startPayload = await startResponse.json();
+        if (startPayload && startPayload.trustedWorkspace) {
+          setBootFastPath(true);
+        }
 
         console.log('[Terminal] Session started on server, connecting WebSocket...');
         term.writeln('\x1b[90mSession started, connecting...\x1b[0m\r\n');
@@ -641,38 +1151,54 @@
         ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
+          wsConnectedAt = performance.now();
           clearTimeout(timeoutId);
+          stopBootAnimation();
           console.log('[Terminal] WebSocket connected.');
+          console.log(`[Perf][UI][${uiTraceId}] ws_connected`);
           document.getElementById('dot').className = 'dot connected';
-          document.getElementById('status').textContent = 'Connected';
+          document.getElementById('status').textContent = 'Resuming...';
           document.getElementById('overlay').classList.add('hidden');
-          term.writeln('\x1b[32m✓ Connected\x1b[0m\r\n');
+          term.clear();
+          term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
+          term.writeln('\x1b[32m✓ Connected\x1b[0m');
+          term.writeln('');
+          startResumeOra();
           term.focus();
           
-          // 发送初始尺寸
+          // Send size immediately to avoid extra startup latency.
           handleResize();
         };
 
         ws.onmessage = e => {
           try {
             const msg = JSON.parse(e.data);
-            if (msg.type === 'output') term.write(msg.data);
+            if (msg.type === 'output') {
+              term.write(msg.data);
+            }
+            else if (msg.type === 'resume_ready') {
+              markResumeReady();
+            }
             else if (msg.type === 'waiting') term.writeln(`\x1b[90m${msg.data}\x1b[0m\r\n`);
             else if (msg.type === 'exit') {
+              stopResumeOra();
               term.writeln(`\r\n\x1b[33m⚠ Terminal exited with code ${msg.code}\x1b[0m`);
               document.getElementById('dot').className = 'dot';
               document.getElementById('status').textContent = 'Exited';
             } else if (msg.type === 'error') {
+              stopResumeOra();
               term.writeln(`\r\n\x1b[31m✕ Error: ${msg.data}\x1b[0m`);
             }
-          } catch (e) {
-            // Fallback for non-JSON data
-            term.write(e.data);
+          } catch (_err) {
+            // Fallback for non-JSON payloads
+            term.write(e.data || '');
           }
         };
 
         ws.onclose = () => {
           clearTimeout(timeoutId);
+          stopBootAnimation();
+          stopResumeOra();
           console.log('[Terminal] WebSocket closed.');
           document.getElementById('dot').className = 'dot';
           document.getElementById('status').textContent = 'Disconnected';
@@ -680,6 +1206,7 @@
         };
 
         ws.onerror = err => {
+          stopResumeOra();
           console.error('[Terminal] WebSocket error:', err);
           document.getElementById('status').textContent = 'Error';
         };
@@ -692,6 +1219,8 @@
 
       } catch (err) {
         clearTimeout(timeoutId);
+        stopBootAnimation();
+        stopResumeOra();
         console.error('[Terminal] Startup error:', err);
         document.getElementById('overlay').innerHTML = `
           <div class="overlay-content">
@@ -835,3 +1364,5 @@
   </script>
 </body>
 </html>
+
+

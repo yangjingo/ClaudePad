@@ -639,6 +639,76 @@
     let isSimulating = false;
     let characters = [];
     let logEntries = [];
+    let simAudioCtx = null;
+    let simHumOsc = null;
+    let simHumGain = null;
+
+    function ensureSimAudio() {
+      if (!simAudioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return null;
+        simAudioCtx = new AudioContext();
+      }
+      if (simAudioCtx.state === 'suspended') simAudioCtx.resume();
+      return simAudioCtx;
+    }
+
+    function startSimHum() {
+      const ctxAudio = ensureSimAudio();
+      if (!ctxAudio || simHumOsc) return;
+      simHumOsc = ctxAudio.createOscillator();
+      simHumGain = ctxAudio.createGain();
+      simHumOsc.type = 'sine';
+      simHumOsc.frequency.setValueAtTime(58, ctxAudio.currentTime);
+      simHumGain.gain.setValueAtTime(0, ctxAudio.currentTime);
+      simHumGain.gain.linearRampToValueAtTime(0.04, ctxAudio.currentTime + 0.7);
+      simHumOsc.connect(simHumGain);
+      simHumGain.connect(ctxAudio.destination);
+      simHumOsc.start();
+    }
+
+    function stopSimHum() {
+      if (!simAudioCtx || !simHumOsc || !simHumGain) return;
+      const stopAt = simAudioCtx.currentTime + 0.25;
+      simHumGain.gain.cancelScheduledValues(simAudioCtx.currentTime);
+      simHumGain.gain.linearRampToValueAtTime(0.001, stopAt);
+      simHumOsc.stop(stopAt + 0.02);
+      simHumOsc = null;
+      simHumGain = null;
+    }
+
+    function playSimBlip() {
+      const ctxAudio = ensureSimAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gainNode = ctxAudio.createGain();
+      const now = ctxAudio.currentTime;
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(680 + Math.random() * 180, now);
+      gainNode.gain.setValueAtTime(0.025, now);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gainNode);
+      gainNode.connect(ctxAudio.destination);
+      osc.start(now);
+      osc.stop(now + 0.09);
+    }
+
+    function playSimEvent() {
+      const ctxAudio = ensureSimAudio();
+      if (!ctxAudio) return;
+      const osc = ctxAudio.createOscillator();
+      const gainNode = ctxAudio.createGain();
+      const now = ctxAudio.currentTime;
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(260 + Math.random() * 150, now);
+      osc.frequency.exponentialRampToValueAtTime(430, now + 0.1);
+      gainNode.gain.setValueAtTime(0.03, now);
+      gainNode.gain.linearRampToValueAtTime(0, now + 0.12);
+      osc.connect(gainNode);
+      gainNode.connect(ctxAudio.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    }
 
     // Westworld-style wandering and dialogue system
     let dialogueBubbles = [];
@@ -1199,6 +1269,7 @@
 
     // ========== QUICK ACTIONS ==========
     function deployAll() {
+      playSimBlip();
       characters.forEach(char => {
         if (char.type !== 'commander') {
           char.status = 'active';
@@ -1214,6 +1285,7 @@
     }
 
     function recallAll() {
+      playSimBlip();
       characters.forEach(char => {
         if (char.type !== 'commander') {
           char.status = 'idle';
@@ -1230,6 +1302,7 @@
     }
 
     function refreshStatus() {
+      playSimBlip();
       characters.forEach(char => {
         char.status = ['active', 'idle', 'busy'][Math.floor(Math.random() * 3)];
       });
@@ -1240,6 +1313,15 @@
 
     function toggleSimulation() {
       isSimulating = !isSimulating;
+      const btn = document.querySelector('button[onclick="toggleSimulation()"]');
+      if (isSimulating) {
+        startSimHum();
+        if (btn) btn.textContent = 'Stop Sim';
+      } else {
+        stopSimHum();
+        if (btn) btn.textContent = 'Simulate';
+      }
+      playSimBlip();
       addLogEntry('link', `Simulation ${isSimulating ? 'started' : 'stopped'}`);
 
       if (isSimulating) {
@@ -1256,6 +1338,7 @@
       const randomAgent = subAgents[Math.floor(Math.random() * subAgents.length)];
 
       if (Math.random() > 0.6) {
+        playSimEvent();
         // Development phase tasks
         const tasks = {
           revali: ['Analyzing requirements', 'Researching tech stack', 'Reviewing PRD', 'Estimating effort'],
