@@ -21,16 +21,16 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
 
 ```bash
 # Install globally
-npm install -g @yangjing/claudepad
+npm install -g @yangjingo/claudepad
 
 # Run
 claudepad
 
 # Update to latest version
-npm update -g @yangjing/claudepad
+npm update -g @yangjingo/claudepad
 
 # Or run directly without installing
-npx @yangjing/claudepad
+npx @yangjingo/claudepad
 ```
 
 ### Development

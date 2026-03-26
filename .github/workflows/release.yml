@@ -164,7 +164,7 @@ jobs:
 
             ### npm
             ```bash
-            npm install -g claudepad
+            npm install -g @yangjingo/claudepad
             claudepad
             ```
 

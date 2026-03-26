@@ -1,5 +1,5 @@
 {
-  "name": "@yangjing/claudepad",
+  "name": "@yangjingo/claudepad",
   "version": "0.3.26",
   "type": "module",
   "description": "Claude Code Session Monitor - Web-based terminal for Claude Code",
