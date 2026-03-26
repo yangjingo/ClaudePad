@@ -16,6 +16,7 @@ CLAUDE
 .claude
 .cache
 dist/
+# build/
 GEMINI.md
 
 # IDE

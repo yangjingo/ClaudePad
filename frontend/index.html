@@ -356,18 +356,18 @@
       <div class="config-bar" style="border-top: none; background: rgba(0,0,0,0.1); border-bottom: 1px solid var(--bronze-dim); padding: 10px 20px;">
         <div class="config-item">
           <span class="config-label">◈ Local Path</span>
-          <span class="config-value" id="config-path" style="font-size: 0.75rem;">Loading...</span>
+          <span class="config-value" id="config-path" style="font-size: 0.75rem; color: var(--cyan-dim);">Loading...</span>
         </div>
         <div class="config-item">
           <span class="config-label">Model</span>
           <div style="display: flex; align-items: center; gap: 8px;">
             <code id="config-model" style="background: rgba(0,212,255,0.05); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.75rem; color: var(--cyan-dim);">claude-3-5-sonnet-latest</code>
-            <button class="btn-edit-model" onclick="openEditModal()">✎</button>
+            <button class="btn-edit-model" onclick="openEditModal('local')">✎</button>
           </div>
         </div>
         <div class="config-item">
           <span class="config-label">Identity</span>
-          <span class="config-value" style="font-size: 0.75rem;"><code id="config-host">-</code> | <code id="config-user">-</code></span>
+          <span class="config-value" style="font-size: 0.75rem; color: var(--cyan-dim);"><code id="config-host">-</code> | <code id="config-user">-</code></span>
         </div>
       </div>
 
@@ -398,10 +398,13 @@
         </div>
         <div class="config-item">
           <span class="config-label">Model</span>
-          <code id="remote-config-model" style="background: rgba(0,212,255,0.05); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.75rem; color: var(--cyan);">claude-3-5-sonnet-latest</code>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <code id="remote-config-model" style="background: rgba(0,212,255,0.05); padding: 2px 6px; border-radius: var(--radius-sm); border: 1px solid var(--bronze-dim); font-size: 0.75rem; color: var(--cyan);">claude-3-5-sonnet-latest</code>
+            <button id="remote-edit-btn" class="btn-edit-model" onclick="openEditModal('remote')">✎</button>
+          </div>
         </div>
         <div class="config-item">
-          <span class="config-label">Host / User</span>
+          <span class="config-label">Identity</span>
           <span class="config-value" style="font-size: 0.75rem; color: var(--cyan);"><code id="remote-config-host">-</code> | <code id="remote-config-user">-</code></span>
         </div>
       </div>
@@ -598,9 +601,11 @@
     async function loadConfig(serverId = 'local') {
       try {
         const res = await fetch(`/api/config?serverId=${serverId}`);
-        currentConfig = await res.json();
+        const config = await res.json();
+        currentConfig = config; // Keep for legacy if any
+        configurations[serverId] = config; // Store for edit modal
         
-        const isRemote = currentConfig.isRemote;
+        const isRemote = config.isRemote;
         const prefix = isRemote ? 'remote-config-' : 'config-';
         
         // Update either local bar or remote bar
@@ -609,11 +614,11 @@
         const hostEl = document.getElementById(`${prefix}host`);
         const userEl = document.getElementById(`${prefix}user`);
 
-        if (pathEl) pathEl.textContent = currentConfig.claudePath || '~/.claude';
-        if (modelEl) modelEl.textContent = currentConfig.model || 'not set';
+        if (pathEl) pathEl.textContent = config.claudePath || '~/.claude';
+        if (modelEl) modelEl.textContent = config.model || 'not set';
         
-        const ip = currentConfig.ip || '127.0.0.1';
-        const user = currentConfig.user || 'unknown';
+        const ip = config.ip || '127.0.0.1';
+        const user = config.user || 'unknown';
         if (hostEl) hostEl.textContent = ip;
         if (userEl) userEl.textContent = user;
 
@@ -702,14 +707,17 @@
     async function toggleServerSessions(id, forceOpen = false) {
       const el = document.getElementById('remote-list');
       const tag = document.getElementById(`tag-${id}`);
+      const remoteBar = document.getElementById('remote-config-bar');
       let expandedServers = JSON.parse(localStorage.getItem('expandedServers') || '[]');
 
       // If clicking already active server, close it
       if (tag && tag.classList.contains('active') && !forceOpen) {
         el.style.display = 'none';
         tag.classList.remove('active');
-        const remoteBar = document.getElementById('remote-config-bar');
-        if (remoteBar) remoteBar.style.display = 'none';
+        if (remoteBar) {
+          remoteBar.style.display = 'none';
+          remoteBar.dataset.serverId = '';
+        }
         
         const remoteBadge = document.getElementById('remote-version-badge');
         if (remoteBadge) remoteBadge.style.display = 'none';
@@ -728,6 +736,7 @@
       if(tag) tag.classList.add('active');
 
       el.style.display = 'block';
+      if (remoteBar) remoteBar.dataset.serverId = id;
       checkVersion(id, 'remote-version-badge');
       loadConfig(id);
       
@@ -822,7 +831,50 @@
       }).join('');
     }
 
-    function openEditModal() { document.getElementById('edit-modal-overlay').classList.add('active'); }
+    const configurations = {};
+
+    function openEditModal(target = 'local') {
+      const modal = document.getElementById('edit-modal-overlay');
+      let serverId = 'local';
+      
+      if (target === 'remote') {
+        serverId = document.getElementById('remote-config-bar').dataset.serverId || 'local';
+      }
+      
+      modal.dataset.targetServer = serverId;
+      
+      const config = configurations[serverId] || {};
+      document.getElementById('edit-model').value = config.model || '';
+      document.getElementById('edit-apiurl').value = config.apiUrl || '';
+      document.getElementById('edit-apikey').value = ''; // Never show full key
+      
+      modal.classList.add('active');
+    }
+
+    async function saveConfig() {
+      const modal = document.getElementById('edit-modal-overlay');
+      const serverId = modal.dataset.targetServer || 'local';
+      const model = document.getElementById('edit-model').value;
+      const apiUrl = document.getElementById('edit-apiurl').value;
+      const apiKey = document.getElementById('edit-apikey').value;
+
+      try {
+        const res = await fetch(`/api/config?serverId=${serverId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, apiUrl, apiKey })
+        });
+        if (res.ok) {
+          closeEditModal();
+          loadConfig(serverId);
+        } else {
+          alert('Failed to save configuration');
+        }
+      } catch (e) {
+        console.error('Save config error:', e);
+      }
+    }
+
     function closeEditModal() { document.getElementById('edit-modal-overlay').classList.remove('active'); }
     function openAddServerModal() { document.getElementById('add-server-modal-overlay').classList.add('active'); }
     function closeAddServerModal() { document.getElementById('add-server-modal-overlay').classList.remove('active'); }
