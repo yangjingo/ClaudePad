@@ -20,15 +20,26 @@ See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
 ## Quick Start
 
 ```bash
-# Install dependencies
+# Install globally
+npm install -g @yangjing/claudepad
+
+# Run
+claudepad
+
+# Update to latest version
+npm update -g @yangjing/claudepad
+
+# Or run directly without installing
+npx @yangjing/claudepad
+```
+
+### Development
+
+```bash
+git clone https://github.com/yangjingo/ClaudePad.git
+cd ClaudePad
 npm install
-
-# Development (with hot reload)
 npm run dev
-
-# Production build
-npm run build
-npm start
 ```
 
 Visit http://localhost:8080

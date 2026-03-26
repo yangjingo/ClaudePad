@@ -1,5 +1,5 @@
 {
-  "name": "claudepad",
+  "name": "@yangjing/claudepad",
   "version": "0.3.26",
   "type": "module",
   "description": "Claude Code Session Monitor - Web-based terminal for Claude Code",
@@ -55,6 +55,9 @@
   ],
   "bin": {
     "claudepad": "dist/index.js"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "pkg": {
     "assets": [
