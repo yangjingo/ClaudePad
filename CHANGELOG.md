@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-07-16
+
+### Added
+- **Session-to-Agent Handoff**: Added `◈ 修复 Bug` actions that carry local or remote session context from Sessions into Multi-Agent and open the matching terminal from an Agent.
+- **Interactive Hyrule Workspace**: Added a draggable and zoomable continent, seeded terrain generation, a synchronized minimap, top-mounted camera controls, a central Sheikah Tower, four regional fortresses, Divine Beasts, Master Cycle Link, and the Bug monster.
+- **Delivery Storyline**: Added a six-stage engineering pipeline covering requirements baseline, incident triage, parallel implementation, integration regression, release gate, and hardening retrospective.
+
+### Changed
+- Unified Sessions and Multi-Agent as a compact two-tab workspace while retaining Ideas and Tips as utility navigation.
+- Moved map controls to the top of the viewport and centered event feedback on the world scene.
+- Reduced the npm package surface by excluding historical design intermediates while retaining all runtime assets.
+- Updated `ws` to 8.21.1.
+
+### Fixed
+- Removed the redundant terminal `RESUMING...` presentation and stopped connection animation after a terminal reaches a final state.
+- Preserved query-string routing for static HTML pages such as session-linked Multi-Agent URLs.
+- Replaced dynamic inline session handlers with encoded data attributes and delegated events.
+
+### Security
+- Restricted `/asserts/` and `/docs/` static file resolution to their configured roots to prevent path traversal.
+- Production dependency audit now reports zero known vulnerabilities.
+
+### Documentation
+- Refreshed README demos, product requirements, UI rules, and Multi-Agent implementation notes for the 0.4.0 release.
+
 ## [0.3.26] - 2026-03-26
 
 ### Added

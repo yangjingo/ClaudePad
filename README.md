@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/claudepad-hyrule-event.png" width="960" alt="ClaudePad Multi-Agent Hyrule workspace showing five agents responding to a software incident">
+  <img src="https://raw.githubusercontent.com/yangjingo/ClaudePad/main/docs/assets/claudepad-hyrule-event.png" width="960" alt="ClaudePad Multi-Agent Hyrule workspace showing five agents responding to a software incident">
 </p>
 
 ClaudePad turns local and remote Claude Code work into one visual control surface. Monitor sessions, open a real xterm.js terminal, capture ideas, browse practical tips, or follow a software-delivery incident across an interactive Hyrule-inspired map.
@@ -21,7 +21,7 @@ ClaudePad turns local and remote Claude Code work into one visual control surfac
 Sessions and Multi-Agent stay together as two workspace tabs, while Ideas and Tips remain available as lightweight utility actions.
 
 <p align="center">
-  <img src="./docs/assets/claudepad-workspaces.gif" width="800" alt="Animated demo switching between ClaudePad Sessions, Tips, and Multi-Agent workspaces">
+  <img src="https://raw.githubusercontent.com/yangjingo/ClaudePad/main/docs/assets/claudepad-workspaces.gif" width="800" alt="Animated demo switching between ClaudePad Sessions, Tips, and Multi-Agent workspaces">
 </p>
 
 ### Explore the delivery map
@@ -29,13 +29,13 @@ Sessions and Multi-Agent stay together as two workspace tabs, while Ideas and Ti
 Zoom, pan, recenter on the Sheikah Tower, use the minimap, and trigger a simulated incident without modifying live sessions.
 
 <p align="center">
-  <img src="./docs/assets/claudepad-map-controls.gif" width="800" alt="Animated demo of ClaudePad Hyrule map zoom, drag, recenter, and incident controls">
+  <img src="https://raw.githubusercontent.com/yangjingo/ClaudePad/main/docs/assets/claudepad-map-controls.gif" width="800" alt="Animated demo of ClaudePad Hyrule map zoom, drag, recenter, and incident controls">
 </p>
 
 <table>
   <tr>
-    <td width="50%"><img src="./docs/assets/claudepad-sessions.png" alt="ClaudePad session monitor"></td>
-    <td width="50%"><img src="./docs/assets/claudepad-hyrule-map.png" alt="ClaudePad interactive Hyrule map centered on the Sheikah Tower"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/yangjingo/ClaudePad/main/docs/assets/claudepad-sessions.png" alt="ClaudePad session monitor"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/yangjingo/ClaudePad/main/docs/assets/claudepad-hyrule-map.png" alt="ClaudePad interactive Hyrule map centered on the Sheikah Tower"></td>
   </tr>
   <tr>
     <td align="center"><strong>Session operations</strong><br>Local and remote environments in one monitor.</td>
@@ -50,7 +50,7 @@ Zoom, pan, recenter on the Sheikah Tower, use the minimap, and trigger a simulat
 - **Local + Remote Environments** — keep environment-aware configuration and independent version status together.
 - **CC Ideas** — capture inspiration, search it, and track progress from new to archived.
 - **CC Tips** — browse, search, randomize, and copy practical Claude Code shortcuts.
-- **Multi-Agent Hyrule** — monitor Link and four specialist agents through a six-stage delivery pipeline: requirements baseline, incident triage, parallel implementation, integration regression, release gate, and hardening retrospective.
+- **Session-linked Multi-Agent Hyrule** — hand a local or remote session to Link and four specialists through a six-stage delivery pipeline: requirements baseline, incident triage, parallel implementation, integration regression, release gate, and hardening retrospective.
 - **Interactive World Map** — drag or use keyboard controls, zoom in and out, recenter, randomize the continent, and navigate through a minimap.
 
 ## Quick start
@@ -88,7 +88,11 @@ npm run dev
 
 ## Update
 
-**v0.3.26** introduces the symmetric sector layout, environment-aware configuration, independent local/remote version tracking, Sheikah scrollbars, and guided empty states. See [CHANGELOG.md](./CHANGELOG.md) for the full history.
+**v0.4.0** links Sessions to the interactive Multi-Agent Hyrule workspace, adds a draggable seeded continent with zoom and minimap navigation, and hardens static asset and dynamic session handling. See [CHANGELOG.md](./CHANGELOG.md) for the full history.
+
+## Visual note
+
+The Multi-Agent workspace is an original, unofficial fan-inspired interface. ClaudePad is not affiliated with or endorsed by Nintendo.
 
 ## License
 

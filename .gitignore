@@ -11,6 +11,9 @@ node_modules/
 docs/*
 !docs/assets/
 !docs/assets/**
+!docs/PRD.md
+!docs/UI.md
+!docs/PLAYGOUND.md
 tests/
 
 # Claude

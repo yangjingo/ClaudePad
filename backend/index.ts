@@ -5,7 +5,7 @@
 
 import { createServer, IncomingMessage, ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer } from 'ws';
 
@@ -92,7 +92,17 @@ const server = createServer(async (req, res) => {
 
 async function serveStaticFiles(url: string, res: ServerResponse): Promise<boolean> {
   const projectRoot = join(__dirname, '..');
-  const pathname = url.split('?', 1)[0];
+  let pathname: string;
+  try {
+    pathname = decodeURIComponent(url.split('?', 1)[0]);
+  } catch {
+    return false;
+  }
+  const resolveStaticPath = (root: string, relativePath: string): string | null => {
+    const resolvedRoot = resolve(root);
+    const filePath = resolve(resolvedRoot, relativePath);
+    return filePath === resolvedRoot || filePath.startsWith(`${resolvedRoot}${sep}`) ? filePath : null;
+  };
 
   // Frontend HTML pages
   const pageMap: Record<string, string> = {
@@ -141,7 +151,8 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
 
   // Asserts directory
   if (pathname.startsWith('/asserts/')) {
-    const filePath = join(projectRoot, pathname);
+    const filePath = resolveStaticPath(join(projectRoot, 'asserts'), pathname.slice('/asserts/'.length));
+    if (!filePath) return false;
     try {
       const content = await readFile(filePath);
       const ext = filePath.split('.').pop();
@@ -161,13 +172,15 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
 
   // Docs directory
   if (pathname.startsWith('/docs/')) {
-    const filePath = join(projectRoot, pathname);
+    const filePath = resolveStaticPath(join(projectRoot, 'docs'), pathname.slice('/docs/'.length));
+    if (!filePath) return false;
     try {
-      const content = await readFile(filePath, 'utf-8');
+      const content = await readFile(filePath);
       const ext = filePath.split('.').pop();
       const contentTypes: Record<string, string> = {
         html: 'text/html', css: 'text/css', js: 'application/javascript',
-        json: 'application/json', md: 'text/markdown', txt: 'text/plain'
+        json: 'application/json', md: 'text/markdown', txt: 'text/plain',
+        png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml'
       };
       res.writeHead(200, { 'Content-Type': contentTypes[ext || ''] || 'application/octet-stream' });
       res.end(content);

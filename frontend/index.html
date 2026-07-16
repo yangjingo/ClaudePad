@@ -591,23 +591,60 @@
 
     const LOCAL_SESSIONS_CACHE_KEY = 'local_sessions_cache_v1';
 
+    function sessionStatusClass(status) {
+      return ['running','idle','completed','error','failed'].includes(status) ? status : '';
+    }
+
+    function wireSessionCards(container, serverId = 'local') {
+      const openSession = sessionId => {
+        const path = serverId === 'local'
+          ? `/terminal/${encodeURIComponent(sessionId)}`
+          : `/terminal/${encodeURIComponent(serverId)}/${encodeURIComponent(sessionId)}`;
+        location.href = path;
+      };
+      container.onclick = event => {
+        if (!(event.target instanceof Element)) return;
+        const fixButton = event.target.closest('[data-fix-session]');
+        if (fixButton) {
+          event.stopPropagation();
+          openInMultiAgent(fixButton.dataset.fixSession,serverId);
+          return;
+        }
+        const card = event.target.closest('.session-card[data-session-id]');
+        if (card && !event.target.closest('button')) openSession(card.dataset.sessionId);
+      };
+      container.onkeydown = event => {
+        if (!(event.target instanceof Element)) return;
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        const card = event.target.closest('.session-card[data-session-id]');
+        if (!card || event.target.closest('button')) return;
+        event.preventDefault();
+        openSession(card.dataset.sessionId);
+      };
+    }
+
     function renderLocalSessions(sessions) {
       document.getElementById('count').textContent = `${sessions.length} sessions`;
       const activeCount = sessions.filter(s => s.status === 'running' || s.status === 'idle').length;
       document.getElementById('active-count').textContent = `Active ${activeCount}`;
-      document.getElementById('list').innerHTML = sessions.map(s => `
-          <div class="session-card" onclick="location.href='/terminal/${s.id}'">
+      const list = document.getElementById('list');
+      list.innerHTML = sessions.map(s => {
+        const safeId = escapeHtml(String(s.id || ''));
+        return `
+          <div class="session-card" data-session-id="${safeId}" role="link" tabindex="0">
             <div>
               <div style="display:flex; align-items:center; gap:8px;">
-                <span class="session-status ${s.status}"></span>
-                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${s.id.slice(0,8)}...</span>
+                <span class="session-status ${sessionStatusClass(s.status)}"></span>
+                <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${escapeHtml(String(s.id || '').slice(0,8))}...</span>
               </div>
               <div style="margin:4px 0; font-weight:500;">${escapeHtml(s.name || 'Untitled')}</div>
               <div style="font-size:0.75rem; color:var(--text-muted)">Started: ${new Date(s.startTime).toLocaleString()}</div>
             </div>
-            <div class="session-card-actions"><button class="bug-fix-link" type="button" onclick="event.stopPropagation(); openInMultiAgent('${s.id}')">◈ 修复 Bug</button></div>
+            <div class="session-card-actions"><button class="bug-fix-link" type="button" data-fix-session="${safeId}">◈ 修复 Bug</button></div>
           </div>
-        `).join('');
+        `;
+      }).join('');
+      wireSessionCards(list);
     }
 
     function openInMultiAgent(sessionId, serverId = 'local') {
@@ -688,13 +725,20 @@
           return;
         }
 
-        listEl.innerHTML = servers.map(s => `
-          <div class="server-tag" id="tag-${s.id}" onclick="toggleServerSessions('${s.id}')">
+        listEl.innerHTML = servers.map(s => {
+          const safeId = escapeHtml(String(s.id || ''));
+          return `
+          <button class="server-tag" type="button" data-server-id="${safeId}">
             <span class="server-status ${s.connected ? 'connected' : ''}"></span>
-            <span>${s.name || s.id}</span>
-          </div>
-          <div id="server-sessions-${s.id}" style="display:none; width:100%;"></div>
-        `).join('');
+            <span>${escapeHtml(String(s.name || s.id || 'Unnamed server'))}</span>
+          </button>
+        `}).join('');
+
+        listEl.onclick = event => {
+          if (!(event.target instanceof Element)) return;
+          const tag = event.target.closest('.server-tag[data-server-id]');
+          if (tag) toggleServerSessions(tag.dataset.serverId);
+        };
 
         // Auto-expand servers that were previously open
         servers.forEach(s => {
@@ -736,7 +780,8 @@
 
     async function toggleServerSessions(id, forceOpen = false) {
       const el = document.getElementById('remote-list');
-      const tag = document.getElementById(`tag-${id}`);
+      const tag = Array.from(document.querySelectorAll('.server-tag[data-server-id]'))
+        .find(item => item.dataset.serverId === String(id));
       const remoteBar = document.getElementById('remote-config-bar');
       let expandedServers = JSON.parse(localStorage.getItem('expandedServers') || '[]');
 
@@ -841,27 +886,29 @@
         const invalidClass = s.invalid ? ' invalid-session' : '';
         const staggerClass = useStagger ? ' stagger-in' : '';
         const delay = useStagger ? `style="animation-delay: ${index * 50}ms"` : '';
-        const onclick = !s.invalid ? `onclick="location.href='/terminal/${serverId}/${s.id}'"` : `title="This remote session is invalid and cannot be resumed."`;
+        const safeId = escapeHtml(String(s.id || ''));
+        const interaction = !s.invalid ? `data-session-id="${safeId}" role="link" tabindex="0"` : `title="This remote session is invalid and cannot be resumed."`;
         
         return `
-          <div class="session-card${staggerClass}${invalidClass}" ${delay} ${onclick}>
+          <div class="session-card${staggerClass}${invalidClass}" ${delay} ${interaction}>
             <div style="width:100%; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
               <div>
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <span class="session-status ${s.status}"></span>
-                  <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${s.id.slice(0,8)}...</span>
+                  <span class="session-status ${sessionStatusClass(s.status)}"></span>
+                  <span style="font-family:var(--font-mono); font-size:0.75rem; color:var(--bronze)">${escapeHtml(String(s.id || '').slice(0,8))}...</span>
                 </div>
                 <div style="margin:4px 0; font-weight:500; font-size:0.95rem;">${escapeHtml(s.name || 'Untitled')}</div>
                 <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">SCAN_TIME: ${new Date(s.startTime).toLocaleString()}</div>
               </div>
               <div class="session-card-actions">
                 <span class="remote-badge ${s.invalid ? 'invalid' : ''}">${s.invalid ? 'INVALID' : 'REMOTE'}</span>
-                ${s.invalid ? '' : `<button class="bug-fix-link" type="button" onclick="event.stopPropagation(); openInMultiAgent('${s.id}','${serverId}')">◈ 修复 Bug</button>`}
+                ${s.invalid ? '' : `<button class="bug-fix-link" type="button" data-fix-session="${safeId}">◈ 修复 Bug</button>`}
               </div>
             </div>
           </div>
         `;
       }).join('');
+      wireSessionCards(container,serverId);
     }
 
     const configurations = {};
