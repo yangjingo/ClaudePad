@@ -1,0 +1,157 @@
+/* Shared ClaudePad navigation — compact utilities + workspace switcher. */
+.header,
+.topbar {
+  flex-direction: row;
+}
+
+.header-actions,
+.topbar-actions {
+  min-width: 0;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 9px;
+}
+
+.utility-nav {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.utility-link {
+  min-width: 29px;
+  height: 29px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 8px;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  text-decoration: none;
+  font: 650 .68rem/1 var(--font-mono);
+  transition: color .16s, background .16s, border-color .16s;
+}
+
+.utility-link:hover {
+  color: var(--cyan);
+  background: rgba(0, 212, 255, .06);
+  border-color: rgba(0, 212, 255, .15);
+}
+
+.utility-link.active {
+  color: var(--cyan);
+  background: rgba(0, 212, 255, .08);
+  border-color: rgba(0, 212, 255, .24);
+}
+
+.utility-icon {
+  color: var(--bronze-light);
+  font-size: .74rem;
+}
+
+.utility-link.active .utility-icon,
+.utility-link:hover .utility-icon {
+  color: var(--cyan);
+}
+
+.workspace-tabs {
+  flex: 0 0 auto;
+  align-self: auto;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  padding: 3px;
+  background: rgba(10, 10, 15, .78);
+  border: 1px solid var(--bronze-dim);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .015);
+}
+
+.workspace-tab {
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  text-decoration: none;
+  font: 650 .69rem/1 var(--font-mono);
+  white-space: nowrap;
+  transition: color .16s, background .16s, border-color .16s;
+}
+
+.workspace-tab:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, .035);
+}
+
+.workspace-tab.active {
+  color: var(--cyan);
+  background: rgba(0, 212, 255, .09);
+  border-color: rgba(0, 212, 255, .28);
+  box-shadow: inset 0 0 0 1px rgba(0, 212, 255, .04), 0 0 12px rgba(0, 212, 255, .06);
+}
+
+.workspace-tab-icon {
+  color: var(--bronze-light);
+  font-size: .72rem;
+}
+
+.workspace-tab.active .workspace-tab-icon {
+  color: var(--cyan);
+}
+
+@media (max-width: 760px) {
+  .header,
+  .topbar {
+    min-height: 55px;
+    padding: 8px 12px;
+  }
+
+  .header-actions,
+  .topbar-actions {
+    gap: 5px;
+  }
+
+  .utility-link {
+    padding: 0 7px;
+  }
+
+  .utility-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .workspace-tab {
+    padding: 0 8px;
+    font-size: .64rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text,
+  .brand-copy,
+  .top-status {
+    display: none;
+  }
+
+  .workspace-tab {
+    gap: 4px;
+    padding: 0 6px;
+  }
+}

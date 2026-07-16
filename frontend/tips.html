@@ -429,6 +429,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/asserts/styles/header-nav.css">
 </head>
 <body>
   <!-- Header -->
@@ -437,12 +438,16 @@
       <span class="logo-icon">◈</span>
       <span class="logo-text">ClaudePad</span>
     </a>
-    <nav class="nav-links">
-      <a href="/" class="nav-link">🐱 Sessions</a>
-      <a href="/idea.html" class="nav-link">💡 Ideas</a>
-      <a href="/tips.html" class="nav-link active">🔧 Tips</a>
-      <a href="/playground.html" class="nav-link">🎮 Playground</a>
-    </nav>
+    <div class="header-actions">
+      <nav class="utility-nav" aria-label="工具">
+        <a class="utility-link" href="/idea.html" title="Ideas"><span class="utility-icon">✦</span><span class="utility-label">Ideas</span></a>
+        <a class="utility-link active" href="/tips.html" aria-current="page" title="Tips"><span class="utility-icon">⌘</span><span class="utility-label">Tips</span></a>
+      </nav>
+      <nav class="workspace-tabs" aria-label="工作区">
+        <a class="workspace-tab" href="/"><span class="workspace-tab-icon">▤</span>Sessions</a>
+        <a class="workspace-tab" href="/playground.html"><span class="workspace-tab-icon">♜</span>Multi-Agent</a>
+      </nav>
+    </div>
   </header>
 
   <!-- Main Content -->

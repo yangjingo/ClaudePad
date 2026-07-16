@@ -92,6 +92,7 @@ const server = createServer(async (req, res) => {
 
 async function serveStaticFiles(url: string, res: ServerResponse): Promise<boolean> {
   const projectRoot = join(__dirname, '..');
+  const pathname = url.split('?', 1)[0];
 
   // Frontend HTML pages
   const pageMap: Record<string, string> = {
@@ -105,8 +106,8 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
     '/playground': 'playground.html'
   };
 
-  if (pageMap[url]) {
-    const html = await readFile(join(projectRoot, 'frontend', pageMap[url])).catch(() => null);
+  if (pageMap[pathname]) {
+    const html = await readFile(join(projectRoot, 'frontend', pageMap[pathname])).catch(() => null);
     if (html) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(html);
@@ -115,7 +116,7 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
   }
 
   // Terminal page (with session ID)
-  const terminalMatch = url.match(/^\/terminal\/(.+)/);
+  const terminalMatch = pathname.match(/^\/terminal\/(.+)/);
   if (terminalMatch) {
     const html = await readFile(join(projectRoot, 'frontend', 'terminal.html')).catch(() => null);
     if (html) {
@@ -126,7 +127,7 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
   }
 
   // Browser default favicon request
-  if (url === '/favicon.ico') {
+  if (pathname === '/favicon.ico') {
     const filePath = join(projectRoot, 'asserts', 'zelda-icon', 'link.png');
     try {
       const content = await readFile(filePath);
@@ -139,8 +140,8 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
   }
 
   // Asserts directory
-  if (url.startsWith('/asserts/')) {
-    const filePath = join(projectRoot, url);
+  if (pathname.startsWith('/asserts/')) {
+    const filePath = join(projectRoot, pathname);
     try {
       const content = await readFile(filePath);
       const ext = filePath.split('.').pop();
@@ -159,8 +160,8 @@ async function serveStaticFiles(url: string, res: ServerResponse): Promise<boole
   }
 
   // Docs directory
-  if (url.startsWith('/docs/')) {
-    const filePath = join(projectRoot, url);
+  if (pathname.startsWith('/docs/')) {
+    const filePath = join(projectRoot, pathname);
     try {
       const content = await readFile(filePath, 'utf-8');
       const ext = filePath.split('.').pop();

@@ -48,6 +48,18 @@
     .nav-link { color: var(--text-muted); text-decoration: none; font-family: var(--font-mono); font-size: 0.85rem; padding: 6px 12px; border-radius: var(--radius-sm); transition: all 0.2s; }
     .nav-link:hover { color: var(--cyan); background: var(--cyan-glow); }
     .nav-link.active { color: var(--cyan); border: 1px solid var(--cyan-dim); }
+    .header { min-height: 57px; padding: 9px 20px; justify-content: flex-start; }
+    .workspace-tabs { align-self: auto; display: flex; align-items: center; gap: 2px; padding: 3px; margin-left: clamp(18px, 4vw, 52px); background: rgba(10,10,15,.78); border: 1px solid var(--bronze-dim); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.015); }
+    .workspace-tab { height: 27px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; color: var(--text-muted); background: transparent; border: 1px solid transparent; border-radius: 3px; text-decoration: none; font: 650 .69rem/1 var(--font-mono); transition: color .16s,background .16s,border-color .16s; }
+    .workspace-tab:hover { color: var(--text); background: rgba(255,255,255,.035); }
+    .workspace-tab.active { color: var(--cyan); background: rgba(0,212,255,.09); border-color: rgba(0,212,255,.28); box-shadow: inset 0 0 0 1px rgba(0,212,255,.04), 0 0 12px rgba(0,212,255,.06); }
+    .workspace-tab-icon { color: var(--bronze-light); font-size: .72rem; }
+    .workspace-tab.active .workspace-tab-icon { color: var(--cyan); }
+    @media (max-width: 600px) {
+      .header { padding: 8px 12px; }
+      .workspace-tabs { margin-left: auto; }
+      .workspace-tab { padding: 0 8px; font-size: .64rem; }
+    }
 
     /* Version Badge */
     .version-badge {
@@ -304,6 +316,13 @@
 
     .session-status { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
     .session-status.running { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: pulse 2s ease-in-out infinite; }
+    .session-card-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .bug-fix-link {
+      flex: 0 0 auto; padding: 6px 9px; color: var(--cyan); background: rgba(0,212,255,.06);
+      border: 1px solid var(--cyan-dim); border-radius: var(--radius-sm); cursor: pointer;
+      font: 700 .66rem/1 var(--font-mono); white-space: nowrap; transition: all .18s;
+    }
+    .bug-fix-link:hover { color: var(--cyan-bright); background: var(--cyan-glow); border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,212,255,.14); }
 
     /* Custom Sheikah Scrollbar */
     .session-list::-webkit-scrollbar {
@@ -323,6 +342,7 @@
       box-shadow: 0 0 10px var(--cyan-glow);
     }
   </style>
+  <link rel="stylesheet" href="/asserts/styles/header-nav.css">
 </head>
 <body>
   <header class="header">
@@ -330,11 +350,15 @@
       <span class="logo-icon" style="color: var(--cyan); text-shadow: 0 0 10px var(--cyan-glow);">◈</span>
       <span class="logo-text">ClaudePad</span>
     </a>
-    <div style="display: flex; gap: 16px; align-items: center;">
-      <a href="/" class="nav-link active">🐱 Sessions</a>
-      <a href="/idea.html" class="nav-link">💡 Ideas</a>
-      <a href="/tips.html" class="nav-link">🔧 Tips</a>
-      <a href="/playground.html" class="nav-link">🎮 Playground</a>
+    <div class="header-actions">
+      <nav class="utility-nav" aria-label="工具">
+        <a class="utility-link" href="/idea.html" title="Ideas"><span class="utility-icon">✦</span><span class="utility-label">Ideas</span></a>
+        <a class="utility-link" href="/tips.html" title="Tips"><span class="utility-icon">⌘</span><span class="utility-label">Tips</span></a>
+      </nav>
+      <nav class="workspace-tabs" aria-label="工作区">
+        <a class="workspace-tab active" href="/" aria-current="page"><span class="workspace-tab-icon">▤</span>Sessions</a>
+        <a class="workspace-tab" href="/playground.html"><span class="workspace-tab-icon">♜</span>Multi-Agent</a>
+      </nav>
     </div>
   </header>
 
@@ -581,8 +605,14 @@
               <div style="margin:4px 0; font-weight:500;">${escapeHtml(s.name || 'Untitled')}</div>
               <div style="font-size:0.75rem; color:var(--text-muted)">Started: ${new Date(s.startTime).toLocaleString()}</div>
             </div>
+            <div class="session-card-actions"><button class="bug-fix-link" type="button" onclick="event.stopPropagation(); openInMultiAgent('${s.id}')">◈ 修复 Bug</button></div>
           </div>
         `).join('');
+    }
+
+    function openInMultiAgent(sessionId, serverId = 'local') {
+      const query = new URLSearchParams({ session: sessionId, server: serverId });
+      location.href = `/playground.html?${query.toString()}`;
     }
 
     async function load() {
@@ -824,7 +854,10 @@
                 <div style="margin:4px 0; font-weight:500; font-size:0.95rem;">${escapeHtml(s.name || 'Untitled')}</div>
                 <div style="font-size:0.7rem; color:var(--text-muted); font-family:var(--font-mono);">SCAN_TIME: ${new Date(s.startTime).toLocaleString()}</div>
               </div>
-              <span class="remote-badge ${s.invalid ? 'invalid' : ''}">${s.invalid ? 'INVALID' : 'REMOTE'}</span>
+              <div class="session-card-actions">
+                <span class="remote-badge ${s.invalid ? 'invalid' : ''}">${s.invalid ? 'INVALID' : 'REMOTE'}</span>
+                ${s.invalid ? '' : `<button class="bug-fix-link" type="button" onclick="event.stopPropagation(); openInMultiAgent('${s.id}','${serverId}')">◈ 修复 Bug</button>`}
+              </div>
             </div>
           </div>
         `;

@@ -1029,61 +1029,18 @@
       if (fit) fit.fit();
 
       let ws = null;
-      let resumeOraTimer = null;
-      let resumeOraFrame = 0;
-      let resumeOraActive = false;
       let resumeOutputArrived = false;
       let wsConnectedAt = 0;
-      const resumeOraFrames = [
-        '[>........]',
-        '[=>.......]',
-        '[==>......]',
-        '[===>.....]',
-        '[====>....]',
-        '[=====>...]',
-        '[======>..]',
-        '[=======>.]',
-        '[========>]',
-        '[.=======>]'
-      ];
-      const shortSessionId = (id || '').slice(0, 8) || 'unknown';
-      let resumeOraLabel = `[CORE/RESUME::${shortSessionId.toUpperCase()}]`;
       const uiTraceId = `${type}:${serverId || 'local'}:${id || 'unknown'}`;
-
-      function startResumeOra(label = resumeOraLabel) {
-        if (resumeOraActive) return;
-        resumeOraLabel = label;
-        resumeOraActive = true;
-        term.write(`\x1b[36m${resumeOraLabel}\x1b[0m \x1b[90m${resumeOraFrames[0]}\x1b[0m`);
-        resumeOraTimer = setInterval(() => {
-          if (!resumeOraActive) return;
-          resumeOraFrame = (resumeOraFrame + 1) % resumeOraFrames.length;
-          term.write(`\r\x1b[36m${resumeOraLabel}\x1b[0m \x1b[90m${resumeOraFrames[resumeOraFrame]}\x1b[0m`);
-        }, 80);
-      }
-
-      function stopResumeOra(doneText = '') {
-        if (!resumeOraActive) return;
-        resumeOraActive = false;
-        if (resumeOraTimer) {
-          clearInterval(resumeOraTimer);
-          resumeOraTimer = null;
-        }
-        term.write('\r\x1b[2K');
-        if (doneText) term.writeln(`\x1b[90m${doneText}\x1b[0m`);
-      }
 
       function markResumeReady() {
         if (resumeOutputArrived) return;
         resumeOutputArrived = true;
         const tNow = performance.now();
-        let doneLine = '[CORE LINK STABLE]';
         if (wsConnectedAt > 0) {
           const elapsed = (tNow - wsConnectedAt).toFixed(1);
           console.log(`[Perf][UI][${uiTraceId}] first_output_after_connected=${elapsed}ms`);
-          doneLine = `[CORE LINK STABLE ${elapsed}ms]`;
         }
-        stopResumeOra(doneLine);
         document.getElementById('status').textContent = 'Connected';
       }
 
@@ -1157,13 +1114,12 @@
           console.log('[Terminal] WebSocket connected.');
           console.log(`[Perf][UI][${uiTraceId}] ws_connected`);
           document.getElementById('dot').className = 'dot connected';
-          document.getElementById('status').textContent = 'Resuming...';
+          document.getElementById('status').textContent = 'Connected';
           document.getElementById('overlay').classList.add('hidden');
           term.clear();
           term.writeln('\x1b[36m◈ ClaudePad Terminal\x1b[0m');
           term.writeln('\x1b[32m✓ Connected\x1b[0m');
           term.writeln('');
-          startResumeOra();
           term.focus();
           
           // Send size immediately to avoid extra startup latency.
@@ -1181,12 +1137,10 @@
             }
             else if (msg.type === 'waiting') term.writeln(`\x1b[90m${msg.data}\x1b[0m\r\n`);
             else if (msg.type === 'exit') {
-              stopResumeOra();
               term.writeln(`\r\n\x1b[33m⚠ Terminal exited with code ${msg.code}\x1b[0m`);
               document.getElementById('dot').className = 'dot';
               document.getElementById('status').textContent = 'Exited';
             } else if (msg.type === 'error') {
-              stopResumeOra();
               term.writeln(`\r\n\x1b[31m✕ Error: ${msg.data}\x1b[0m`);
             }
           } catch (_err) {
@@ -1198,7 +1152,6 @@
         ws.onclose = () => {
           clearTimeout(timeoutId);
           stopBootAnimation();
-          stopResumeOra();
           console.log('[Terminal] WebSocket closed.');
           document.getElementById('dot').className = 'dot';
           document.getElementById('status').textContent = 'Disconnected';
@@ -1206,7 +1159,6 @@
         };
 
         ws.onerror = err => {
-          stopResumeOra();
           console.error('[Terminal] WebSocket error:', err);
           document.getElementById('status').textContent = 'Error';
         };

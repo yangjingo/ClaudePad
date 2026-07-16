@@ -8,7 +8,9 @@ node_modules/
 
 
 # docs & tests
-docs/
+docs/*
+!docs/assets/
+!docs/assets/**
 tests/
 
 # Claude

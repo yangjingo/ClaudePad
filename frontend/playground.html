@@ -1,1392 +1,1681 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ClaudePad | Agent Playground</title>
+  <meta name="theme-color" content="#172b38">
+  <title>ClaudePad · 海拉鲁远征</title>
   <style>
     :root {
-      /* Sheikah Slate Theme */
+      --ink: #13242c;
+      --ink-soft: #314b54;
+      --paper: #fff7d6;
+      --paper-deep: #ead9a7;
+      --night: #172b38;
+      --night-2: #213d48;
+      --grass: #79ad62;
+      --grass-dark: #4f7e4e;
+      --grass-light: #a7cf78;
+      --road: #d9bd80;
+      --road-dark: #b28a59;
+      --water: #55a5b9;
+      --water-light: #8bd0cc;
+      --coral: #e66a58;
+      --gold: #f3bd4b;
+      --mint: #5dbb92;
+      --sky: #8ec5c5;
+      --line: #1d3034;
+      --pixel: 4px;
+      --shadow: 0 6px 0 #0d1c22;
+      --font-display: "Microsoft YaHei", "PingFang SC", sans-serif;
+      --font-mono: "Cascadia Mono", "Microsoft YaHei", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--night); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: var(--font-display);
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px),
+        var(--night);
+      background-size: 8px 8px;
+    }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    :focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+    .skip-link {
+      position: fixed; left: 12px; top: -80px; z-index: 1000;
+      padding: 10px 14px; color: var(--ink); background: var(--paper);
+      border: 3px solid var(--line); text-decoration: none;
+    }
+    .skip-link:focus { top: 12px; }
+
+    .topbar {
+      min-height: 66px;
+      display: flex; align-items: center; justify-content: space-between; gap: 18px;
+      padding: 10px clamp(14px, 3vw, 36px);
+      color: var(--paper); background: #132832;
+      border-bottom: 4px solid #0c1c22;
+      box-shadow: 0 4px 0 rgba(255,255,255,.05) inset;
+      position: sticky; top: 0; z-index: 90;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: max-content; }
+    .brand-mark {
+      width: 36px; height: 36px; position: relative;
+      background: var(--gold); border: 3px solid #0b1a20;
+      box-shadow: 4px 4px 0 #081419, inset 4px 4px 0 #ffe598;
+      transform: rotate(45deg);
+    }
+    .brand-mark::after {
+      content: "C"; position: absolute; inset: 0; display: grid; place-items: center;
+      color: var(--ink); font: 900 18px/1 var(--font-mono); transform: rotate(-45deg);
+    }
+    .brand-copy strong { display: block; font: 900 15px/1 var(--font-mono); letter-spacing: .08em; }
+    .brand-copy span { color: #9db9ba; font: 700 10px/1.5 var(--font-mono); letter-spacing: .1em; }
+    .top-status { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+    .connection-pill, .day-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 10px; color: #d8efdb; background: #203f43;
+      border: 2px solid #3b6060; font: 700 11px/1 var(--font-mono);
+      box-shadow: 3px 3px 0 #0c1b20;
+    }
+    .connection-dot { width: 8px; height: 8px; background: #8ee08a; box-shadow: 0 0 0 2px #244b3c; }
+    .day-pill { color: #f8dfa0; }
+    .topnav { display: flex; gap: 8px; }
+    .topnav a {
+      color: #a9c0c1; padding: 8px 10px; border: 2px solid transparent;
+      text-decoration: none; font: 700 12px/1 var(--font-mono);
+    }
+    .topnav a:hover, .topnav a[aria-current="page"] { color: var(--paper); border-color: #49656a; background: #1d3740; }
+
+    .app-shell {
+      width: min(1760px, 100%); margin: 0 auto; padding: 18px;
+      display: grid; grid-template-columns: 250px minmax(600px, 1fr) 280px; gap: 16px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--paper); border: 3px solid var(--line); box-shadow: var(--shadow);
+      position: relative;
+    }
+    .panel::before {
+      content: ""; position: absolute; inset: 4px; border: 1px solid rgba(29,48,52,.18); pointer-events: none;
+    }
+    .panel-title {
+      position: relative; z-index: 1; margin: 0; padding: 12px 14px 10px;
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      color: var(--paper); background: var(--ink-soft); border-bottom: 3px solid var(--line);
+      font: 900 12px/1.2 var(--font-mono); letter-spacing: .07em;
+    }
+    .panel-title small { color: #bed5cf; font-size: 9px; }
+
+    .quest-panel { overflow: hidden; }
+    .quest-summary { padding: 14px 14px 10px; position: relative; z-index: 1; }
+    .quest-kicker { color: #9c5b44; font: 900 10px/1 var(--font-mono); text-transform: uppercase; letter-spacing: .09em; }
+    .quest-summary h1 { margin: 7px 0 6px; font-size: 20px; line-height: 1.18; }
+    .quest-summary p { margin: 0; color: #597079; font-size: 12px; line-height: 1.55; }
+    .quest-list { list-style: none; margin: 0; padding: 4px 12px 12px; position: relative; z-index: 1; }
+    .quest-step {
+      display: grid; grid-template-columns: 28px 1fr; gap: 9px; position: relative;
+      padding: 9px 4px;
+    }
+    .quest-step:not(:last-child)::after { content: ""; position: absolute; left: 17px; top: 34px; bottom: -7px; width: 2px; background: #c7b888; }
+    .step-icon {
+      width: 26px; height: 26px; display: grid; place-items: center;
+      color: #766b50; background: #ded1a5; border: 2px solid #a79468;
+      font: 900 11px/1 var(--font-mono); z-index: 1;
+    }
+    .quest-step.active .step-icon { color: #fff7d6; background: var(--coral); border-color: #9e433c; box-shadow: 2px 2px 0 #9e433c; }
+    .quest-step.done .step-icon { color: #fff; background: var(--mint); border-color: #397a61; }
+    .step-copy strong { display: block; margin-bottom: 2px; font-size: 12px; }
+    .step-copy span { display: block; color: #758282; font-size: 10px; line-height: 1.35; }
+    .quest-step:not(.active):not(.done) .step-copy { opacity: .58; }
+    .quest-reward {
+      margin: 0 14px 14px; padding: 10px; display: flex; align-items: center; gap: 9px;
+      color: #725827; background: #f6e5a8; border: 2px dashed #c59b43;
+      font: 800 10px/1.35 var(--font-mono); position: relative; z-index: 1;
+    }
+    .reward-gem { font-size: 20px; filter: saturate(.8); }
+
+    .mini-help { margin-top: 16px; padding: 12px; color: #bed0cd; background: #1c353e; border: 3px solid #0d2027; box-shadow: 0 5px 0 #09171d; }
+    .mini-help strong { color: #f5d98f; font: 900 11px/1 var(--font-mono); }
+    .mini-help p { margin: 7px 0 0; font-size: 10px; line-height: 1.55; }
+    kbd { padding: 1px 5px; color: var(--paper); background: #38545c; border: 1px solid #728488; box-shadow: 0 2px 0 #0d2027; font: 700 9px/1.5 var(--font-mono); }
+
+    .game-column { min-width: 0; }
+    .game-header {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 10px; color: #e6f1e8;
+    }
+    .game-title { display: flex; align-items: baseline; gap: 10px; }
+    .game-title h2 { margin: 0; font: 900 clamp(16px, 2vw, 22px)/1 var(--font-mono); letter-spacing: .04em; }
+    .game-title span { color: #88a5a5; font: 700 10px/1 var(--font-mono); }
+    .game-tools { display: flex; gap: 7px; }
+    .icon-btn {
+      width: 36px; height: 34px; display: grid; place-items: center; cursor: pointer;
+      color: #c8d9d5; background: #24414a; border: 2px solid #526c70; box-shadow: 3px 3px 0 #0c1b20;
+    }
+    .icon-btn:hover { color: #fff4bf; transform: translateY(-1px); }
+    .icon-btn[aria-pressed="true"] { color: #202e31; background: var(--gold); border-color: #d89732; }
+
+    .game-frame {
+      background: #0e2027; border: 4px solid #09161c; box-shadow: 0 0 0 3px #46636a, 0 9px 0 #081318;
+      padding: 7px; position: relative;
+    }
+    .world-viewport {
+      position: relative; width: 100%; aspect-ratio: 16 / 10; min-height: 430px; overflow: hidden;
+      background: var(--grass); cursor: grab; touch-action: none; user-select: none;
+    }
+    .world-viewport.is-panning { cursor: grabbing; }
+    .world {
+      position: absolute; left: 0; top: 0; width: 145%; height: 155%; overflow: hidden; isolation: isolate;
+      will-change: transform; transform: translate3d(0,0,0);
+      background:
+        linear-gradient(90deg, rgba(39,91,65,.14) 1px, transparent 1px),
+        linear-gradient(rgba(39,91,65,.14) 1px, transparent 1px),
+        var(--grass);
+      background-size: 24px 24px;
+    }
+    .terrain-layer { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+    .world::after {
+      content: ""; position: absolute; inset: 0; z-index: 50; pointer-events: none;
+      box-shadow: inset 0 0 0 4px rgba(12,36,34,.28), inset 0 0 60px rgba(20,44,39,.25);
+    }
+    .grass-speck { position: absolute; width: 4px; height: 8px; background: #4d8652; box-shadow: 5px 3px 0 #9aca6e, 9px -1px 0 #4d8652; opacity: .75; z-index: 1; }
+    .road { position: absolute; z-index: 2; background: var(--road); border: 4px solid var(--road-dark); }
+    .road.main { left: 7%; right: 7%; top: 47%; height: 13%; }
+    .road.vertical { left: 43%; top: 6%; bottom: 8%; width: 11%; }
+    .road::after { content: ""; position: absolute; inset: 5px; border: 2px dashed rgba(125,85,45,.23); }
+    .river { position: absolute; right: 9%; top: 0; bottom: 0; width: 13%; z-index: 2; background: var(--water); border-left: 5px solid #347b87; border-right: 5px solid #347b87; }
+    .river::before { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent 0 18px, rgba(205,247,225,.32) 18px 22px, transparent 22px 41px); animation: water-flow 4s steps(4) infinite; }
+    @keyframes water-flow { to { background-position-y: 41px; } }
+    .bridge { position: absolute; right: 6.4%; top: 47%; width: 18%; height: 13%; z-index: 7; background: repeating-linear-gradient(90deg, #a66e3e 0 9px, #774a31 9px 12px); border: 4px solid #573523; }
+
+    .building { position: absolute; z-index: 6; width: 18%; min-width: 105px; height: 19%; min-height: 86px; filter: drop-shadow(6px 7px 0 rgba(22,52,43,.35)); }
+    .building .walls { position: absolute; left: 7%; right: 7%; top: 31%; bottom: 0; background: #f2d69b; border: 4px solid #684936; }
+    .building .roof { position: absolute; inset: 0 0 42%; background: var(--roof, #c85e4b); border: 4px solid #623b36; clip-path: polygon(8% 100%, 16% 19%, 50% 0, 84% 19%, 92% 100%); }
+    .building .roof::after { content: ""; position: absolute; left: 16%; right: 16%; bottom: 10px; height: 5px; background: rgba(255,255,255,.22); }
+    .building .door { position: absolute; left: 42%; bottom: 0; width: 18%; height: 35%; background: #684936; border: 3px solid #3d2b28; }
+    .building .sign { position: absolute; left: 50%; bottom: -19px; transform: translateX(-50%); padding: 4px 7px; min-width: max-content; color: #fff7d6; background: #304d4c; border: 2px solid #172f31; font: 900 9px/1 var(--font-mono); }
+    .building.command { left: 8%; top: 8%; --roof: #d16450; }
+    .building.studio { left: 12%; bottom: 8%; --roof: #5aa68b; }
+    .building.forge { right: 22%; top: 8%; --roof: #d49a46; }
+    .building.lab { right: 22%; bottom: 7%; --roof: #7c83b8; }
+    .chimney { position: absolute; right: 18%; top: 11%; width: 12%; height: 30%; background: #7a5140; border: 3px solid #51362f; }
+    .smoke { position: absolute; right: 19%; top: -3%; width: 9px; height: 9px; background: #d9e2d3; box-shadow: 8px -7px 0 #b6c8bf, 14px -16px 0 #d9e2d3; animation: smoke 2.4s steps(3) infinite; }
+    @keyframes smoke { 50% { transform: translate(3px,-5px); opacity: .6; } }
+
+    .tree { position: absolute; z-index: 5; width: 31px; height: 45px; }
+    .tree::before { content: ""; position: absolute; left: 12px; bottom: 0; width: 9px; height: 20px; background: #684936; border: 2px solid #46332c; }
+    .tree::after { content: ""; position: absolute; left: 2px; top: 0; width: 29px; height: 29px; background: #477a50; border: 4px solid #285343; box-shadow: inset 5px 5px 0 #70a55a, 4px 6px 0 rgba(20,58,43,.25); clip-path: polygon(50% 0,100% 36%,83% 100%,17% 100%,0 36%); }
+    .rock { position: absolute; z-index: 4; width: 19px; height: 14px; background: #7e9386; border: 3px solid #49645c; clip-path: polygon(25% 0,80% 10%,100% 65%,73% 100%,10% 87%,0 40%); }
+    .map-hud {
+      position: absolute; left: 12px; bottom: 12px; z-index: 82; display: flex; align-items: center; gap: 8px;
+      padding: 6px 7px 6px 10px; color: #cbded9; background: rgba(10,25,27,.9); border: 2px solid #526c70;
+      box-shadow: 3px 3px 0 rgba(5,14,16,.72); font: 800 9px/1 var(--font-mono); pointer-events: auto;
+    }
+    .map-hud strong { color: #ffd76d; }
+    .map-hud button { padding: 5px 7px; color: #cbded9; background: #24414a; border: 1px solid #526c70; cursor: pointer; font: inherit; }
+    .campfire { position: absolute; left: 47.5%; top: 50%; z-index: 9; width: 18px; height: 18px; opacity: .3; transition: opacity .2s; }
+    .campfire::before { content: ""; position: absolute; inset: 3px 5px 5px; background: var(--gold); border: 3px solid #cc4c39; clip-path: polygon(50% 0,100% 75%,70% 100%,50% 77%,28% 100%,0 75%); animation: fire .55s steps(2) infinite; }
+    .campfire::after { content: ""; position: absolute; left: 1px; right: 1px; bottom: 0; height: 5px; background: #5d3a2e; transform: rotate(12deg); box-shadow: 0 0 0 2px #36282a; }
+    .world.victory .campfire { opacity: 1; }
+    @keyframes fire { 50% { transform: scaleX(.76) translateY(2px); } }
+
+    .agent {
+      --agent-color: #5dbb92; position: absolute; left: var(--x); top: var(--y); z-index: 20;
+      width: 42px; height: 58px; transform: translate(-50%, -60%);
+      padding: 0; border: 0; appearance: none; color: inherit; background: transparent;
+      transition: left 1.25s steps(10), top 1.25s steps(10); cursor: pointer;
+    }
+    .agent:hover, .agent.selected { z-index: 40; }
+    .agent.selected .nameplate { color: var(--ink); background: var(--gold); border-color: #76592a; }
+    .agent.walking .pixel-person { animation: walk .36s steps(2) infinite; }
+    .agent.working .pixel-person { animation: work .45s steps(2) infinite; }
+    @keyframes walk { 50% { transform: translateY(-3px) rotate(-2deg); } }
+    @keyframes work { 50% { transform: translateY(2px) scaleX(.94); } }
+    .pixel-person { width: 28px; height: 37px; margin: 15px auto 0; position: relative; filter: drop-shadow(3px 4px 0 rgba(22,43,39,.38)); }
+    .pixel-person .head { position: absolute; left: 7px; top: 0; width: 15px; height: 14px; background: #e8b587; border: 3px solid #4a3430; box-shadow: inset 3px 0 0 #f4ca9b; }
+    .pixel-person .hair { position: absolute; left: 5px; top: -3px; width: 19px; height: 8px; background: var(--hair, #654036); border: 3px solid #3c2d2d; border-bottom: 0; }
+    .pixel-person .body { position: absolute; left: 4px; top: 13px; width: 21px; height: 17px; background: var(--agent-color); border: 3px solid #314544; box-shadow: inset 4px 0 0 rgba(255,255,255,.25); }
+    .pixel-person .body::before, .pixel-person .body::after { content: ""; position: absolute; top: 2px; width: 5px; height: 13px; background: #e8b587; border: 2px solid #4a3430; }
+    .pixel-person .body::before { left: -7px; }
+    .pixel-person .body::after { right: -7px; }
+    .pixel-person .legs { position: absolute; left: 6px; top: 28px; width: 7px; height: 9px; background: #334e5c; border: 2px solid #26383d; box-shadow: 10px 0 0 #334e5c, 10px 0 0 2px #26383d; }
+    .nameplate { position: absolute; left: 50%; bottom: -16px; transform: translateX(-50%); min-width: max-content; padding: 3px 6px; color: #fff; background: #203a40; border: 2px solid #10262c; font: 900 8px/1 var(--font-mono); box-shadow: 2px 2px 0 rgba(8,26,30,.4); }
+    .agent-bubble { position: absolute; left: 31px; top: 0; min-width: max-content; padding: 5px 7px; color: var(--ink); background: #fffbe7; border: 3px solid var(--line); box-shadow: 3px 3px 0 rgba(14,35,38,.28); font: 800 9px/1.15 var(--font-mono); opacity: 0; transform: translateY(5px); transition: .18s; pointer-events: none; }
+    .agent-bubble::after { content: ""; position: absolute; left: -7px; bottom: 3px; width: 8px; height: 8px; background: #fffbe7; border-left: 3px solid var(--line); border-bottom: 3px solid var(--line); transform: rotate(45deg); }
+    .agent.speaking .agent-bubble { opacity: 1; transform: translateY(0); }
+
+    .monster { position: absolute; left: 77%; top: 52%; z-index: 17; width: 68px; height: 70px; transform: translate(-50%,-50%); opacity: 0; pointer-events: none; }
+    .monster.visible { opacity: 1; pointer-events: auto; animation: monster-pop .35s steps(3) both; }
+    @keyframes monster-pop { from { transform: translate(-50%,-35%) scale(.2); } to { transform: translate(-50%,-50%) scale(1); } }
+    .monster-body { position: absolute; left: 9px; top: 19px; width: 48px; height: 36px; background: #df7a91; border: 4px solid #633b4b; box-shadow: inset 6px 6px 0 #f3a0a9, 5px 5px 0 rgba(27,45,42,.28); }
+    .monster-body::before, .monster-body::after { content: ""; position: absolute; top: -14px; width: 14px; height: 16px; background: #df7a91; border: 4px solid #633b4b; }
+    .monster-body::before { left: -4px; transform: skewY(28deg); }
+    .monster-body::after { right: -4px; transform: skewY(-28deg); }
+    .pig-face { position: absolute; left: 14px; top: 9px; width: 20px; height: 14px; background: #f5b1af; border: 3px solid #633b4b; box-shadow: -8px -8px 0 -5px #272f39, 8px -8px 0 -5px #272f39; }
+    .pig-face::before { content: "•  •"; position: absolute; left: 2px; top: -3px; color: #633b4b; font: 900 8px/1 monospace; white-space: pre; }
+    .monster-legs { position: absolute; left: 14px; top: 52px; width: 10px; height: 8px; background: #633b4b; box-shadow: 30px 0 0 #633b4b; }
+    .monster-label { position: absolute; left: 50%; top: 0; transform: translateX(-50%); min-width: max-content; color: #ffe4c4; background: #633b4b; padding: 3px 6px; font: 900 8px/1 var(--font-mono); }
+    .hp-bar { position: absolute; left: 8px; right: 8px; bottom: 0; height: 7px; background: #4b3b3d; border: 2px solid #372a2d; }
+    .hp-fill { width: var(--hp, 100%); height: 100%; background: var(--coral); transition: width .35s steps(5); }
+    .impact { position: absolute; left: 75%; top: 45%; z-index: 19; color: #fff0a5; font: 900 29px/1 var(--font-mono); text-shadow: 3px 3px 0 #b2463e; opacity: 0; }
+    .world.battling .impact { animation: impact 1.1s steps(3) infinite; }
+    @keyframes impact { 0%,100% { opacity: 0; transform: scale(.5) rotate(-12deg); } 48% { opacity: 1; transform: scale(1.1) rotate(8deg); } }
+
+    .scene-banner { position: absolute; left: 50%; top: 16px; transform: translateX(-50%); z-index: 60; min-width: min(440px, 84%); padding: 8px 12px; color: #fff9dc; background: rgba(24,48,51,.92); border: 3px solid #0f292d; box-shadow: 4px 4px 0 rgba(8,25,28,.55); text-align: center; font: 800 11px/1.35 var(--font-mono); }
+    .scene-banner strong { color: #ffd76d; }
+    .story-toast { position: absolute; left: 50%; bottom: 16px; transform: translate(-50%, 24px); z-index: 70; width: min(620px, 90%); padding: 12px 14px; color: #263b3e; background: #fff8d8; border: 4px solid #1a3033; box-shadow: 6px 6px 0 rgba(11,28,30,.52); opacity: 0; transition: .2s; pointer-events: none; }
+    .story-toast.show { opacity: 1; transform: translate(-50%,0); }
+    .story-toast strong { color: #a44b3d; font: 900 11px/1 var(--font-mono); }
+    .story-toast span { display: block; margin-top: 4px; font-size: 12px; line-height: 1.45; }
+
+    .action-dock {
+      margin-top: 12px; padding: 10px; display: grid; grid-template-columns: 1fr; align-items: center; gap: 10px;
+      background: #1a3139; border: 3px solid #0b1d23; box-shadow: 0 6px 0 #08161b;
+    }
+    .mission-copy { display: flex; align-items: center; justify-self: center; gap: 10px; min-width: 0; color: #cbded9; }
+    .mission-icon { width: 34px; height: 34px; display: grid; place-items: center; flex: 0 0 auto; color: #26363a; background: var(--gold); border: 2px solid #d08c32; box-shadow: 3px 3px 0 #0c1b20; font-weight: 900; }
+    .mission-copy strong { display: block; color: #fff5c6; font: 900 11px/1.2 var(--font-mono); }
+    .mission-copy span { display: block; margin-top: 4px; color: #8facac; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .primary-action {
+      min-width: 162px; padding: 10px 14px; cursor: pointer; color: #263230; background: #f5bf4d;
+      border: 3px solid #8e632e; box-shadow: 4px 4px 0 #0c1b20, inset 3px 3px 0 #ffe39a;
+      font: 900 11px/1 var(--font-mono); letter-spacing: .03em;
+    }
+    .primary-action:hover { transform: translate(-1px,-1px); box-shadow: 5px 5px 0 #0c1b20, inset 3px 3px 0 #ffe39a; }
+    .primary-action:active { transform: translate(2px,2px); box-shadow: 2px 2px 0 #0c1b20; }
+    .primary-action:disabled { cursor: wait; filter: grayscale(.6); opacity: .72; }
+
+    .roster { overflow: hidden; }
+    .agent-list { padding: 8px; display: grid; gap: 6px; position: relative; z-index: 1; }
+    .agent-card {
+      width: 100%; padding: 8px; display: grid; grid-template-columns: 34px 1fr auto; gap: 8px; align-items: center;
+      color: var(--ink); background: #f5eac5; border: 2px solid #beae83; cursor: pointer; text-align: left;
+    }
+    .agent-card:hover { background: #fff7d8; transform: translateX(-2px); }
+    .agent-card.selected { background: #f7d978; border-color: #8a652f; box-shadow: 3px 3px 0 #8a652f; }
+    .card-avatar { width: 32px; height: 32px; display: grid; place-items: center; color: #fff; background: var(--card-color); border: 3px solid #324547; box-shadow: inset 3px 3px 0 rgba(255,255,255,.25); font: 900 12px/1 var(--font-mono); }
+    .agent-card strong { display: block; font-size: 11px; }
+    .agent-card small { display: block; margin-top: 3px; color: #6c7979; font: 700 8px/1 var(--font-mono); }
+    .card-state { color: #45625f; font: 900 8px/1 var(--font-mono); }
+    .card-state::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 4px; background: var(--state-color, #62ae7a); border: 1px solid #32513d; }
+
+    .inspector { margin-top: 10px; padding: 11px; background: #eadbaa; border-top: 3px solid #9a895f; position: relative; z-index: 1; }
+    .inspector-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 9px; }
+    .inspector-head strong { font-size: 13px; }
+    .role-tag { padding: 3px 5px; color: #fff; background: #536d69; font: 800 8px/1 var(--font-mono); }
+    .meter-label { display: flex; justify-content: space-between; color: #5b6766; font: 800 8px/1 var(--font-mono); }
+    .meter { height: 9px; margin: 5px 0 9px; background: #bcae84; border: 2px solid #81775d; }
+    .meter-fill { height: 100%; width: var(--value); background: var(--mint); transition: width .35s steps(6); }
+    .inspector-task { min-height: 34px; margin: 0; color: #526563; font-size: 10px; line-height: 1.45; }
+    .session-binding { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--bronze-dim); }
+    .session-binding-kicker { display: block; color: var(--cyan-dim); font: 800 .58rem/1 var(--font-mono); letter-spacing: .08em; }
+    .session-binding strong { display: block; margin-top: 6px; color: var(--text); font-size: .72rem; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .session-binding code { display: block; margin-top: 3px; color: var(--text-dark); font: 650 .58rem/1.3 var(--font-mono); }
+    .session-action { margin-top: 9px; min-height: 30px; display: flex; align-items: center; justify-content: center; color: var(--cyan); background: var(--cyan-glow); border: 1px solid var(--cyan-dim); border-radius: 3px; text-decoration: none; font: 800 .62rem/1 var(--font-mono); }
+    .session-action:hover { border-color: var(--cyan); box-shadow: 0 0 14px rgba(0,212,255,.16); }
+    .session-action[hidden] { display: none; }
+    .card-session { color: var(--cyan-dim) !important; max-width: 142px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .event-panel { margin-top: 16px; overflow: hidden; }
+    .event-log { height: 214px; overflow: auto; padding: 8px 10px 10px; position: relative; z-index: 1; scrollbar-color: #8a7652 #dfcfa2; }
+    .log-row { display: grid; grid-template-columns: 38px 1fr; gap: 7px; padding: 7px 0; border-bottom: 1px dashed #c2b27f; font-size: 9px; line-height: 1.35; }
+    .log-row time { color: #9c8059; font: 700 8px/1.4 var(--font-mono); }
+    .log-row strong { color: #82503f; }
+
+    .intro-overlay { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; background: rgba(8,25,31,.76); backdrop-filter: blur(2px); }
+    .intro-overlay[hidden] { display: none; }
+    .intro-card { width: min(540px,100%); color: var(--ink); background: var(--paper); border: 4px solid var(--line); box-shadow: 10px 10px 0 rgba(6,19,23,.65); }
+    .intro-art { height: 126px; position: relative; overflow: hidden; background: var(--grass); border-bottom: 4px solid var(--line); }
+    .intro-art::before { content: ""; position: absolute; left: 0; right: 0; bottom: 25px; height: 34px; background: var(--road); border: 4px solid var(--road-dark); }
+    .intro-pig { position: absolute; right: 17%; bottom: 42px; font-size: 42px; filter: drop-shadow(4px 4px 0 #4f3d3d); }
+    .intro-party { position: absolute; left: 14%; bottom: 43px; font-size: 32px; letter-spacing: -8px; filter: drop-shadow(3px 4px 0 #39534c); }
+    .intro-copy { padding: 20px; }
+    .intro-copy .eyebrow { color: #a65343; font: 900 10px/1 var(--font-mono); letter-spacing: .12em; }
+    .intro-copy h2 { margin: 7px 0 8px; font-size: 24px; }
+    .intro-copy p { margin: 0; color: #52686c; font-size: 13px; line-height: 1.6; }
+    .intro-points { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 15px 0; }
+    .intro-point { padding: 9px 7px; background: #eee0b4; border: 2px solid #c2ad78; text-align: center; font-size: 10px; line-height: 1.4; }
+    .intro-point b { display: block; margin-bottom: 4px; font-size: 17px; }
+    .intro-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .text-btn { padding: 9px 12px; color: #506365; background: transparent; border: 2px solid #9f9476; cursor: pointer; font: 800 10px/1 var(--font-mono); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (max-width: 1220px) {
+      .app-shell { grid-template-columns: 230px minmax(560px,1fr); }
+      .right-column { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+      .event-panel { margin-top: 0; }
+    }
+    @media (max-width: 880px) {
+      .topnav { display: none; }
+      .day-pill { display: none; }
+      .app-shell { display: flex; flex-direction: column; padding: 12px; }
+      .game-column { order: -1; width: 100%; }
+      .quest-column, .right-column { width: 100%; }
+      .quest-column { display: grid; grid-template-columns: 1fr .65fr; gap: 14px; }
+      .mini-help { margin-top: 0; }
+      .world-viewport { min-height: 390px; }
+    }
+    @media (max-width: 640px) {
+      .brand-copy span, .connection-pill span:last-child { display: none; }
+      .topbar { min-height: 58px; }
+      .app-shell { padding: 8px; gap: 12px; }
+      .game-title span { display: none; }
+      .world-viewport { min-height: 360px; aspect-ratio: 1 / 1; }
+      .building { transform: scale(.78); transform-origin: center; }
+      .building.command { left: 2%; } .building.studio { left: 5%; }
+      .river { right: 5%; width: 15%; } .bridge { right: 1%; width: 24%; }
+      .action-dock { grid-template-columns: 1fr; }
+      .primary-action { grid-column: auto; width: min(100%, 240px); justify-self: center; min-height: 44px; }
+      .quest-column, .right-column { display: block; }
+      .mini-help, .event-panel { margin-top: 12px; }
+      .intro-points { grid-template-columns: 1fr; }
+      .intro-art { height: 92px; }
+    }
+
+    /* ============================================
+     * SHEIKAH SLATE — shared with Sessions
+     * The town keeps its game layout, while every
+     * product surface follows ClaudePad's legacy CSS.
+     * ============================================ */
+    :root {
       --slate-bg: #0a0a0f;
       --slate-bg-light: #111118;
       --slate-bg-lighter: #1a1a24;
       --slate-panel: #13131a;
-      --bronze: #8B7355;
-      --bronze-light: #A0826D;
+      --bronze: #8b7355;
+      --bronze-light: #a0826d;
       --bronze-dark: #6b5b4f;
       --bronze-dim: #4a3f37;
       --cyan: #00d4ff;
       --cyan-bright: #00f0ff;
       --cyan-dim: #00a8cc;
-      --cyan-glow: rgba(0, 212, 255, 0.3);
+      --cyan-glow: rgba(0, 212, 255, .3);
       --text: #e0e0e0;
       --text-muted: #888;
       --text-dark: #666;
-
-      /* Champion Colors */
-      --link-color: #00d4ff;
-      --mipha-color: #4ade80;
-      --revali-color: #60a5fa;
-      --urbosa-color: #fbbf24;
-      --daruk-color: #f87171;
-
-      --font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --status-done: #4ade80;
+      --status-error: #ef4444;
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --font-mono: "SF Mono", "Fira Code", "Consolas", monospace;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
+    html { background: var(--slate-bg); }
     body {
-      font-family: var(--font-sans);
-      background: var(--slate-bg);
       color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 50% -20%, rgba(0, 212, 255, .055), transparent 38%),
+        var(--slate-bg);
+      font-family: var(--font-display);
     }
-
-    /* Header */
-    .header {
-      background: var(--slate-bg-light);
-      border-bottom: 1px solid var(--bronze-dim);
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-    }
-
-    .logo-icon {
+    .skip-link {
+      top: -80px !important;
       color: var(--cyan);
-      font-size: 1.5rem;
+      background: var(--slate-panel);
+      border: 1px solid var(--cyan);
+    }
+    .skip-link:focus-visible { top: 12px !important; }
+
+    .topbar {
+      min-height: 57px; padding: 9px 20px;
+      background: var(--slate-bg-light); color: var(--text);
+      border: 0; border-bottom: 1px solid var(--bronze-dim); box-shadow: none;
+    }
+    .brand { gap: 10px; }
+    .brand-mark {
+      width: 26px; height: 26px; border: 0; background: transparent;
+      box-shadow: none; transform: none;
+    }
+    .brand-mark::after {
+      content: "◈"; color: var(--cyan); transform: none; font-size: 24px;
       text-shadow: 0 0 10px var(--cyan-glow);
     }
-
-    .logo-text {
-      font-family: var(--font-mono);
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--bronze-light);
+    .brand-copy strong { color: var(--bronze-light); font-size: 1.05rem; letter-spacing: 0; }
+    .brand-copy span { color: var(--text-dark); font-size: .58rem; letter-spacing: .08em; }
+    .workspace-tabs {
+      align-self: auto; display: flex; align-items: center; gap: 2px; padding: 3px;
+      margin-left: clamp(12px, 3vw, 42px); margin-right: auto;
+      background: rgba(10,10,15,.78); border: 1px solid var(--bronze-dim); border-radius: 6px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
     }
-
-    .nav-links {
-      display: flex;
-      gap: 8px;
+    .workspace-tab {
+      height: 27px; display: inline-flex; align-items: center; gap: 6px;
+      padding: 0 10px; color: var(--text-muted); background: transparent;
+      border: 1px solid transparent; border-radius: 3px;
+      text-decoration: none; font: 650 .69rem/1 var(--font-mono); transition: color .16s,background .16s,border-color .16s;
     }
-
-    .nav-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      padding: 6px 12px;
-      border-radius: 4px;
-      transition: all 0.2s;
+    .workspace-tab:hover { color: var(--text); background: rgba(255,255,255,.035); }
+    .workspace-tab.active {
+      color: var(--cyan); background: rgba(0,212,255,.09); border-color: rgba(0,212,255,.28);
+      box-shadow: inset 0 0 0 1px rgba(0,212,255,.04), 0 0 12px rgba(0,212,255,.06);
     }
-
-    .nav-link:hover, .nav-link.active {
-      color: var(--cyan);
-      background: var(--cyan-glow);
+    .workspace-tab-icon { color: var(--bronze-light); font-size: .72rem; }
+    .workspace-tab.active .workspace-tab-icon { color: var(--cyan); }
+    .top-status { margin-left: 0; }
+    .connection-pill, .day-pill {
+      padding: 5px 9px; color: var(--text-muted); background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim); border-radius: 999px; box-shadow: none;
+      font-size: .62rem;
     }
+    .connection-pill { color: var(--cyan-dim); }
+    .connection-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px var(--cyan); }
+    .day-pill { display: none; }
+    .topnav { display: none; }
 
-    /* Main Container */
-    .container {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 24px;
+    .app-shell {
+      width: min(1600px, 100%); padding: 22px 20px 32px;
+      grid-template-columns: minmax(0, 1fr) 292px;
+      grid-template-areas: "quest quest" "game roster";
+      gap: 16px 18px;
     }
-
-    /* Command Center Header */
-    .command-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--bronze-dim);
+    .quest-column { grid-area: quest; }
+    .game-column { grid-area: game; }
+    .right-column { grid-area: roster; }
+    .panel {
+      color: var(--text); background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim); border-radius: var(--radius-lg);
+      box-shadow: 0 10px 35px rgba(0,0,0,.32); overflow: hidden;
     }
-
-    .command-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .panel::before { display: none; }
+    .panel-title {
+      min-height: 42px; padding: 12px 16px; color: var(--bronze-light);
+      background: linear-gradient(90deg, var(--slate-bg-lighter), rgba(26,26,36,.45));
+      border: 0; border-bottom: 1px solid var(--bronze-dim);
+      font-size: .74rem; letter-spacing: .09em; text-transform: uppercase;
     }
+    .panel-title small { color: var(--cyan-dim); font-size: .58rem; }
 
-    .command-title h1 {
-      font-family: var(--font-mono);
-      font-size: 1.5rem;
-      color: var(--bronze-light);
-      text-shadow: 0 0 20px rgba(139, 115, 85, 0.3);
+    .quest-panel {
+      display: grid; grid-template-columns: 225px minmax(0,1fr);
+      grid-template-rows: auto 1fr; min-height: 138px;
     }
-
-    .live-indicator {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--cyan);
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
+    .quest-panel .panel-title { grid-column: 1 / -1; }
+    .quest-summary { padding: 14px 16px; border-right: 1px solid var(--bronze-dim); }
+    .quest-kicker { color: var(--cyan-dim); font-size: .59rem; }
+    .quest-summary h1 { margin: 6px 0 4px; color: var(--text); font-size: 1rem; }
+    .quest-summary p { color: var(--text-muted); font-size: .7rem; line-height: 1.45; }
+    .quest-list {
+      padding: 14px 16px; display: grid; grid-template-columns: repeat(6, minmax(78px,1fr));
+      align-items: start; gap: 6px;
     }
-
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--cyan);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
+    .quest-step { display: block; padding: 0; text-align: center; }
+    .quest-step:not(:last-child)::after {
+      left: calc(50% + 15px); right: calc(-50% + 15px); top: 11px; bottom: auto; width: auto; height: 1px;
+      background: var(--bronze-dim);
     }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.2); }
+    .step-icon {
+      width: 23px; height: 23px; margin: 0 auto 7px; border-radius: 50%;
+      color: var(--text-dark); background: var(--slate-bg-light); border: 1px solid var(--bronze-dim);
+      font-size: .58rem;
     }
+    .quest-step.active .step-icon { color: var(--slate-bg); background: var(--cyan); border-color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); }
+    .quest-step.done .step-icon { color: var(--slate-bg); background: var(--status-done); border-color: var(--status-done); box-shadow: none; }
+    .step-copy strong { color: var(--text); font-size: .64rem; font-weight: 650; letter-spacing: .015em; }
+    .step-copy span { max-width: 122px; margin: 2px auto 0; color: var(--text-dark); font-size: .53rem; line-height: 1.3; }
+    .quest-reward, .mini-help { display: none; }
 
-    /* Stats Bar */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 24px;
+    .game-header { margin-bottom: 10px; min-height: 34px; color: var(--text); }
+    .game-title h2 { color: var(--bronze-light); font-size: 1rem; text-shadow: 0 0 18px rgba(139,115,85,.25); }
+    .game-title span { color: var(--text-dark); font-size: .6rem; }
+    .game-tools { gap: 6px; }
+    .icon-btn {
+      width: 31px; height: 29px; color: var(--text-muted); background: var(--slate-bg-lighter);
+      border: 1px solid var(--bronze-dim); border-radius: var(--radius-sm); box-shadow: none;
+      transition: all .2s;
     }
-
-    .stat-card {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: 8px;
-      padding: 16px;
-      text-align: center;
+    .icon-btn:hover { color: var(--cyan); border-color: var(--cyan-dim); transform: none; box-shadow: 0 0 12px rgba(0,212,255,.12); }
+    .icon-btn[aria-pressed="true"] { color: var(--cyan); background: var(--cyan-glow); border-color: var(--cyan); }
+    .game-frame {
+      padding: 7px; background: var(--slate-panel); border: 1px solid var(--bronze-dim);
+      border-radius: 12px; box-shadow: 0 14px 40px rgba(0,0,0,.38), inset 0 0 25px rgba(0,212,255,.02);
     }
-
-    .stat-value {
-      font-family: var(--font-mono);
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--cyan);
+    .world-viewport { min-height: 480px; border-radius: var(--radius-md); background: #14261f; }
+    .world {
+      background:
+        linear-gradient(90deg, rgba(0,212,255,.055) 1px, transparent 1px),
+        linear-gradient(rgba(0,212,255,.055) 1px, transparent 1px),
+        #1b342b;
+      background-size: 24px 24px;
     }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 4px;
+    .world::after { box-shadow: inset 0 0 0 1px rgba(0,212,255,.14), inset 0 0 70px rgba(0,0,0,.42); }
+    .grass-speck { background: #2e5945; box-shadow: 5px 3px 0 #3f7358, 9px -1px 0 #2e5945; }
+    .road { background: #625544; border-color: var(--bronze-dark); }
+    .road::after { border-color: rgba(160,130,109,.28); }
+    .river { background: #0b5265; border-color: #083c4b; }
+    .river::before { opacity: .55; }
+    .bridge { background: repeating-linear-gradient(90deg, #72533c 0 9px, #4b382f 9px 12px); border-color: #3b2c29; }
+    .building { filter: drop-shadow(5px 7px 0 rgba(0,0,0,.35)); }
+    .building .walls { background: var(--slate-bg-lighter); border-color: var(--bronze-dark); }
+    .building .roof { border-color: var(--bronze-dim); }
+    .building.command { --roof: #725d48; }
+    .building.studio { --roof: #27655f; }
+    .building.forge { --roof: #7a6037; }
+    .building.lab { --roof: #45496d; }
+    .building .door { background: var(--bronze-dark); border-color: #3d332f; }
+    .building .sign { color: var(--cyan-dim); background: rgba(10,10,15,.92); border-color: var(--bronze-dim); border-radius: 3px; }
+    .tree::before { background: #4c3b32; border-color: #302728; }
+    .tree::after { background: #285444; border-color: #18392f; box-shadow: inset 5px 5px 0 #3a7056, 4px 6px 0 rgba(0,0,0,.25); }
+    .rock { background: #53615d; border-color: #344642; }
+    .scene-banner {
+      color: var(--text); background: rgba(10,10,15,.9); border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm); box-shadow: 0 8px 25px rgba(0,0,0,.35); font-size: .68rem;
     }
-
-    /* Main Dashboard */
-    .dashboard {
-      display: grid;
-      grid-template-columns: 1fr 350px;
-      gap: 24px;
-      margin-bottom: 24px;
+    .scene-banner strong { color: var(--cyan); }
+    .nameplate { color: var(--text); background: rgba(10,10,15,.94); border: 1px solid var(--bronze-dim); border-radius: 3px; box-shadow: 0 3px 8px rgba(0,0,0,.4); }
+    .agent.selected .nameplate { color: var(--cyan); background: var(--slate-bg-lighter); border-color: var(--cyan); box-shadow: 0 0 12px var(--cyan-glow); }
+    .agent-bubble, .story-toast {
+      color: var(--text); background: var(--slate-panel); border: 1px solid var(--bronze);
+      border-radius: var(--radius-sm); box-shadow: 0 12px 35px rgba(0,0,0,.48);
     }
+    .agent-bubble::after { background: var(--slate-panel); border-color: var(--bronze); }
+    .story-toast strong { color: var(--cyan); }
+    .story-toast span { color: var(--text-muted); }
+    .monster-label { color: #fecaca; background: rgba(77,22,29,.94); border: 1px solid #a94d57; border-radius: 3px; }
 
-    /* Hyrule Map (Canvas) */
-    .map-container {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-      height: 500px;
+    .action-dock {
+      margin-top: 10px; padding: 11px 12px; background: var(--slate-panel);
+      border: 1px solid var(--bronze-dim); border-radius: var(--radius-lg); box-shadow: 0 8px 28px rgba(0,0,0,.3);
     }
+    .mission-copy { color: var(--text); }
+    .mission-icon {
+      width: 30px; height: 30px; color: var(--cyan); background: rgba(0,212,255,.08);
+      border: 1px solid var(--cyan-dim); border-radius: var(--radius-sm); box-shadow: 0 0 12px rgba(0,212,255,.1);
+    }
+    .mission-copy strong { color: var(--bronze-light); font-size: .68rem; }
+    .mission-copy span { color: var(--text-dark); font-size: .62rem; }
+    .primary-action {
+      min-width: 150px; padding: 9px 14px; color: var(--cyan); background: transparent;
+      border: 1px solid var(--cyan-dim); border-radius: var(--radius-sm); box-shadow: none;
+      font-size: .7rem; transition: all .2s;
+    }
+    .primary-action:hover { color: var(--cyan-bright); background: var(--cyan-glow); transform: none; box-shadow: 0 0 20px rgba(0,212,255,.18); }
+    .primary-action:active { transform: none; box-shadow: inset 0 0 12px rgba(0,212,255,.2); }
+    .agent-list { padding: 8px; gap: 5px; }
+    .agent-card {
+      padding: 8px; color: var(--text); background: var(--slate-bg-light);
+      border: 1px solid var(--bronze-dim); border-radius: var(--radius-md); transition: all .2s;
+    }
+    .agent-card:hover { color: var(--text); background: var(--slate-bg-lighter); border-color: var(--cyan-dim); transform: none; }
+    .agent-card.selected { color: var(--text); background: rgba(0,212,255,.06); border-color: var(--cyan); box-shadow: 0 0 16px rgba(0,212,255,.12); }
+    .card-avatar { border: 1px solid rgba(255,255,255,.14); border-radius: 50%; box-shadow: 0 0 10px rgba(0,0,0,.35); }
+    .agent-card small { color: var(--text-dark); }
+    .card-state { color: var(--text-muted); }
+    .card-state::before { width: 6px; height: 6px; border-radius: 50%; border: 0; box-shadow: 0 0 6px var(--state-color,#62ae7a); }
+    .inspector { background: var(--slate-bg-lighter); border-top: 1px solid var(--bronze-dim); }
+    .inspector-head strong { color: var(--text); }
+    .role-tag { color: var(--cyan-dim); background: rgba(0,212,255,.07); border: 1px solid rgba(0,212,255,.18); border-radius: 3px; }
+    .meter-label { color: var(--text-muted); }
+    .meter { background: var(--slate-bg); border: 1px solid var(--bronze-dim); border-radius: 999px; overflow: hidden; }
+    .meter-fill { background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); box-shadow: 0 0 8px var(--cyan-glow); }
+    .inspector-task { color: var(--text-muted); }
+    .event-panel { margin-top: 14px; }
+    .event-log { height: 210px; scrollbar-color: var(--bronze-dim) var(--slate-bg); }
+    .log-row { border-bottom-color: rgba(107,91,79,.32); color: var(--text-muted); }
+    .log-row time { color: var(--text-dark); }
+    .log-row strong { color: var(--cyan-dim); }
 
-    .map-title {
+    .intro-overlay { background: rgba(0,0,0,.82); backdrop-filter: blur(8px); }
+    .intro-card { color: var(--text); background: var(--slate-panel); border: 1px solid var(--bronze); border-radius: var(--radius-lg); box-shadow: 0 24px 70px rgba(0,0,0,.65); overflow: hidden; }
+    .intro-art { filter: brightness(.58) saturate(.72); border-bottom: 1px solid var(--bronze-dim); }
+    .intro-copy .eyebrow { color: var(--cyan); }
+    .intro-copy h2 { color: var(--text); }
+    .intro-copy p { color: var(--text-muted); }
+    .intro-point { color: var(--text-muted); background: var(--slate-bg-lighter); border: 1px solid var(--bronze-dim); border-radius: var(--radius-sm); }
+    .intro-point b { color: var(--cyan); }
+    .text-btn { color: var(--bronze-light); border: 1px solid var(--bronze-dim); border-radius: var(--radius-sm); }
+
+    /* Zelda icon field — the town itself now uses the supplied champion art. */
+    .game-frame {
+      padding: 6px;
+      border: 2px solid var(--bronze-dark);
+      border-radius: 0;
+      box-shadow: 4px 4px 0 #050508, inset 0 0 0 2px #20202a;
+    }
+    .world-viewport {
+      border: 3px solid #071713;
+      border-radius: 0;
+      box-shadow: inset 0 0 0 2px #2f5c48;
+    }
+    .world-viewport:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+    .world {
+      image-rendering: pixelated;
+      width: 290%;
+      height: 310%;
+      transform-origin: 0 0;
+      background-color: #0a2023;
+      background-image:
+        linear-gradient(rgba(8,23,25,.16),rgba(8,23,25,.32)),
+        url('/asserts/zelda-icon/hyrule-map-background.png'),
+        linear-gradient(90deg,rgba(0,212,255,.045) 1px,transparent 1px),
+        linear-gradient(rgba(0,212,255,.045) 1px,transparent 1px);
+      background-size: 100% 100%,100% 100%,16px 16px,16px 16px;
+      background-position: center,var(--map-bg-x,50%) var(--map-bg-y,50%),0 0,0 0;
+      background-repeat: no-repeat,no-repeat,repeat,repeat;
+    }
+    .world::before {
+      content: "";
       position: absolute;
-      top: 16px;
-      left: 16px;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: .18;
+      background:
+        linear-gradient(90deg,transparent 0 12%,rgba(64,112,82,.28) 12% 14%,transparent 14% 82%,rgba(10,28,24,.22) 82% 84%,transparent 84%),
+        linear-gradient(transparent 0 18%,rgba(72,121,89,.22) 18% 20%,transparent 20% 76%,rgba(8,27,22,.24) 76% 78%,transparent 78%);
+      background-size: 96px 96px;
+    }
+    .world::after { box-shadow: inset 0 0 0 4px #0b211b, inset 0 0 0 7px var(--bronze), inset 0 0 38px rgba(0,0,0,.3); }
+    .biome { position: absolute; z-index: 0; opacity: .18; mix-blend-mode: color; pointer-events: none; }
+    .biome.faron { left: 0; top: 0; width: 38%; height: 43%; background: #2b6248; clip-path: polygon(0 0,100% 0,88% 34%,100% 72%,72% 100%,0 86%); }
+    .biome.lanayru { left: 0; bottom: 0; width: 39%; height: 42%; background: #245e61; clip-path: polygon(0 17%,68% 0,100% 27%,88% 100%,0 100%); }
+    .biome.gerudo { right: 13%; top: 0; width: 36%; height: 39%; background: #78634c; clip-path: polygon(18% 0,100% 0,100% 88%,61% 100%,0 78%); }
+    .biome.akkala { right: 12%; bottom: 0; width: 38%; height: 39%; background: #634b45; clip-path: polygon(0 18%,48% 0,100% 14%,100% 100%,12% 100%); }
+    .road {
+      background: var(--bronze);
+      border: 4px solid #4a3f37;
+      box-shadow: inset 4px 4px 0 var(--bronze-light), inset -4px -4px 0 var(--bronze-dark);
+    }
+    .road.vertical { background: var(--bronze); }
+    .road::after { inset: 7px; border: 2px dashed rgba(10,10,15,.25); }
+    .central-tower {
+      position: absolute; left: 47.25%; top: 37%; width: 5.5%; height: 12%; z-index: 11;
+      pointer-events: none;
+    }
+    .tower-aura {
+      position: absolute; left: 50%; bottom: 4%; width: 86%; height: 18%; transform: translateX(-50%);
+      background: radial-gradient(ellipse,rgba(0,212,255,.16),rgba(3,11,13,.42) 55%,transparent 72%);
+      filter: blur(4px); opacity: .72;
+    }
+    .tower-sprite {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center bottom;
+      image-rendering: pixelated; filter: drop-shadow(8px 12px 0 rgba(0,0,0,.32)) saturate(.86) brightness(.9);
+      transition: filter .25s,transform .25s;
+    }
+    .central-tower:hover .tower-sprite { filter: drop-shadow(8px 12px 0 rgba(0,0,0,.32)) saturate(.96) brightness(1.02); transform: translateY(-2px); }
+    .tower-label {
+      position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); min-width: max-content;
+      padding: 4px 8px; color: var(--cyan); background: rgba(10,10,15,.94); border: 1px solid var(--bronze-dim);
+      font: 800 7px/1 var(--font-mono); letter-spacing: .14em;
+    }
+    .central-tower .primary-action {
+      position: absolute; left: 50%; bottom: 7%; top: auto; z-index: 14; min-width: 136px;
+      transform: translateX(-50%); white-space: nowrap; pointer-events: auto;
+      padding: 8px 11px; font-size: .62rem;
+      background: rgba(10,10,15,.94); backdrop-filter: blur(3px);
+    }
+    .central-tower .primary-action:hover { transform: translateX(-50%) translateY(-1px); }
+    .central-tower .primary-action:active { transform: translateX(-50%) translateY(1px); }
+    .river {
+      background: #0b5265;
+      border: 4px solid #083c4b;
+      box-shadow: inset 7px 0 0 #146b7d, inset -7px 0 0 #073947;
+    }
+    .river::before { opacity: 1; background: repeating-linear-gradient(0deg,transparent 0 21px,rgba(0,212,255,.38) 21px 25px,transparent 25px 43px); animation-timing-function: steps(4); }
+    .bridge { background: repeating-linear-gradient(90deg,#72533c 0 9px,#4b382f 9px 12px); border: 4px solid #332823; box-shadow: inset 4px 4px 0 rgba(160,130,109,.16),4px 4px 0 rgba(0,0,0,.3); }
+
+    .building {
+      --site-color: var(--cyan);
+      height: 21%;
+      filter: drop-shadow(5px 6px 0 rgba(0,0,0,.38));
+    }
+    .building .walls {
+      left: 5%; right: 5%; top: 25%; bottom: 0;
+      background: var(--slate-bg-lighter);
+      border: 4px solid var(--bronze-dark);
+      box-shadow: inset 4px 4px 0 #22222d;
+    }
+    .building .roof {
+      inset: 0 0 34%;
+      background: color-mix(in srgb,var(--site-color) 38%,#22222b);
+      border: 4px solid color-mix(in srgb,var(--site-color) 32%,var(--bronze-dark));
+      clip-path: polygon(14% 100%,20% 18%,50% 0,80% 18%,86% 100%);
+      box-shadow: inset 0 -7px 0 rgba(0,0,0,.3),inset 4px 0 0 rgba(255,255,255,.05);
+    }
+    .building .roof::after { left: 23%; right: 23%; bottom: 8px; height: 3px; background: var(--site-color); box-shadow: none; }
+    .building-emblem {
+      position: absolute;
+      left: 50%; top: 29%;
+      z-index: 3;
+      width: 32px; height: 32px;
+      display: grid; place-items: center;
+      transform: translateX(-50%);
+      color: var(--site-color);
+      background: rgba(10,10,15,.88);
+      border: 1px solid color-mix(in srgb,var(--site-color) 70%,var(--bronze));
+      clip-path: polygon(50% 0,88% 16%,100% 50%,88% 84%,50% 100%,12% 84%,0 50%,12% 16%);
+      font: 700 17px/1 Georgia,serif;
+      text-shadow: 0 0 10px color-mix(in srgb,var(--site-color) 65%,transparent);
+    }
+    .building .door { width: 14%; height: 27%; bottom: 0; background: var(--bronze-dark); border: 2px solid #3d332f; }
+    .building .sign { bottom: -17px; color: var(--cyan-dim); background: rgba(10,10,15,.94); border: 2px solid var(--bronze-dim); }
+    .building.command { --site-color: #4f8a67; }
+    .building.studio { --site-color: #31858a; }
+    .building.forge { --site-color: #9b7543; }
+    .building.lab { --site-color: #765250; }
+    .region-site {
+      --region-color: var(--cyan);
+      position: absolute;
+      z-index: 8;
+      width: 12%;
+      height: 18%;
+      min-width: 190px;
+      min-height: 190px;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+      filter: drop-shadow(8px 11px 0 rgba(0,0,0,.3));
+    }
+    .region-site::before {
+      content: "";
+      position: absolute;
+      left: 10%; right: 10%; bottom: 5%; height: 18%;
+      z-index: -1;
+      border-radius: 50%;
+      background: radial-gradient(ellipse,color-mix(in srgb,var(--region-color) 24%,transparent),rgba(0,0,0,.34) 58%,transparent 74%);
+      filter: blur(7px);
+      opacity: .74;
+    }
+    .region-art {
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center bottom;
+      image-rendering: pixelated;
+      filter: saturate(.9) brightness(.91) contrast(1.04);
+      transition: filter .24s,transform .24s;
+    }
+    .region-site:hover .region-art { filter: saturate(1) brightness(1.02) contrast(1.04); transform: translateY(-2px); }
+    .region-sign {
+      position: absolute;
+      left: 50%; bottom: -7px;
+      min-width: max-content;
+      display: grid;
+      gap: 3px;
+      transform: translateX(-50%);
+      padding: 6px 9px;
+      color: var(--text);
+      background: rgba(10,10,15,.95);
+      border: 1px solid color-mix(in srgb,var(--region-color) 48%,var(--bronze-dim));
+      box-shadow: 4px 5px 0 rgba(0,0,0,.32),inset 0 0 13px color-mix(in srgb,var(--region-color) 7%,transparent);
+      text-align: center;
       font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--bronze-light);
-      z-index: 10;
-      background: rgba(10, 10, 15, 0.8);
-      padding: 4px 12px;
-      border-radius: 4px;
-      border: 1px solid var(--bronze-dim);
+    }
+    .region-sign strong { color: color-mix(in srgb,var(--region-color) 70%,var(--bronze-light)); font-size: 9px; letter-spacing: .05em; }
+    .region-sign small { color: var(--text-dark); font-size: 6px; letter-spacing: .09em; }
+    .region-site.command { --region-color:#6f9c74; left:16%; top:16%; }
+    .region-site.studio { --region-color:#3abed0; left:84%; top:78%; }
+    .region-site.forge { --region-color:#d18a45; left:16%; top:80%; }
+    .region-site.lab { --region-color:#bd6d50; left:84%; top:17%; }
+    .tree::before { background: #4c3b32; border-color: #302728; }
+    .tree::after { background: #285444; border-color: #18392f; box-shadow: inset 5px 5px 0 #3a7056,4px 6px 0 rgba(0,0,0,.25); }
+    .rock { background: #53615d; border-color: #344642; }
+    .grass-speck { background: #2e5945; box-shadow: 5px 3px 0 var(--bronze),9px -1px 0 #2e5945; }
+    .wildflower { position: absolute; z-index: 4; width: 4px; height: 4px; background: var(--cyan); box-shadow: 5px 3px 0 var(--bronze-light),-4px 5px 0 var(--cyan-dim),2px 8px 0 #2e5945; }
+    .ruin { position: absolute; z-index: 4; width: 25px; height: 12px; background: #59605b; border: 3px solid #353b38; box-shadow: inset 4px 3px 0 #777b71; }
+    .map-hud {
+      left: 50%; right: auto; top: 12px; bottom: auto; transform: translateX(-50%);
+      max-width: calc(100% - 24px); overflow-x: auto; white-space: nowrap;
+      color: var(--text-muted); background: rgba(10,10,15,.9); border: 1px solid var(--bronze-dim);
+      border-radius: var(--radius-sm); box-shadow: 0 6px 18px rgba(0,0,0,.36); backdrop-filter: blur(4px);
+    }
+    .map-hud strong { color: var(--cyan); }
+    .map-hud button { color: var(--cyan); background: var(--cyan-glow); border: 1px solid var(--cyan-dim); border-radius: 3px; }
+    .map-hud button:hover { border-color: var(--cyan); box-shadow: 0 0 12px rgba(0,212,255,.14); }
+    .map-hud .zoom-controls { display: inline-flex; align-items: center; gap: 3px; padding-left: 3px; border-left: 1px solid var(--bronze-dim); }
+    .map-hud .zoom-button { min-width: 25px; padding-inline: 5px; font-size: 12px; }
+    .map-hud .zoom-value { min-width: 42px; color: var(--text-muted); }
+    .map-hud button:disabled { opacity: .34; cursor: not-allowed; box-shadow: none; }
+    .scene-banner { top: 58px; }
+    .mini-map {
+      position: absolute; right: 12px; bottom: 12px; z-index: 83;
+      width: 158px; aspect-ratio: 1.48; overflow: hidden; cursor: crosshair; pointer-events: auto;
+      background:
+        linear-gradient(rgba(5,14,16,.18),rgba(5,14,16,.4)),
+        url('/asserts/zelda-icon/hyrule-map-background.png') center / 100% 100% no-repeat;
+      border: 1px solid var(--bronze); border-radius: var(--radius-sm);
+      box-shadow: 0 8px 24px rgba(0,0,0,.55), inset 0 0 0 2px rgba(0,212,255,.08);
+      image-rendering: pixelated; touch-action: none;
+    }
+    .mini-map::before {
+      content: "HYRULE · MAP"; position: absolute; left: 6px; top: 5px; z-index: 3;
+      color: var(--bronze-light); font: 800 6px/1 var(--font-mono); letter-spacing: .12em;
+      text-shadow: 1px 1px #08090d;
+    }
+    .mini-map::after {
+      content: "N"; position: absolute; right: 6px; top: 5px; z-index: 3;
+      color: var(--cyan); font: 800 7px/1 var(--font-mono);
+    }
+    .mini-map-site, .mini-map-tower {
+      position: absolute; z-index: 2; width: 6px; height: 6px; transform: translate(-50%,-50%) rotate(45deg);
+      background: var(--site,#d69a55); border: 1px solid rgba(8,9,13,.9); box-shadow: 0 0 5px var(--site,#d69a55);
+    }
+    .mini-map-site.command { left: 16%; top: 16%; --site:#d8a75f; }
+    .mini-map-site.studio { left: 84%; top: 78%; --site:#53c5de; }
+    .mini-map-site.forge { left: 16%; top: 80%; --site:#e2b45e; }
+    .mini-map-site.lab { left: 84%; top: 17%; --site:#dc755c; }
+    .mini-map-tower { left: 50%; top: 43%; width: 7px; height: 7px; --site:var(--cyan); }
+    .mini-map-window {
+      position: absolute; z-index: 4; left: 0; top: 0; width: 20%; height: 20%; pointer-events: none;
+      border: 1px solid var(--cyan); background: rgba(0,212,255,.075); box-shadow: 0 0 8px rgba(0,212,255,.5), inset 0 0 0 1px rgba(7,12,16,.72);
     }
 
-    #hyruleCanvas {
+    .event-log { display: grid; align-content: center; gap: 6px; padding: 14px 10px; }
+    .log-row { transition: opacity .2s,border-color .2s,background .2s; }
+    .log-row:not(.latest) { opacity: .5; }
+    .log-row.latest {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      padding: 12px 10px;
+      color: var(--text);
+      background: rgba(0,212,255,.055);
+      border: 1px solid var(--cyan-dim);
+      text-align: center;
+      box-shadow: inset 0 0 18px rgba(0,212,255,.035);
+    }
+    .log-row.latest time { color: var(--cyan); }
+    .log-row.latest strong { color: var(--bronze-light); }
+
+    .agent {
+      width: 132px;
+      height: 112px;
+      transform: translate(-50%,-66%);
+      filter: drop-shadow(0 8px 6px rgba(0,0,0,.38));
+    }
+    .agent-field-art {
+      position: absolute;
+      left: 50%; top: 0;
+      width: 128px; height: 100px;
+      display: block;
+      transform: translateX(-50%);
+      transition: filter .18s, transform .18s;
+    }
+    .agent-field-art img {
+      position: relative;
+      z-index: 3;
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: contain;
+      object-position: center bottom;
+      image-rendering: pixelated;
+      filter: saturate(.95) contrast(1.04) drop-shadow(3px 5px 0 rgba(0,0,0,.34));
+    }
+    .agent-field-art .avatar-fallback { inset: 22px 38px 12px; }
+    .agent-portrait {
+      position: absolute;
+      left: 50%; top: 7px;
+      width: 60px; height: 70px;
+      display: block;
+      transform: translateX(-50%);
+      padding: 2px;
+      overflow: hidden;
+      background: linear-gradient(145deg,var(--agent-color),var(--bronze),var(--cyan-dim));
+      clip-path: polygon(13% 0,87% 0,100% 13%,100% 87%,87% 100%,13% 100%,0 87%,0 13%);
+      transition: filter .18s, transform .18s;
+    }
+    .agent-portrait::after {
+      content: "";
+      position: absolute;
+      inset: 3px;
+      z-index: 2;
+      pointer-events: none;
+      border: 1px solid rgba(0,212,255,.3);
+      clip-path: inherit;
+      box-shadow: inset 0 0 13px rgba(0,0,0,.15);
+    }
+    .agent-portrait img {
+      position: relative;
+      z-index: 1;
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: cover;
+      object-position: center top;
+      image-rendering: pixelated;
+      filter: saturate(1.08) contrast(1.04);
+      clip-path: inherit;
+    }
+    .avatar-fallback {
+      position: absolute;
+      inset: 2px;
+      display: grid;
+      place-items: center;
+      color: var(--cyan);
+      background: var(--slate-bg-lighter);
+      font: 900 20px/1 var(--font-mono);
+    }
+    .agent-portrait img { z-index: 3; }
+    .agent:hover .agent-portrait, .agent.selected .agent-portrait { transform: translateX(-50%) translateY(-3px); filter: drop-shadow(0 0 8px var(--cyan)); }
+    .agent:hover .agent-field-art, .agent.selected .agent-field-art { transform: translateX(-50%) translateY(-3px); filter: drop-shadow(0 0 7px var(--cyan)); }
+    .agent.selected .agent-portrait { background: var(--cyan); }
+    .agent.walking .agent-portrait, .agent.walking .agent-field-art { animation: champion-walk .36s steps(2) infinite; }
+    .agent.working .agent-portrait, .agent.working .agent-field-art { animation: champion-work .5s steps(2) infinite; }
+    @keyframes champion-walk { 50% { transform: translateX(-50%) translateY(-5px) rotate(-1deg); } }
+    @keyframes champion-work { 50% { filter: drop-shadow(0 0 10px var(--agent-color)) brightness(1.08); } }
+    .agent .nameplate { bottom: -2px; padding: 3px 7px; font-size: 8px; }
+    .agent-bubble { left: 104px; top: -5px; z-index: 5; }
+
+    .monster {
+      left: 63.5%;
+      top: 47.5%;
+      width: 104px;
+      height: 116px;
+      transform: translate(-50%,-58%);
+    }
+    .monster.visible { animation-name: monster-sprite-pop; }
+    @keyframes monster-sprite-pop {
+      from { transform: translate(-50%,-42%) scale(.25); }
+      to { transform: translate(-50%,-58%) scale(1); }
+    }
+    .monster::before {
+      content: "";
+      position: absolute;
+      inset: 20px 3px 5px;
+      border: 1px dashed #cf6679;
+      border-radius: 50%;
+      opacity: .7;
+      animation: corruption-ring 2.8s linear infinite;
+    }
+    @keyframes corruption-ring { to { transform: rotate(360deg); } }
+    .monster-sprite {
+      position: absolute;
+      inset: 12px 5px 8px;
+      z-index: 2;
+      display: block;
+      filter: drop-shadow(5px 7px 0 rgba(35,10,22,.5));
+    }
+    .monster-sprite img {
       width: 100%;
       height: 100%;
       display: block;
+      object-fit: contain;
+      image-rendering: pixelated;
     }
+    .monster-label { box-shadow: 0 0 12px rgba(207,60,96,.25); }
+    .monster .hp-bar { left: 13px; right: 13px; bottom: 0; z-index: 4; }
 
-    /* Side Panel */
-    .side-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* Champion Cards */
-    .champion-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-    }
-
-    .champion-card {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
+    .agent-card { grid-template-columns: 42px 1fr auto; }
+    .card-avatar {
       position: relative;
-    }
-
-    .champion-card:hover {
-      border-color: var(--bronze);
-      transform: translateY(-2px);
-    }
-
-    .champion-card.active {
-      border-color: var(--cyan);
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-    }
-
-    .champion-card.mipha:hover { border-color: var(--mipha-color); }
-    .champion-card.revali:hover { border-color: var(--revali-color); }
-    .champion-card.urbosa:hover { border-color: var(--urbosa-color); }
-    .champion-card.daruk:hover { border-color: var(--daruk-color); }
-
-    .champion-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .champion-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 38px; height: 42px;
+      padding: 1px;
       overflow: hidden;
-      background: var(--slate-bg);
+      border: 1px solid var(--bronze);
+      border-radius: 0;
+      background: #d7dde1;
+      clip-path: polygon(14% 0,86% 0,100% 14%,100% 86%,86% 100%,14% 100%,0 86%,0 14%);
     }
+    .card-avatar img { position: relative; z-index: 2; width: 100%; height: 100%; display: block; object-fit: cover; object-position: center top; image-rendering: pixelated; }
+    .card-avatar i { position: absolute; inset: 0; display: grid; place-items: center; color: var(--cyan); background: var(--slate-bg-lighter); font: 900 12px/1 var(--font-mono); }
 
-    .champion-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .intro-art { filter: none; background: #182b24; }
+    .intro-party { left: 9%; bottom: 31px; display: flex; align-items: flex-end; letter-spacing: 0; }
+    .intro-party img { width: 58px; height: 74px; margin-right: -13px; object-fit: cover; object-position: center top; image-rendering: pixelated; border: 1px solid var(--bronze); clip-path: polygon(12% 0,88% 0,100% 12%,100% 88%,88% 100%,12% 100%,0 88%,0 12%); }
+    .intro-pig { right: 11%; bottom: 22px; width: 98px; height: 98px; font-size: 0; }
+    .intro-pig img { width: 100%; height: 100%; display: block; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(4px 5px 0 rgba(30,8,19,.55)); }
+
+    @media (max-width: 1220px) {
+      .app-shell { grid-template-columns: minmax(0,1fr) 270px; }
+      .right-column { grid-column: auto; display: block; }
+      .event-panel { margin-top: 14px; }
     }
-
-    .champion-avatar .fallback-icon {
-      font-size: 1.2rem;
+    @media (max-width: 880px) {
+      .app-shell { display: flex; }
+      .quest-column { display: block; }
+      .quest-panel { grid-template-columns: 1fr; }
+      .quest-summary { border-right: 0; border-bottom: 1px solid var(--bronze-dim); }
+      .workspace-tabs { margin-left: 12px; }
+      .connection-pill { margin-left: auto; }
+      .world-viewport { min-height: 390px; }
     }
-
-    .champion-card.link .champion-avatar { border-color: var(--link-color); }
-    .champion-card.mipha .champion-avatar { border-color: var(--mipha-color); }
-    .champion-card.revali .champion-avatar { border-color: var(--revali-color); }
-    .champion-card.urbosa .champion-avatar { border-color: var(--urbosa-color); }
-    .champion-card.daruk .champion-avatar { border-color: var(--daruk-color); }
-
-    .champion-info h4 {
-      font-size: 0.9rem;
-      color: var(--text);
+    @media (max-width: 640px) {
+      .topbar { min-height: 55px; padding: 8px 12px; }
+      .brand-copy { display: none; }
+      .workspace-tabs { margin: 0 auto 0 4px; }
+      .workspace-tab { padding: 0 8px; font-size: .64rem; }
+      .connection-pill { display: none; }
+      .quest-list { overflow-x: auto; grid-template-columns: repeat(6, 82px); }
+      .world-viewport { min-height: 360px; }
+      .agent { width: 92px; height: 82px; }
+      .agent-field-art { width: 90px; height: 70px; }
+      .agent-portrait { width: 43px; height: 52px; }
+      .agent .nameplate { bottom: -1px; padding: 2px 4px; font-size: 6px; }
+      .agent-bubble { left: 72px; max-width: 150px; min-width: 110px; white-space: normal; }
+      .building-emblem { width: 24px; height: 24px; font-size: 13px; }
+      .central-tower { left: 47.25%; top: 38%; width: 5.5%; height: 11.25%; }
+      .region-site { width: 14%; height: 16%; min-width: 150px; min-height: 150px; }
+      .region-sign strong { font-size: 7px; }
+      .region-sign small { display: none; }
+      .tower-label { display: none; }
+      .central-tower .primary-action { min-width: 140px; padding: 8px 9px; font-size: .62rem; }
+      .map-hud { top: 8px; max-width: calc(100% - 16px); gap: 5px; }
+      .map-hud > span:first-child { display: none; }
+      .scene-banner { top: 54px; min-width: calc(100% - 16px); }
+      .mini-map { width: 118px; }
+      .monster { width: 76px; height: 88px; }
+      .monster-sprite { inset: 10px 4px 7px; }
+      .monster-label { font-size: 6px; }
     }
-
-    .champion-role {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-    }
-
-    .champion-status {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.75rem;
-      margin-top: 8px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-
-    .status-dot.active { background: var(--cyan); animation: pulse 2s infinite; }
-    .status-dot.idle { background: var(--text-dark); }
-    .status-dot.busy { background: #ff9800; animation: blink 1s infinite; }
-
-    @keyframes blink {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.3; }
-    }
-
-    /* Quick Actions */
-    .quick-actions {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: 8px;
-      padding: 16px;
-    }
-
-    .quick-actions h3 {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      color: var(--bronze-light);
-      margin-bottom: 12px;
-    }
-
-    .action-buttons {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-    }
-
-    .action-btn {
-      background: var(--slate-bg-lighter);
-      border: 1px solid var(--bronze-dim);
-      color: var(--text);
-      padding: 10px 16px;
-      border-radius: 6px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .action-btn:hover {
-      background: var(--bronze-dim);
-      border-color: var(--bronze);
-    }
-
-    .action-btn.primary {
-      background: var(--cyan-glow);
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    .action-btn.primary:hover {
-      background: var(--cyan);
-      color: var(--slate-bg);
-    }
-
-    /* Activity Log */
-    .activity-log {
-      background: var(--slate-panel);
-      border: 1px solid var(--bronze-dim);
-      border-radius: 12px;
-      height: 300px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .log-header {
-      padding: 16px;
-      border-bottom: 1px solid var(--bronze-dim);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .log-header h3 {
-      font-family: var(--font-mono);
-      font-size: 0.9rem;
-      color: var(--bronze-light);
-    }
-
-    .log-clear {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      cursor: pointer;
-    }
-
-    .log-clear:hover { color: var(--cyan); }
-
-    .log-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      font-family: var(--font-mono);
-      font-size: 0.8rem;
-    }
-
-    .log-entry {
-      display: flex;
-      gap: 12px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(107, 91, 79, 0.2);
-    }
-
-    .log-time {
-      color: var(--text-dark);
-      white-space: nowrap;
-    }
-
-    .log-champion {
-      white-space: nowrap;
-    }
-
-    .log-link { color: var(--link-color); }
-    .log-mipha { color: var(--mipha-color); }
-    .log-revali { color: var(--revali-color); }
-    .log-urbosa { color: var(--urbosa-color); }
-    .log-daruk { color: var(--daruk-color); }
-
-    .log-action {
-      color: var(--text-muted);
-    }
-
-    /* Responsive */
-    @media (max-width: 1200px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-      .map-container { height: 400px; }
-    }
-
-    @media (max-width: 600px) {
-      .stats-bar { grid-template-columns: repeat(2, 1fr); }
-      .champion-grid { grid-template-columns: 1fr; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .001ms !important; }
     }
   </style>
+  <link rel="stylesheet" href="/asserts/styles/header-nav.css">
 </head>
 <body>
-  <!-- Header -->
-  <header class="header">
-    <a href="/" class="logo">
-      <span class="logo-icon">◈</span>
-      <span class="logo-text">ClaudePad</span>
-    </a>
-    <nav class="nav-links">
-      <a href="/" class="nav-link">Sessions</a>
-      <a href="/idea.html" class="nav-link">Ideas</a>
-      <a href="/tips.html" class="nav-link">Tips</a>
-      <a href="/playground.html" class="nav-link active">Playground</a>
-    </nav>
+  <a class="skip-link" href="#agentTown">跳到海拉鲁大陆</a>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div class="brand-copy"><strong>CLAUDEPAD</strong><span>MULTI-AGENT HYRULE</span></div>
+    </div>
+    <div class="topbar-actions">
+      <nav class="utility-nav" aria-label="工具">
+        <a class="utility-link" href="/idea.html" title="Ideas"><span class="utility-icon">✦</span><span class="utility-label">Ideas</span></a>
+        <a class="utility-link" href="/tips.html" title="Tips"><span class="utility-icon">⌘</span><span class="utility-label">Tips</span></a>
+      </nav>
+      <nav class="workspace-tabs" aria-label="工作区">
+        <a class="workspace-tab" href="/"><span class="workspace-tab-icon">▤</span>Sessions</a>
+        <a class="workspace-tab active" href="/playground.html" aria-current="page"><span class="workspace-tab-icon">♜</span>Multi-Agent</a>
+      </nav>
+      <div class="top-status">
+        <span class="connection-pill"><span class="connection-dot" aria-hidden="true"></span><span id="connectionLabel">大陆在线 · 演示模式</span></span>
+        <span class="day-pill" id="dayLabel">SPRINT DAY 07 · 09:42</span>
+      </div>
+    </div>
   </header>
 
-  <div class="container">
-    <!-- Command Center Header -->
-    <div class="command-header">
-      <div class="command-title">
-        <h1>🏰 Agent Playground</h1>
-        <span style="color: var(--text-muted);">|</span>
-        <span style="color: var(--bronze);">Sheikah Slate Interface</span>
-      </div>
-      <div class="live-indicator">
-        <span class="live-dot"></span>
-        <span>LIVE</span>
-      </div>
-    </div>
-
-    <!-- Stats Bar -->
-    <div class="stats-bar">
-      <div class="stat-card">
-        <div class="stat-value" id="activeAgents">5</div>
-        <div class="stat-label">Active Agents</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="tasksCompleted">42</div>
-        <div class="stat-label">Tasks Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="uptime">2h 15m</div>
-        <div class="stat-label">Uptime</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="cpuLoad">32%</div>
-        <div class="stat-label">CPU Load</div>
-      </div>
-    </div>
-
-    <!-- Main Dashboard -->
-    <div class="dashboard">
-      <!-- Hyrule Map Canvas -->
-      <div class="map-container">
-        <div class="map-title">🗺️ Hyrule Map - Agent Activity</div>
-        <canvas id="hyruleCanvas"></canvas>
-      </div>
-
-      <!-- Side Panel -->
-      <div class="side-panel">
-        <!-- Champion Cards -->
-        <div class="champion-grid" id="championGrid">
-          <!-- Dynamically populated -->
+  <main class="app-shell" id="agentTown">
+    <aside class="quest-column" aria-label="任务线">
+      <section class="panel quest-panel">
+        <h2 class="panel-title"><span>▣ 交付流水线 · DELIVERY PIPELINE</span><small id="chapterCounter">1 / 6</small></h2>
+        <div class="quest-summary">
+          <span class="quest-kicker" id="questKicker">晨会 · 安全巡逻</span>
+          <h1 id="questTitle">守护发布日</h1>
+          <p id="questDescription">发布前最后一次巡逻。让每位 Agent 穿过海拉鲁平原，确认各领地是否安全。</p>
         </div>
+        <ol class="quest-list" id="questList"></ol>
+        <div class="quest-reward"><span class="reward-gem">◆</span><span>完成奖励<br>稳定性 +20 · 团队默契 +10</span></div>
+      </section>
+      <div class="mini-help">
+        <strong>HOW TO PLAY</strong>
+        <p>拖拽地图或使用 <kbd>WASD</kbd> / 方向键探索大陆；使用 <kbd>+</kbd> / <kbd>−</kbd> 缩放，点击小地图快速定位。按 <kbd>Space</kbd> 推进剧情。</p>
+      </div>
+    </aside>
 
-        <!-- Quick Actions -->
-        <div class="quick-actions">
-          <h3>🎮 Sprint Actions</h3>
-          <div class="action-buttons">
-            <button class="action-btn primary" onclick="deployAll()">Start Sprint</button>
-            <button class="action-btn" onclick="recallAll()">Standup</button>
-            <button class="action-btn" onclick="refreshStatus()">Code Review</button>
-            <button class="action-btn" onclick="toggleSimulation()">Simulate</button>
+    <section class="game-column" aria-label="海拉鲁大陆远征场景">
+      <div class="game-header">
+        <div class="game-title"><h2>海拉鲁大陆 · HYRULE FIELD</h2><span>五位 Agent 正分散在大陆各区域执行发布远征</span></div>
+        <div class="game-tools">
+          <button class="icon-btn" id="soundButton" type="button" aria-label="开启声音" aria-pressed="false" title="声音">♪</button>
+          <button class="icon-btn" id="helpButton" type="button" aria-label="打开新手指南" title="新手指南">?</button>
+          <button class="icon-btn" id="resetButton" type="button" aria-label="重置剧情" title="重置剧情">↻</button>
+        </div>
+      </div>
+      <div class="game-frame">
+        <div class="world-viewport" id="worldViewport" tabindex="0" aria-describedby="mapControlsHelp">
+          <span class="sr-only" id="mapControlsHelp">两倍尺寸开放地图。拖拽或使用 WASD 与方向键移动镜头，使用加减按钮缩放，点击或拖动小地图快速定位。</span>
+          <div class="map-hud" aria-label="地图控制"><span><strong id="mapSeedLabel">WORLD ----</strong> · 2× 大陆 / 拖拽</span><span class="zoom-controls" aria-label="缩放控制"><button class="zoom-button" id="zoomOut" type="button" title="缩小地图" aria-label="缩小地图">−</button><button class="zoom-value" id="zoomReset" type="button" title="恢复 100% 缩放" aria-label="恢复 100% 缩放">100%</button><button class="zoom-button" id="zoomIn" type="button" title="放大地图" aria-label="放大地图">+</button></span><button id="recenterMap" type="button" title="返回中央希卡塔">◎ 中央塔</button><button id="regenerateMap" type="button" title="生成新的海拉鲁地貌">⟳ 新大陆</button></div>
+          <div class="world" id="world" aria-label="俯视角像素海拉鲁大陆。五位 Agent 正在执行发布远征。">
+            <div class="biome faron" aria-hidden="true"></div><div class="biome lanayru" aria-hidden="true"></div><div class="biome gerudo" aria-hidden="true"></div><div class="biome akkala" aria-hidden="true"></div>
+            <div class="central-tower" aria-label="中央希卡塔 · HYRULE FIELD">
+              <span class="tower-aura" aria-hidden="true"></span><img class="tower-sprite" src="/asserts/zelda-icon/central-tower-v2.png" alt="" aria-hidden="true">
+              <small class="tower-label">CENTRAL SHEIKAH TOWER</small><button class="primary-action" id="primaryAction" type="button">踏上海拉鲁平原 →</button>
+            </div>
+            <div class="region-site command" aria-label="海拉鲁城堡，PLAN 区域：护城河、王城遗迹与草原"><img class="region-art" src="/asserts/zelda-icon/hyrule-command-fortress.png" alt=""><span class="region-sign"><strong>海拉鲁城堡 · PLAN</strong><small>护城河 / 王城遗迹 / 草原</small></span></div>
+            <div class="region-site studio" aria-label="卓拉领地，UX 区域：发光石、曲桥与水瀑"><img class="region-art" src="/asserts/zelda-icon/zora-ux-sanctuary.png" alt=""><span class="region-sign"><strong>卓拉领地 · UX</strong><small>发光石 / 曲桥 / 水瀑</small></span></div>
+            <div class="region-site forge" aria-label="格鲁德要塞，API 区域：砂岩城墙、绿洲与水渠"><img class="region-art" src="/asserts/zelda-icon/gerudo-api-citadel.png" alt=""><span class="region-sign"><strong>格鲁德要塞 · API</strong><small>砂岩城墙 / 绿洲 / 水渠</small></span></div>
+            <div class="region-site lab" aria-label="阿卡莱古代研究所，QA 区域：旧灯塔、蓝焰炉与红岩丘陵"><img class="region-art" src="/asserts/zelda-icon/akkala-qa-lab.png" alt=""><span class="region-sign"><strong>古代研究所 · QA</strong><small>旧灯塔 / 蓝焰炉 / 红岩丘陵</small></span></div>
+            <div class="terrain-layer" id="terrainLayer" aria-hidden="true"></div>
+            <div class="campfire" aria-hidden="true"></div>
+            <div class="monster" id="bugMonster" aria-label="猪猪怪：中央塔数据节点空值异常">
+              <span class="monster-label">BUG 猪猪怪 · LV.7</span><span class="monster-sprite" aria-hidden="true"><img src="/asserts/zelda-icon/pig-monster.png" alt=""></span><span class="hp-bar"><span class="hp-fill" id="monsterHp"></span></span>
+            </div>
+            <div class="impact" aria-hidden="true">FIX!</div>
+            <div id="agentLayer"></div>
+          </div>
+          <div class="mini-map" id="miniMap" role="navigation" tabindex="0" aria-label="海拉鲁小地图。点击或拖动以移动镜头。">
+            <i class="mini-map-site command" aria-hidden="true"></i><i class="mini-map-site studio" aria-hidden="true"></i><i class="mini-map-site forge" aria-hidden="true"></i><i class="mini-map-site lab" aria-hidden="true"></i><i class="mini-map-tower" aria-hidden="true"></i>
+            <span class="mini-map-window" id="miniMapWindow" aria-hidden="true"></span>
+          </div>
+          <div class="scene-banner" id="sceneBanner"><strong>09:42</strong> · 海拉鲁平原风声平静，发布远征正式开始。</div>
+          <div class="story-toast" id="storyToast" role="status" aria-live="polite"><strong id="toastSpeaker">系统</strong><span id="toastText"></span></div>
+        </div>
+      </div>
+      <div class="action-dock">
+        <div class="mission-copy"><span class="mission-icon" id="missionIcon">!</span><div><strong id="missionTitle">等待你的指令</strong><span id="missionDetail">带队巡逻，了解每个 Agent 的岗位。</span></div></div>
+      </div>
+      <p class="sr-only" id="announcer" aria-live="assertive"></p>
+    </section>
+
+    <aside class="right-column" aria-label="Agent 队伍与事件记录">
+      <section class="panel roster">
+        <h2 class="panel-title"><span>♜ 远征队</span><small id="teamCount">5 AGENTS</small></h2>
+        <div class="agent-list" id="agentList"></div>
+        <div class="inspector">
+          <div class="inspector-head"><strong id="inspectName">Link</strong><span class="role-tag" id="inspectRole">TECH LEAD</span></div>
+          <div class="meter-label"><span>专注值</span><span id="focusValue">86%</span></div><div class="meter"><div class="meter-fill" id="focusMeter" style="--value:86%"></div></div>
+          <p class="inspector-task" id="inspectTask">正在指挥所整理发布计划，等待全员签到。</p>
+          <div class="session-binding" id="sessionBinding">
+            <span class="session-binding-kicker">◈ LINKED SESSION</span>
+            <strong id="inspectSessionName">等待 Sessions 同步</strong>
+            <code id="inspectSessionId">NO SESSION</code>
+            <a class="session-action" id="inspectSessionAction" href="/" hidden>◈ 进入会话修复 Bug</a>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
+      <section class="panel event-panel">
+        <h2 class="panel-title"><span>☷ 海拉鲁驿报</span><small>LIVE FEED</small></h2>
+        <div class="event-log" id="eventLog" aria-label="事件记录"></div>
+      </section>
+    </aside>
+  </main>
 
-    <!-- Activity Log -->
-    <div class="activity-log">
-      <div class="log-header">
-        <h3>📜 Activity Log</h3>
-        <span class="log-clear" onclick="clearLog()">Clear</span>
-      </div>
-      <div class="log-content" id="logContent">
-        <!-- Dynamically populated -->
+  <div class="intro-overlay" id="introOverlay" role="dialog" aria-modal="true" aria-labelledby="introTitle" hidden>
+    <div class="intro-card">
+      <div class="intro-art"><span class="intro-party" aria-hidden="true"><img src="/asserts/zelda-icon/link.png" alt=""><img src="/asserts/zelda-icon/mipha.png" alt=""><img src="/asserts/zelda-icon/revali.png" alt=""></span><span class="intro-pig" aria-hidden="true"><img src="/asserts/zelda-icon/pig-monster.png" alt=""></span></div>
+      <div class="intro-copy">
+        <span class="eyebrow">WELCOME TO HYRULE</span>
+        <h2 id="introTitle">这不是监控面板，是一支会讲故事的团队。</h2>
+        <p>每位 Agent 都守护一片领地。当 Bug 出现，它会化作侵入海拉鲁大陆的猪猪怪；你要召集远征队，把排查、修复和测试连成一次大陆冒险。</p>
+        <div class="intro-points"><div class="intro-point"><b>①</b>看见状态</div><div class="intro-point"><b>②</b>推进剧情</div><div class="intro-point"><b>③</b>协作解 Bug</div></div>
+        <div class="intro-actions"><button class="text-btn" id="skipIntro" type="button">直接进入</button><button class="primary-action" id="startIntro" type="button">开始今日冒险 →</button></div>
       </div>
     </div>
   </div>
 
   <script>
-    // ========== CONFIGURATION ==========
-    const CHAMPIONS = {
-      link: {
-        id: 'link',
-        name: 'Link',
-        role: 'Project Manager / Tech Lead',
-        shortRole: 'PM',
-        icon: '♔',
-        avatar: '/asserts/zelda-icon/link.png',
-        color: '#00d4ff',
-        type: 'commander',
-        status: 'active',
-        x: 0.5, y: 0.5,
-        tasksDone: 156,
-        description: '项目管理、架构决策、资源协调'
-      },
-      revali: {
-        id: 'revali',
-        name: 'Revali',
-        role: 'Requirements Analyst',
-        shortRole: 'Analyst',
-        icon: '💨',
-        avatar: '/asserts/zelda-icon/revali.png',
-        color: '#60a5fa',
-        type: 'analyst',
-        status: 'active',
-        x: 0.2, y: 0.2,
-        tasksDone: 67,
-        description: '需求分析、技术调研、可行性评估'
-      },
-      mipha: {
-        id: 'mipha',
-        name: 'Mipha',
-        role: 'Frontend / UX Designer',
-        shortRole: 'Frontend',
-        icon: '💚',
-        avatar: '/asserts/zelda-icon/mipha.png',
-        color: '#4ade80',
-        type: 'frontend',
-        status: 'idle',
-        x: 0.2, y: 0.8,
-        tasksDone: 89,
-        description: '界面设计、前端开发、用户体验优化'
-      },
-      urbosa: {
-        id: 'urbosa',
-        name: 'Urbosa',
-        role: 'Backend Developer',
-        shortRole: 'Backend',
-        icon: '⚡',
-        avatar: '/asserts/zelda-icon/urbosa.png',
-        color: '#fbbf24',
-        type: 'backend',
-        status: 'busy',
-        x: 0.8, y: 0.8,
-        tasksDone: 134,
-        description: '业务逻辑、API开发、数据库设计'
-      },
-      daruk: {
-        id: 'daruk',
-        name: 'Daruk',
-        role: 'QA / DevOps Engineer',
-        shortRole: 'QA',
-        icon: '🛡️',
-        avatar: '/asserts/zelda-icon/darurk.png',
-        color: '#f87171',
-        type: 'qa',
-        status: 'idle',
-        x: 0.8, y: 0.2,
-        tasksDone: 56,
-        description: '测试验证、代码审查、CI/CD'
+    const AGENTS = [
+      { id:'link', name:'Link', initial:'L', role:'TECH LEAD', avatar:'/asserts/zelda-icon/link.png', fieldAvatar:'/asserts/zelda-icon/link-master-cycle.png', companion:'零式摩托', color:'#4fa876', hair:'#70513d', focus:86, x:22, y:22, home:[22,22], task:'正骑着零式摩托巡查海拉鲁城堡外围。' },
+      { id:'revali', name:'Revali', initial:'R', role:'ANALYST', avatar:'/asserts/zelda-icon/revali.png', fieldAvatar:'/asserts/zelda-icon/revali-vah-medoh.png', companion:'风神兽 · 瓦·梅德', color:'#568cb8', hair:'#315267', focus:78, x:50, y:25, home:[50,25], task:'与风神兽从高空巡查四个区域的数据航线。' },
+      { id:'mipha', name:'Mipha', initial:'M', role:'FRONTEND / UX', avatar:'/asserts/zelda-icon/mipha.png', fieldAvatar:'/asserts/zelda-icon/mipha-vah-ruta.png', companion:'水神兽 · 瓦·露塔', color:'#59b6a1', hair:'#9b4f52', focus:82, x:78, y:72, home:[78,72], task:'与水神兽守护卓拉领地的恢复体验。' },
+      { id:'urbosa', name:'Urbosa', initial:'U', role:'BACKEND', avatar:'/asserts/zelda-icon/urbosa.png', fieldAvatar:'/asserts/zelda-icon/urbosa-vah-naboris.png', companion:'雷神兽 · 瓦·娜波力斯', color:'#d89a45', hair:'#78493c', focus:91, x:22, y:74, home:[22,74], task:'与雷神兽守护格鲁德要塞的 API 边界。' },
+      { id:'daruk', name:'Daruk', initial:'D', role:'QA / DEVOPS', avatar:'/asserts/zelda-icon/darurk.png', fieldAvatar:'/asserts/zelda-icon/daruk-vah-rudania.png', companion:'火神兽 · 瓦·鲁达尼亚', color:'#b76d68', hair:'#6e4133', focus:88, x:78, y:22, home:[78,22], task:'与火神兽驻守阿卡莱古代研究所的质量闸门。' }
+    ];
+
+    const CHAPTERS = [
+      { kicker:'海拉鲁平原 · 安全巡逻', title:'守护发布日', description:'发布前最后一次巡逻。让每位 Agent 穿过海拉鲁平原，确认各领地是否安全。', button:'踏上海拉鲁平原 →', mission:'带队巡查大陆区域，确认每位 Agent 的守护区域。', icon:'!', banner:'<strong>09:42</strong> · 海拉鲁平原风声平静，发布远征正式开始。' },
+      { kicker:'突发事件 · ERROR 500', title:'猪猪怪侵入中央塔', description:'中央塔数据节点出现空值异常，Bug 聚成了猪猪怪。先召集分析、前端、后端与 QA。', button:'吹响集结号 →', mission:'让五位 Agent 在中央塔前会合。', icon:'⚑', banner:'<strong>警报！</strong> 中央塔传来 ERROR 500，一只猪猪怪正在啃食数据。' },
+      { kicker:'协同作战 · 4 条战线', title:'拆解 Bug 的护甲', description:'Revali 找根因、Mipha 修复恢复体验、Urbosa 加固接口、Daruk 编写回归测试。', button:'联手释放 FIX →', mission:'四条任务并行推进，Link 负责协调依赖。', icon:'⚔', banner:'<strong>战术展开：</strong>不是围观 Bug，而是让每位 Agent 都有明确战线。' },
+      { kicker:'质量关卡 · REGRESSION', title:'测试塔的最后审判', description:'修复已经合并，但真正的胜利要由自动化测试、边界用例和用户路径共同证明。', button:'启动回归测试 →', mission:'Daruk 执行 24 项检查，其他 Agent 原地支援。', icon:'✓', banner:'<strong>猪猪怪已虚弱。</strong> 还差一次完整回归，才能确认它不会复活。' },
+      { kicker:'发布关卡 · SHIP IT', title:'启动中央塔', description:'所有检查通过。让远征队把稳定补丁送入中央塔核心，恢复大陆服务。', button:'发布稳定补丁 →', mission:'启动发布核心，让海拉鲁大陆恢复健康。', icon:'↑', banner:'<strong>24 / 24 tests passed.</strong> 中央塔的发布核心已经解锁。' },
+      { kicker:'尾声 · CAMPFIRE', title:'今晚，篝火属于远征队', description:'猪猪怪化成一枚复盘徽章。团队记录根因与守护规则，下一次会更快发现它。', button:'开启新的远征 ↻', mission:'远征完成：从异常、协作、验证到复盘形成闭环。', icon:'◆', banner:'<strong>服务恢复 100%。</strong> 海拉鲁大陆重新亮起篝火，远征队在平原复盘。' }
+    ];
+
+    const STEP_LABELS = [
+      ['需求基线','范围与验收标准'], ['故障分诊','复现与根因定位'], ['并行实现','修复与依赖协同'], ['集成回归','自动化与边界验证'], ['发布门禁','评审、部署与观测'], ['复盘加固','行动项与防复发']
+    ];
+    const INTRO_KEY = 'claudepad-agent-town-intro-seen';
+
+    let stage = 0;
+    let selectedAgent = 'link';
+    let soundEnabled = false;
+    let busy = false;
+    let storyTimer;
+    const world = document.getElementById('world');
+    const worldViewport = document.getElementById('worldViewport');
+    const terrainLayer = document.getElementById('terrainLayer');
+    const miniMap = document.getElementById('miniMap');
+    const miniMapWindow = document.getElementById('miniMapWindow');
+    const zoomReset = document.getElementById('zoomReset');
+    const monster = document.getElementById('bugMonster');
+    const hpFill = document.getElementById('monsterHp');
+    let cameraX = 0;
+    let cameraY = 0;
+    let cameraScale = 1;
+    let cameraTouched = false;
+    let mapPointer = null;
+    let miniMapPointer = null;
+    const MIN_ZOOM = .55;
+    const MAX_ZOOM = 1.6;
+    const ZOOM_STEP = .15;
+
+    function seededRandom(seed) {
+      let state = seed >>> 0;
+      return () => {
+        state += 0x6D2B79F5;
+        let value = state;
+        value = Math.imul(value ^ value >>> 15, value | 1);
+        value ^= value + Math.imul(value ^ value >>> 7, value | 61);
+        return ((value ^ value >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function newMapSeed() {
+      try {
+        const value = new Uint32Array(1);
+        crypto.getRandomValues(value);
+        return value[0];
+      } catch { return Date.now() >>> 0; }
+    }
+
+    function setCamera(x, y) {
+      const scaledWidth = world.offsetWidth * cameraScale;
+      const scaledHeight = world.offsetHeight * cameraScale;
+      const minX = Math.min(0, worldViewport.clientWidth - scaledWidth);
+      const minY = Math.min(0, worldViewport.clientHeight - scaledHeight);
+      cameraX = Math.max(minX, Math.min(0, x));
+      cameraY = Math.max(minY, Math.min(0, y));
+      world.style.transform = `translate3d(${Math.round(cameraX)}px,${Math.round(cameraY)}px,0) scale(${cameraScale})`;
+      updateMiniMap();
+    }
+
+    function updateMiniMap() {
+      const scaledWidth = Math.max(1,world.offsetWidth * cameraScale);
+      const scaledHeight = Math.max(1,world.offsetHeight * cameraScale);
+      miniMapWindow.style.left = `${Math.max(0,-cameraX / scaledWidth * 100)}%`;
+      miniMapWindow.style.top = `${Math.max(0,-cameraY / scaledHeight * 100)}%`;
+      miniMapWindow.style.width = `${Math.min(100,worldViewport.clientWidth / scaledWidth * 100)}%`;
+      miniMapWindow.style.height = `${Math.min(100,worldViewport.clientHeight / scaledHeight * 100)}%`;
+      zoomReset.textContent = `${Math.round(cameraScale * 100)}%`;
+      document.getElementById('zoomOut').disabled = cameraScale <= MIN_ZOOM;
+      document.getElementById('zoomIn').disabled = cameraScale >= MAX_ZOOM;
+    }
+
+    function zoomCamera(nextScale, focusX = worldViewport.clientWidth / 2, focusY = worldViewport.clientHeight / 2) {
+      nextScale = Math.max(MIN_ZOOM,Math.min(MAX_ZOOM,Math.round(nextScale * 100) / 100));
+      if (nextScale === cameraScale) return;
+      const worldFocusX = (focusX - cameraX) / cameraScale;
+      const worldFocusY = (focusY - cameraY) / cameraScale;
+      cameraScale = nextScale;
+      setCamera(focusX - worldFocusX * cameraScale,focusY - worldFocusY * cameraScale);
+    }
+
+    function centerCamera() {
+      const tower = world.querySelector('.central-tower');
+      const towerFocusX = tower.offsetLeft + tower.offsetWidth / 2;
+      const towerFocusY = tower.offsetTop + tower.offsetHeight * .68;
+      worldViewport.scrollLeft = 0;
+      worldViewport.scrollTop = 0;
+      setCamera(worldViewport.clientWidth / 2 - towerFocusX * cameraScale, worldViewport.clientHeight / 2 - towerFocusY * cameraScale);
+    }
+
+    function panCamera(dx, dy) { setCamera(cameraX + dx, cameraY + dy); }
+
+    function generateMap(recenter = true) {
+      const seed = newMapSeed();
+      const random = seededRandom(seed);
+      const between = (min,max) => min + random() * (max - min);
+      document.getElementById('mapSeedLabel').textContent = `WORLD ${seed.toString(16).slice(-4).toUpperCase().padStart(4,'0')}`;
+      world.style.setProperty('--map-bg-x',`${between(47,53).toFixed(2)}%`);
+      world.style.setProperty('--map-bg-y',`${between(47,53).toFixed(2)}%`);
+
+      document.querySelectorAll('.biome').forEach((biome,index) => {
+        const anchors = [[-5,-4],[0,58],[55,-5],[54,57]];
+        biome.style.left = `${anchors[index][0] + between(-4,5)}%`;
+        biome.style.top = `${anchors[index][1] + between(-4,5)}%`;
+        biome.style.width = `${between(36,48)}%`;
+        biome.style.height = `${between(37,49)}%`;
+        biome.style.clipPath = `polygon(${between(0,15)}% ${between(0,10)}%,${between(75,100)}% 0,100% ${between(25,48)}%,${between(78,100)}% 100%,${between(18,45)}% ${between(82,100)}%,0 ${between(50,82)}%)`;
+      });
+
+      terrainLayer.innerHTML = '';
+      const reserved = [
+        [4,3,29,31], [4,67,29,97], [41,34,59,58],
+        [71,3,97,33], [71,66,97,97], [57,37,71,57]
+      ];
+      const isReserved = (x,y) => reserved.some(([x1,y1,x2,y2]) => x > x1 && x < x2 && y > y1 && y < y2);
+      const terrain = [
+        ['div','tree',112], ['div','rock',72], ['i','grass-speck',136],
+        ['i','wildflower',88], ['i','ruin',32]
+      ];
+      terrain.forEach(([tag,className,count]) => {
+        for (let index = 0; index < count; index += 1) {
+          let x; let y; let attempts = 0;
+          do { x = between(1.5,97); y = between(2,96); attempts += 1; } while (isReserved(x,y) && attempts < 30);
+          const element = document.createElement(tag);
+          element.className = className;
+          element.style.left = `${x.toFixed(2)}%`;
+          element.style.top = `${y.toFixed(2)}%`;
+          if (className === 'tree') element.style.transform = `scale(${between(.72,1.18).toFixed(2)})`;
+          if (className === 'rock' || className === 'ruin') element.style.transform = `rotate(${Math.floor(between(-8,9))}deg)`;
+          element.style.opacity = between(.62,1).toFixed(2);
+          terrainLayer.appendChild(element);
+        }
+      });
+      if (recenter) requestAnimationFrame(centerCamera);
+    }
+
+    function agentTemplate(agent) {
+      return `<button class="agent" id="agent-${agent.id}" type="button" data-agent="${agent.id}" style="--x:${agent.x}%;--y:${agent.y}%;--agent-color:${agent.color};--hair:${agent.hair}" aria-label="查看 ${agent.name}，${agent.role}，${agent.companion}">
+        <span class="agent-bubble">准备就绪</span><span class="agent-field-art" aria-hidden="true"><img src="${agent.fieldAvatar}" alt=""><i class="avatar-fallback">${agent.initial}</i></span><span class="nameplate">${agent.name}</span>
+      </button>`;
+    }
+
+    function renderAgents() {
+      document.getElementById('agentLayer').innerHTML = AGENTS.map(agentTemplate).join('');
+      document.querySelectorAll('.agent').forEach(el => el.addEventListener('click', () => selectAgent(el.dataset.agent, true)));
+      document.getElementById('agentList').innerHTML = AGENTS.map(a => `<button class="agent-card" type="button" data-agent-card="${a.id}" style="--card-color:${a.color}"><span class="card-avatar"><img src="${a.avatar}" alt=""><i>${a.initial}</i></span><span><strong>${a.name}</strong><small>${a.role}</small><small class="card-session" id="session-${a.id}">未绑定会话</small></span><span class="card-state" id="state-${a.id}">待命</span></button>`).join('');
+      document.querySelectorAll('[data-agent-card]').forEach(el => el.addEventListener('click', () => selectAgent(el.dataset.agentCard, true)));
+    }
+
+    function renderQuest() {
+      document.getElementById('questList').innerHTML = STEP_LABELS.map((item,index) => {
+        const complete = index < stage || (stage === 5 && index === 5);
+        return `<li class="quest-step ${complete ? 'done' : index === stage ? 'active' : ''}"><span class="step-icon">${complete ? '✓' : index + 1}</span><span class="step-copy"><strong>${item[0]}</strong><span>${item[1]}</span></span></li>`;
+      }).join('');
+      const chapter = CHAPTERS[stage];
+      document.getElementById('chapterCounter').textContent = `${stage + 1} / ${CHAPTERS.length}`;
+      document.getElementById('questKicker').textContent = chapter.kicker;
+      document.getElementById('questTitle').textContent = chapter.title;
+      document.getElementById('questDescription').textContent = chapter.description;
+      document.getElementById('primaryAction').textContent = chapter.button;
+      document.getElementById('missionTitle').textContent = stage === 5 ? '远征完成 · 海拉鲁恢复稳定' : '当前目标';
+      document.getElementById('missionDetail').textContent = chapter.mission;
+      document.getElementById('missionIcon').textContent = chapter.icon;
+      document.getElementById('sceneBanner').innerHTML = chapter.banner;
+    }
+
+    function selectAgent(id, speak = false) {
+      selectedAgent = id;
+      const agent = AGENTS.find(a => a.id === id);
+      document.querySelectorAll('.agent,.agent-card').forEach(el => el.classList.remove('selected'));
+      document.getElementById(`agent-${id}`).classList.add('selected');
+      document.querySelector(`[data-agent-card="${id}"]`).classList.add('selected');
+      document.getElementById('inspectName').textContent = agent.name;
+      document.getElementById('inspectRole').textContent = agent.role;
+      document.getElementById('focusValue').textContent = `${agent.focus}%`;
+      document.getElementById('focusMeter').style.setProperty('--value', `${agent.focus}%`);
+      document.getElementById('inspectTask').textContent = agent.task;
+      const sessionName = document.getElementById('inspectSessionName');
+      const sessionId = document.getElementById('inspectSessionId');
+      const sessionAction = document.getElementById('inspectSessionAction');
+      if (agent.session) {
+        sessionName.textContent = agent.session.name || 'Untitled session';
+        sessionId.textContent = `${agent.sessionServer === 'local' ? 'LOCAL' : agent.sessionServer.toUpperCase()} · ${agent.session.id.slice(0,12)} · ${(agent.session.status || 'unknown').toUpperCase()}`;
+        sessionAction.href = agent.sessionServer === 'local' ? `/terminal/${encodeURIComponent(agent.session.id)}` : `/terminal/${encodeURIComponent(agent.sessionServer)}/${encodeURIComponent(agent.session.id)}`;
+        sessionAction.hidden = false;
+      } else {
+        sessionName.textContent = '等待 Sessions 同步';
+        sessionId.textContent = 'NO SESSION';
+        sessionAction.hidden = true;
       }
-    };
+      if (speak) showBubble(id, getAgentLine(id));
+    }
 
-    // 开发阶段到 Champion 映射
-    const DEV_PHASE_MAP = {
-      'requirement': 'revali', 'analysis': 'revali', 'research': 'revali',
-      'design': 'mipha', 'ui': 'mipha', 'ux': 'mipha', 'frontend': 'mipha',
-      'backend': 'urbosa', 'api': 'urbosa', 'database': 'urbosa', 'logic': 'urbosa',
-      'testing': 'daruk', 'review': 'daruk', 'qa': 'daruk', 'deploy': 'daruk',
-      'planning': 'link', 'coordination': 'link', 'architecture': 'link'
-    };
+    function getAgentLine(id) {
+      const lines = {
+        link:['先看全局，再拆依赖。','我来同步每条战线。','发布不是终点，复盘才是。'],
+        revali:['日志的第 482 行有脚印。','空值从支付回调溜进来了。','根因已钉在任务板上。'],
+        mipha:['错误要被看见，也要能恢复。','我补上重试与友好提示。','用户路径已经恢复顺滑。'],
+        urbosa:['我守住 API 的输入边界。','补丁正在锻造，别让猪跑了。','接口契约已加固。'],
+        daruk:['没有测试通过，就没有胜利。','我正在覆盖那条空值分支。','24 项回归全部通过。']
+      };
+      return lines[id][Math.min(2, Math.floor(stage / 2))];
+    }
 
-    // 文件类型到 Champion 映射
-    const FILE_TYPE_MAP = {
-      '.md': 'revali', '.txt': 'revali', 'README': 'revali', 'PRD': 'revali',
-      '.html': 'mipha', '.css': 'mipha', '.scss': 'mipha', '.tsx': 'mipha', '.jsx': 'mipha', '.vue': 'mipha',
-      '.py': 'urbosa', '.js': 'urbosa', '.ts': 'urbosa', '.go': 'urbosa', '.sql': 'urbosa',
-      '.test.js': 'daruk', '.spec.ts': 'daruk', 'Dockerfile': 'daruk', '.yml': 'daruk'
-    };
+    function showBubble(id, text, duration = 2200) {
+      document.querySelectorAll('.agent.speaking').forEach(el => el.classList.remove('speaking'));
+      const el = document.getElementById(`agent-${id}`);
+      el.querySelector('.agent-bubble').textContent = text;
+      el.classList.add('speaking');
+      window.clearTimeout(storyTimer);
+      storyTimer = window.setTimeout(() => el.classList.remove('speaking'), duration);
+    }
 
-    // ========== STATE ==========
-    let canvas, ctx;
-    let animationId;
-    let isSimulating = false;
-    let characters = [];
-    let logEntries = [];
-    let simAudioCtx = null;
-    let simHumOsc = null;
-    let simHumGain = null;
+    function showToast(speaker, text, duration = 3300) {
+      const toast = document.getElementById('storyToast');
+      document.getElementById('toastSpeaker').textContent = speaker;
+      document.getElementById('toastText').textContent = text;
+      toast.classList.add('show');
+      document.getElementById('announcer').textContent = `${speaker}：${text}`;
+      window.setTimeout(() => toast.classList.remove('show'), duration);
+    }
 
-    function ensureSimAudio() {
-      if (!simAudioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return null;
-        simAudioCtx = new AudioContext();
+    function moveAgent(id, x, y, state = 'walking') {
+      const el = document.getElementById(`agent-${id}`);
+      el.style.setProperty('--x', `${x}%`); el.style.setProperty('--y', `${y}%`);
+      el.classList.remove('walking','working'); if (state) el.classList.add(state);
+      setAgentState(id, state === 'working' ? '处理中' : '移动中', state === 'working' ? '#e49a45' : '#5c9fc0');
+      window.setTimeout(() => { if (state === 'walking') { el.classList.remove('walking'); setAgentState(id,'待命','#62ae7a'); } }, 1350);
+    }
+
+    function setAgentState(id, label, color) {
+      const state = document.getElementById(`state-${id}`); state.textContent = label; state.style.setProperty('--state-color', color);
+    }
+
+    function addLog(author, message) {
+      const log = document.getElementById('eventLog');
+      const now = new Date();
+      log.querySelector('.log-row.latest')?.classList.remove('latest');
+      const row = document.createElement('div'); row.className = 'log-row latest';
+      const time = document.createElement('time'); time.textContent = now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+      const copy = document.createElement('span'); const who = document.createElement('strong'); who.textContent = `${author} `; copy.append(who, document.createTextNode(message)); row.append(time, copy); log.prepend(row);
+      while (log.children.length > 10) log.lastElementChild.remove();
+    }
+
+    function chirp(notes = [440,660], duration = .08) {
+      if (!soundEnabled) return;
+      const Audio = window.AudioContext || window.webkitAudioContext; if (!Audio) return;
+      if (!window.townAudio) window.townAudio = new Audio();
+      const ctx = window.townAudio;
+      notes.forEach((frequency,index) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain(), start = ctx.currentTime + index * duration;
+        osc.type = 'square'; osc.frequency.value = frequency; gain.gain.setValueAtTime(.035,start); gain.gain.exponentialRampToValueAtTime(.001,start + duration);
+        osc.connect(gain); gain.connect(ctx.destination); osc.start(start); osc.stop(start + duration);
+      });
+    }
+
+    const wait = ms => new Promise(resolve => window.setTimeout(resolve, ms));
+
+    async function advanceStory() {
+      if (busy) return;
+      if (stage === 5) { resetStory(); return; }
+      busy = true; document.getElementById('primaryAction').disabled = true; chirp();
+      if (stage === 0) await patrolScene();
+      else if (stage === 1) await rallyScene();
+      else if (stage === 2) await battleScene();
+      else if (stage === 3) await testScene();
+      else if (stage === 4) await releaseScene();
+      stage += 1; renderQuest(); selectAgent(selectedAgent); busy = false; document.getElementById('primaryAction').disabled = false;
+    }
+
+    async function patrolScene() {
+      addLog('Link','启动发布前安全巡逻。'); showToast('Link','大家按区域巡查，任何异常先标记，不要单打独斗。');
+      moveAgent('revali',55,45.5); moveAgent('mipha',43.5,54.5); moveAgent('urbosa',58,43.5); moveAgent('daruk',54,55.5);
+      await wait(1350); monster.classList.add('visible'); hpFill.style.setProperty('--hp','100%'); chirp([180,145,110],.12);
+      showToast('系统警报','中央塔数据节点出现 ERROR 500！空值异常聚成了一只 LV.7 猪猪怪。'); addLog('系统','检测到中央塔数据节点空值异常：猪猪怪现形。');
+    }
+
+    async function rallyScene() {
+      showToast('Link','Revali 查根因，Urbosa 守接口，Mipha 处理恢复体验，Daruk 准备回归。到中央塔集合！');
+      moveAgent('link',58,47.5); moveAgent('revali',56.5,43.5); moveAgent('mipha',56,51.5); moveAgent('urbosa',60,41.5); moveAgent('daruk',59.5,54.5);
+      AGENTS.forEach(a => setAgentState(a.id,'集结中','#5c9fc0')); addLog('团队','五位 Agent 已接受分工，正在中央塔会合。');
+      await wait(1400); AGENTS.forEach(a => { document.getElementById(`agent-${a.id}`).classList.add('working'); setAgentState(a.id,'就位','#e49a45'); });
+    }
+
+    async function battleScene() {
+      world.classList.add('battling');
+      const tasks = [
+        ['revali','沿日志回溯到 payment.callback 的空值分支。'], ['mipha','补上可恢复错误提示与安全重试。'], ['urbosa','增加 schema 校验与幂等保护。'], ['daruk','新增 8 个边界用例与 16 项回归。']
+      ];
+      for (let i = 0; i < tasks.length; i++) {
+        const [id,text] = tasks[i]; const agent = AGENTS.find(a => a.id === id); agent.task = text; agent.focus = Math.max(62,agent.focus - 4);
+        selectAgent(id); showBubble(id,getAgentLine(id),1200); addLog(agent.name,text); hpFill.style.setProperty('--hp', `${76 - i * 21}%`); chirp([420 + i * 80,620 + i * 70]); await wait(700);
       }
-      if (simAudioCtx.state === 'suspended') simAudioCtx.resume();
-      return simAudioCtx;
+      hpFill.style.setProperty('--hp','18%'); world.classList.remove('battling'); showToast('系统','四条战线已合流：根因确认、补丁完成、恢复路径可用、回归用例就绪。');
+      AGENTS.forEach(a => document.getElementById(`agent-${a.id}`).classList.remove('working')); addLog('Link','修复已合并，进入质量闸门。');
     }
 
-    function startSimHum() {
-      const ctxAudio = ensureSimAudio();
-      if (!ctxAudio || simHumOsc) return;
-      simHumOsc = ctxAudio.createOscillator();
-      simHumGain = ctxAudio.createGain();
-      simHumOsc.type = 'sine';
-      simHumOsc.frequency.setValueAtTime(58, ctxAudio.currentTime);
-      simHumGain.gain.setValueAtTime(0, ctxAudio.currentTime);
-      simHumGain.gain.linearRampToValueAtTime(0.04, ctxAudio.currentTime + 0.7);
-      simHumOsc.connect(simHumGain);
-      simHumGain.connect(ctxAudio.destination);
-      simHumOsc.start();
+    async function testScene() {
+      moveAgent('daruk',56,57.5,'working'); moveAgent('revali',53.5,55); moveAgent('mipha',51.5,58); moveAgent('urbosa',54,60.5); moveAgent('link',49.5,56);
+      showToast('Daruk','开始回归：API 契约、空值边界、重试体验、发布回滚，共 24 项。');
+      for (const progress of [6,11,18,24]) { setAgentState('daruk',`${progress}/24`,'#7c83b8'); addLog('Daruk',`${progress}/24 项测试通过。`); chirp([520,690]); await wait(520); }
+      hpFill.style.setProperty('--hp','0%'); monster.classList.remove('visible'); setAgentState('daruk','全通过','#62ae7a'); showToast('测试塔','24 / 24 全部通过。猪猪怪无法在相同路径复活。');
     }
 
-    function stopSimHum() {
-      if (!simAudioCtx || !simHumOsc || !simHumGain) return;
-      const stopAt = simAudioCtx.currentTime + 0.25;
-      simHumGain.gain.cancelScheduledValues(simAudioCtx.currentTime);
-      simHumGain.gain.linearRampToValueAtTime(0.001, stopAt);
-      simHumOsc.stop(stopAt + 0.02);
-      simHumOsc = null;
-      simHumGain = null;
+    async function releaseScene() {
+      showToast('Link','发布核心已解锁。全队把补丁送入中央塔，然后开始复盘！');
+      moveAgent('link',49.5,47.5); moveAgent('revali',46.5,45.5); moveAgent('mipha',46.5,50.5); moveAgent('urbosa',52.5,45.5); moveAgent('daruk',52.5,50.5);
+      await wait(1400); AGENTS.forEach(a => setAgentState(a.id,'已完成','#62ae7a')); world.classList.add('victory'); chirp([523,659,784,1046],.12);
+      showToast('海拉鲁广播','服务恢复 100%。猪猪怪掉落「边界守护」徽章，远征队默契 +10。',4000); addLog('系统','补丁发布成功，海拉鲁大陆恢复，进入篝火复盘。');
     }
 
-    function playSimBlip() {
-      const ctxAudio = ensureSimAudio();
-      if (!ctxAudio) return;
-      const osc = ctxAudio.createOscillator();
-      const gainNode = ctxAudio.createGain();
-      const now = ctxAudio.currentTime;
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(680 + Math.random() * 180, now);
-      gainNode.gain.setValueAtTime(0.025, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-      osc.connect(gainNode);
-      gainNode.connect(ctxAudio.destination);
-      osc.start(now);
-      osc.stop(now + 0.09);
+    function resetStory() {
+      stage = 0; busy = false; world.classList.remove('victory','battling'); monster.classList.remove('visible'); hpFill.style.setProperty('--hp','100%');
+      AGENTS.forEach(agent => { agent.x = agent.home[0]; agent.y = agent.home[1]; agent.focus = Math.min(95,agent.focus + 3); const el = document.getElementById(`agent-${agent.id}`); el.style.setProperty('--x',`${agent.x}%`); el.style.setProperty('--y',`${agent.y}%`); el.classList.remove('walking','working','speaking'); setAgentState(agent.id,'待命','#62ae7a'); });
+      document.getElementById('eventLog').innerHTML = ''; addLog('系统','新的一天开始，海拉鲁大陆状态稳定。'); renderQuest(); selectAgent('link'); showToast('系统','远征已重置。准备再次踏上海拉鲁平原。');
     }
 
-    function playSimEvent() {
-      const ctxAudio = ensureSimAudio();
-      if (!ctxAudio) return;
-      const osc = ctxAudio.createOscillator();
-      const gainNode = ctxAudio.createGain();
-      const now = ctxAudio.currentTime;
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(260 + Math.random() * 150, now);
-      osc.frequency.exponentialRampToValueAtTime(430, now + 0.1);
-      gainNode.gain.setValueAtTime(0.03, now);
-      gainNode.gain.linearRampToValueAtTime(0, now + 0.12);
-      osc.connect(gainNode);
-      gainNode.connect(ctxAudio.destination);
-      osc.start(now);
-      osc.stop(now + 0.12);
+    function sessionState(status) {
+      if (status === 'running') return ['运行中','#00d4ff',94];
+      if (status === 'idle') return ['空闲','#d1ad7b',72];
+      if (status === 'completed') return ['已完成','#62ae7a',100];
+      if (status === 'error' || status === 'failed') return ['异常','#ef6464',42];
+      return ['待命','#6b7280',58];
     }
 
-    // Westworld-style wandering and dialogue system
-    let dialogueBubbles = [];
-    const DIALOGUES = {
-      link: ['Let\'s plan the sprint', 'Code review needed', 'Architecture looks good', 'Ship it!'],
-      revali: ['Analyzing requirements...', 'This tech stack looks promising', 'Let me research that', 'Found a solution!'],
-      mipha: ['Designing the UI...', 'This color palette works', 'Responsive layout done', 'UX improved!'],
-      urbosa: ['Building the API...', 'Database optimized', 'Cache layer added', 'Performance boosted!'],
-      daruk: ['Running tests...', 'Bug found!', 'All tests passing', 'Deploying to prod!']
-    };
-
-    function initCharacters() {
-      characters = Object.values(CHAMPIONS).map(champ => ({
-        ...champ,
-        state: 'IDLE',
-        targetX: champ.x,
-        targetY: champ.y,
-        progress: 0,
-        currentTool: null,
-        wanderTimer: 0,
-        dialogueTimer: 0,
-        currentDialogue: null
-      }));
+    function bindSessions(sessions, serverId, requestedSessionId, silent = false) {
+      const validSessions = sessions.filter(session => !session.invalid);
+      const requested = requestedSessionId && validSessions.find(session => session.id === requestedSessionId);
+      const ordered = requested ? [requested,...validSessions.filter(session => session.id !== requestedSessionId)] : validSessions;
+      const bound = ordered.slice(0,AGENTS.length);
+      AGENTS.forEach((agent,index) => {
+        const session = bound[index] || null;
+        agent.session = session;
+        agent.sessionServer = serverId;
+        const sessionLabel = document.getElementById(`session-${agent.id}`);
+        const fieldAgent = document.getElementById(`agent-${agent.id}`);
+        if (session) {
+          const [label,color,focus] = sessionState(session.status);
+          agent.focus = focus;
+          sessionLabel.textContent = session.name || session.id.slice(0,8);
+          sessionLabel.title = session.name || session.id;
+          fieldAgent.setAttribute('aria-label',`查看 ${agent.name}，已绑定会话 ${session.name || session.id}`);
+          setAgentState(agent.id,label,color);
+        } else {
+          sessionLabel.textContent = '未绑定会话';
+          sessionLabel.removeAttribute('title');
+          setAgentState(agent.id,'待命','#6b7280');
+        }
+      });
+      document.getElementById('teamCount').textContent = `${bound.length}/${AGENTS.length} AGENTS · LINKED`;
+      selectAgent(requested ? 'link' : selectedAgent);
+      if (!silent) addLog('同步器',`已将 ${bound.length} 个 Claude 会话绑定到远征队。点击 Agent 可进入真实终端修复 Bug。`);
+      return bound.length;
     }
 
-    // ========== INITIALIZATION ==========
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('DOMContentLoaded fired');
-      initCanvas();
-      console.log('Canvas initialized, size:', canvas.width, canvas.height);
-      await loadAvatarImages();
-      console.log('Images loaded:', imagesLoaded, Object.keys(avatarImages));
-      initCharacters();
-      console.log('Characters initialized:', characters.length);
-      renderChampionCards();
-      addLogEntry('link', 'Project initialized - Development Team Ready');
-      addLogEntry('revali', 'Requirements analysis systems online');
-      addLogEntry('mipha', 'UI/UX design tools ready');
-      addLogEntry('urbosa', 'Backend development environment active');
-      addLogEntry('daruk', 'QA & Testing frameworks loaded');
-      console.log('Starting animation...');
-      startAnimation();
+    async function detectLiveSessions(silent = false) {
+      try {
+        const params = new URLSearchParams(location.search);
+        const serverId = params.get('server') || 'local';
+        const requestedSessionId = params.get('session');
+        const endpoint = serverId === 'local' ? '/api/sessions?limit=20&offset=0' : `/api/servers/${encodeURIComponent(serverId)}/sessions`;
+        const response = await fetch(endpoint); if (!response.ok) throw new Error('offline');
+        const data = await response.json(); const sessions = data.sessions || [];
+        const boundCount = bindSessions(sessions,serverId,requestedSessionId,silent);
+        document.getElementById('connectionLabel').textContent = `${serverId === 'local' ? '本地' : serverId}在线 · ${boundCount}/${sessions.length} 已绑定`;
+      } catch {
+        document.getElementById('connectionLabel').textContent = '大陆在线 · 演示模式';
+        if (!silent) addLog('同步器','Sessions 暂时不可用，远征队保持演示模式。');
+      }
+    }
+
+    function openIntro() { document.getElementById('introOverlay').hidden = false; window.setTimeout(() => document.getElementById('startIntro').focus(),0); }
+    function closeIntro(advance = false) {
+      document.getElementById('introOverlay').hidden = true;
+      try { localStorage.setItem(INTRO_KEY,'1'); } catch {}
+      document.getElementById('primaryAction').focus({ preventScroll:true });
+      if (!cameraTouched) requestAnimationFrame(centerCamera);
+      if (advance && stage === 0) advanceStory();
+    }
+
+    function navigateFromMiniMap(event) {
+      const rect = miniMap.getBoundingClientRect();
+      const mapX = Math.max(0,Math.min(1,(event.clientX - rect.left) / rect.width));
+      const mapY = Math.max(0,Math.min(1,(event.clientY - rect.top) / rect.height));
+      setCamera(worldViewport.clientWidth / 2 - mapX * world.offsetWidth * cameraScale,worldViewport.clientHeight / 2 - mapY * world.offsetHeight * cameraScale);
+    }
+
+    miniMap.addEventListener('pointerdown',event => {
+      if (event.button !== 0) return;
+      event.stopPropagation();
+      cameraTouched = true;
+      miniMapPointer = event.pointerId;
+      miniMap.setPointerCapture(event.pointerId);
+      navigateFromMiniMap(event);
     });
-
-    function initCanvas() {
-      canvas = document.getElementById('hyruleCanvas');
-      ctx = canvas.getContext('2d');
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
+    miniMap.addEventListener('pointermove',event => {
+      if (miniMapPointer !== event.pointerId) return;
+      event.stopPropagation();
+      navigateFromMiniMap(event);
+    });
+    function stopMiniMapPan(event) {
+      if (miniMapPointer !== event.pointerId) return;
+      miniMapPointer = null;
+      if (miniMap.hasPointerCapture(event.pointerId)) miniMap.releasePointerCapture(event.pointerId);
     }
+    miniMap.addEventListener('pointerup',stopMiniMapPan);
+    miniMap.addEventListener('pointercancel',stopMiniMapPan);
 
-    function resizeCanvas() {
-      const container = canvas.parentElement;
-      canvas.width = container.clientWidth;
-      canvas.height = container.clientHeight;
+    worldViewport.addEventListener('pointerdown',event => {
+      if (event.button !== 0 || event.target.closest('button,.mini-map')) return;
+      cameraTouched = true;
+      mapPointer = { id:event.pointerId, x:event.clientX, y:event.clientY, cameraX, cameraY };
+      worldViewport.classList.add('is-panning');
+      worldViewport.setPointerCapture(event.pointerId);
+    });
+    worldViewport.addEventListener('pointermove',event => {
+      if (!mapPointer || mapPointer.id !== event.pointerId) return;
+      setCamera(mapPointer.cameraX + event.clientX - mapPointer.x, mapPointer.cameraY + event.clientY - mapPointer.y);
+    });
+    function stopMapPan(event) {
+      if (!mapPointer || mapPointer.id !== event.pointerId) return;
+      mapPointer = null;
+      worldViewport.classList.remove('is-panning');
     }
+    worldViewport.addEventListener('pointerup',stopMapPan);
+    worldViewport.addEventListener('pointercancel',stopMapPan);
+    worldViewport.addEventListener('wheel',event => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      cameraTouched = true;
+      const rect = worldViewport.getBoundingClientRect();
+      zoomCamera(cameraScale + (event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP),event.clientX - rect.left,event.clientY - rect.top);
+    },{ passive:false });
+    const cameraLayoutObserver = new ResizeObserver(() => requestAnimationFrame(() => {
+      if (cameraTouched) setCamera(cameraX,cameraY);
+      else centerCamera();
+    }));
+    cameraLayoutObserver.observe(worldViewport);
+    window.addEventListener('load',() => { if (!cameraTouched) requestAnimationFrame(centerCamera); },{ once:true });
 
-    // ========== CANVAS IMAGE CACHE ==========
-    const avatarImages = {};
-    let imagesLoaded = false;
-
-    function loadAvatarImages() {
-      const promises = Object.values(CHAMPIONS).map(champ => {
-        return new Promise((resolve) => {
-          const img = new Image();
-          img.onload = () => {
-            console.log('Image loaded:', champ.id);
-            avatarImages[champ.id] = img;
-            resolve();
-          };
-          img.onerror = () => {
-            console.log('Image failed to load:', champ.avatar);
-            resolve();
-          };
-          img.src = champ.avatar;
-        });
-      });
-      return Promise.all(promises).then(() => {
-        imagesLoaded = true;
-        console.log('All images processed, loaded:', Object.keys(avatarImages));
-      });
-    }
-
-    // ========== RENDERING ==========
-    function startAnimation() {
-      console.log('Animation started');
-      let frameCount = 0;
-      function animate() {
-        frameCount++;
-        if (frameCount % 60 === 0) console.log('Frame', frameCount, 'chars:', characters.length);
-        drawMap();
-        updateCharacters();
-        drawCharacters();
-        drawDialogues();
-        animationId = requestAnimationFrame(animate);
-      }
-      animate();
-    }
-
-    function drawMap() {
-      // Clear canvas
-      ctx.fillStyle = '#0a0a0f';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw grid
-      ctx.strokeStyle = 'rgba(107, 91, 79, 0.2)';
-      ctx.lineWidth = 1;
-      const gridSize = 50;
-
-      for (let x = 0; x < canvas.width; x += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, canvas.height);
-        ctx.stroke();
-      }
-      for (let y = 0; y < canvas.height; y += gridSize) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(canvas.width, y);
-        ctx.stroke();
-      }
-
-      // Draw decorative elements (ancient Sheikah symbols)
-      ctx.strokeStyle = 'rgba(139, 115, 85, 0.1)';
-      ctx.lineWidth = 2;
-
-      // Center circle (Link's position area)
-      ctx.beginPath();
-      ctx.arc(canvas.width * 0.5, canvas.height * 0.5, 80, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Draw zone labels
-      const zones = [
-        { x: 0.2, y: 0.15, label: 'REQUIREMENTS', color: CHAMPIONS.revali.color },
-        { x: 0.2, y: 0.85, label: 'FRONTEND', color: CHAMPIONS.mipha.color },
-        { x: 0.8, y: 0.85, label: 'BACKEND', color: CHAMPIONS.urbosa.color },
-        { x: 0.8, y: 0.15, label: 'QA/DEVOPS', color: CHAMPIONS.daruk.color }
-      ];
-
-      zones.forEach(zone => {
-        ctx.fillStyle = zone.color + '60';
-        ctx.font = '10px "SF Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(zone.label, canvas.width * zone.x, canvas.height * zone.y);
-      });
-
-      // Draw Hyrule landscape elements (mountains)
-      drawHyruleMountains();
-    }
-
-    // Draw Hyrule-style mountains
-    function drawHyruleMountains() {
-      const w = canvas.width;
-      const h = canvas.height;
-
-      // Mountain ranges - stylized triangles with gradients
-      const mountains = [
-        // Background mountains (distant)
-        { x: 0.05, y: 0.35, width: 0.12, height: 0.15, color: '#1a1a2e', opacity: 0.4 },
-        { x: 0.88, y: 0.4, width: 0.1, height: 0.12, color: '#1a1a2e', opacity: 0.4 },
-        { x: 0.45, y: 0.08, width: 0.15, height: 0.1, color: '#1a1a2e', opacity: 0.3 },
-
-        // Mid-ground mountains
-        { x: 0.35, y: 0.25, width: 0.08, height: 0.1, color: '#16213e', opacity: 0.5 },
-        { x: 0.6, y: 0.3, width: 0.1, height: 0.12, color: '#16213e', opacity: 0.5 },
-        { x: 0.08, y: 0.6, width: 0.1, height: 0.15, color: '#16213e', opacity: 0.5 },
-        { x: 0.9, y: 0.65, width: 0.08, height: 0.1, color: '#16213e', opacity: 0.5 },
-
-        // Foreground mountains (closer, more visible)
-        { x: 0.02, y: 0.45, width: 0.06, height: 0.12, color: '#0f3460', opacity: 0.6 },
-        { x: 0.95, y: 0.5, width: 0.05, height: 0.1, color: '#0f3460', opacity: 0.6 },
-        { x: 0.5, y: 0.92, width: 0.12, height: 0.08, color: '#0f3460', opacity: 0.5 },
-      ];
-
-      mountains.forEach(m => {
-        const mx = m.x * w;
-        const my = m.y * h;
-        const mw = m.width * w;
-        const mh = m.height * h;
-
-        // Create gradient for mountain
-        const gradient = ctx.createLinearGradient(mx, my - mh, mx, my);
-        gradient.addColorStop(0, m.color);
-        gradient.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = m.opacity;
-
-        // Draw mountain as triangle
-        ctx.beginPath();
-        ctx.moveTo(mx - mw / 2, my);
-        ctx.lineTo(mx, my - mh);
-        ctx.lineTo(mx + mw / 2, my);
-        ctx.closePath();
-        ctx.fill();
-
-        // Draw snow cap for taller mountains
-        if (m.height > 0.12) {
-          ctx.fillStyle = 'rgba(200, 200, 220, 0.3)';
-          ctx.beginPath();
-          ctx.moveTo(mx - mw / 6, my - mh * 0.6);
-          ctx.lineTo(mx, my - mh);
-          ctx.lineTo(mx + mw / 6, my - mh * 0.6);
-          ctx.lineTo(mx, my - mh * 0.5);
-          ctx.closePath();
-          ctx.fill();
-        }
-
-        ctx.globalAlpha = 1;
-      });
-
-      // Draw some hills (rounded)
-      const hills = [
-        { x: 0.25, y: 0.95, width: 0.3, height: 0.08, color: '#1a1a24' },
-        { x: 0.75, y: 0.95, width: 0.25, height: 0.06, color: '#1a1a24' },
-        { x: 0.5, y: 0.05, width: 0.2, height: 0.05, color: '#1a1a24' },
-      ];
-
-      hills.forEach(hill => {
-        const hx = hill.x * w;
-        const hy = hill.y * h;
-        const hw = hill.width * w;
-        const hh = hill.height * h;
-
-        const gradient = ctx.createRadialGradient(hx, hy - hh, 0, hx, hy, hw);
-        gradient.addColorStop(0, hill.color);
-        gradient.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = gradient;
-        ctx.globalAlpha = 0.3;
-
-        ctx.beginPath();
-        ctx.ellipse(hx, hy, hw / 2, hh, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.globalAlpha = 1;
-      });
-
-      // Draw some decorative trees (simple triangles)
-      const trees = [
-        { x: 0.03, y: 0.55, size: 15 },
-        { x: 0.06, y: 0.58, size: 12 },
-        { x: 0.94, y: 0.6, size: 14 },
-        { x: 0.97, y: 0.57, size: 10 },
-        { x: 0.48, y: 0.88, size: 12 },
-        { x: 0.52, y: 0.9, size: 14 },
-      ];
-
-      trees.forEach(tree => {
-        const tx = tree.x * w;
-        const ty = tree.y * h;
-        const ts = tree.size;
-
-        // Tree trunk
-        ctx.fillStyle = '#4a3f37';
-        ctx.fillRect(tx - 2, ty, 4, ts / 3);
-
-        // Tree foliage (triangle)
-        ctx.fillStyle = 'rgba(74, 175, 80, 0.3)';
-        ctx.beginPath();
-        ctx.moveTo(tx - ts / 2, ty);
-        ctx.lineTo(tx, ty - ts);
-        ctx.lineTo(tx + ts / 2, ty);
-        ctx.closePath();
-        ctx.fill();
-      });
-    }
-
-    function updateCharacters() {
-      const now = Date.now();
-
-      characters.forEach(char => {
-        // Westworld-style wandering
-        if (char.state === 'IDLE' && isSimulating) {
-          char.wanderTimer = (char.wanderTimer || 0) + 1;
-
-          // Randomly start wandering every 3-8 seconds
-          if (char.wanderTimer > 180 + Math.random() * 300) {
-            char.wanderTimer = 0;
-            startWandering(char);
-          }
-
-          // Random dialogue
-          char.dialogueTimer = (char.dialogueTimer || 0) + 1;
-          if (char.dialogueTimer > 300 + Math.random() * 600 && !char.currentDialogue) {
-            char.dialogueTimer = 0;
-            showDialogue(char);
-          }
-        }
-
-        // Handle movement
-        if (char.state === 'WALK' || char.state === 'WANDER') {
-          const dx = char.targetX - char.x;
-          const dy = char.targetY - char.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-
-          if (dist > 0.01) {
-            char.x += dx * 0.015;
-            char.y += dy * 0.015;
-          } else {
-            char.x = char.targetX;
-            char.y = char.targetY;
-            char.state = 'IDLE';
-
-            // Return to base position after wandering
-            if (char.returnToBase) {
-              const base = CHAMPIONS[char.id];
-              setTimeout(() => {
-                char.targetX = base.x;
-                char.targetY = base.y;
-                char.state = 'WALK';
-                char.returnToBase = false;
-              }, 1000 + Math.random() * 2000);
-            }
-          }
-        }
-
-        // Update dialogue timer
-        if (char.currentDialogue) {
-          char.currentDialogue.timer--;
-          if (char.currentDialogue.timer <= 0) {
-            char.currentDialogue = null;
-          }
-        }
-      });
-
-      // Update dialogue bubbles
-      dialogueBubbles = dialogueBubbles.filter(bubble => {
-        bubble.timer--;
-        return bubble.timer > 0;
-      });
-    }
-
-    function startWandering(char) {
-      // Generate random target within bounds (keeping some margin)
-      const margin = 0.15;
-      char.targetX = margin + Math.random() * (1 - margin * 2);
-      char.targetY = margin + Math.random() * (1 - margin * 2);
-      char.state = 'WANDER';
-      char.returnToBase = true;
-
-      // Show wander dialogue
-      const wanderLines = {
-        link: ['Checking on the team...'],
-        revali: ['Looking for requirements...'],
-        mipha: ['Exploring design ideas...'],
-        urbosa: ['Checking the codebase...'],
-        daruk: ['Patrolling for bugs...']
-      };
-
-      if (Math.random() > 0.7) {
-        showDialogue(char, wanderLines[char.id][0]);
-      }
-    }
-
-    function showDialogue(char, text = null) {
-      const lines = text ? [text] : DIALOGUES[char.id];
-      const line = text || lines[Math.floor(Math.random() * lines.length)];
-
-      char.currentDialogue = {
-        text: line,
-        timer: 180 // Show for 3 seconds (at 60fps)
-      };
-
-      dialogueBubbles.push({
-        charId: char.id,
-        text: line,
-        timer: 180
-      });
-    }
-
-    function drawDialogues() {
-      characters.forEach(char => {
-        if (char.currentDialogue) {
-          const x = char.x * canvas.width;
-          const y = char.y * canvas.height - 45;
-
-          ctx.font = '12px "SF Mono", monospace';
-          const textWidth = ctx.measureText(char.currentDialogue.text).width;
-          const padding = 10;
-          const bubbleWidth = textWidth + padding * 2;
-          const bubbleHeight = 24;
-
-          // Draw bubble background
-          ctx.fillStyle = 'rgba(19, 19, 26, 0.95)';
-          ctx.strokeStyle = char.color;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.roundRect(x - bubbleWidth / 2, y - bubbleHeight / 2, bubbleWidth, bubbleHeight, 6);
-          ctx.fill();
-          ctx.stroke();
-
-          // Draw tail
-          ctx.beginPath();
-          ctx.moveTo(x - 5, y + bubbleHeight / 2);
-          ctx.lineTo(x, y + bubbleHeight / 2 + 6);
-          ctx.lineTo(x + 5, y + bubbleHeight / 2);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-
-          // Draw text
-          ctx.fillStyle = '#e0e0e0';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(char.currentDialogue.text, x, y);
-        }
-      });
-    }
-
-    function drawCharacters() {
-      console.log('drawCharacters called, characters:', characters.length, 'imagesLoaded:', imagesLoaded);
-      if (characters.length === 0) {
-        console.log('No characters to draw');
+    renderAgents(); renderQuest(); generateMap(); selectAgent('link'); addLog('系统','发布日开始，五位 Agent 已在各自岗位签到。'); detectLiveSessions();
+    window.setInterval(() => detectLiveSessions(true),30000);
+    try { if (!localStorage.getItem(INTRO_KEY)) openIntro(); } catch { openIntro(); }
+    document.getElementById('primaryAction').addEventListener('click',advanceStory);
+    document.getElementById('resetButton').addEventListener('click',resetStory);
+    document.getElementById('zoomOut').addEventListener('click',() => { cameraTouched = true; zoomCamera(cameraScale - ZOOM_STEP); });
+    document.getElementById('zoomIn').addEventListener('click',() => { cameraTouched = true; zoomCamera(cameraScale + ZOOM_STEP); });
+    zoomReset.addEventListener('click',() => { cameraTouched = true; zoomCamera(1); });
+    document.getElementById('recenterMap').addEventListener('click',() => { cameraTouched = true; centerCamera(); });
+    document.getElementById('regenerateMap').addEventListener('click',() => { generateMap(); addLog('地图','新的海拉鲁地貌已生成。'); showToast('海拉鲁测绘局','大陆地貌已重新展开，拖拽或使用 WASD 继续探索。'); });
+    document.getElementById('helpButton').addEventListener('click',openIntro);
+    document.getElementById('startIntro').addEventListener('click',() => closeIntro(true));
+    document.getElementById('skipIntro').addEventListener('click',() => closeIntro(false));
+    document.getElementById('soundButton').addEventListener('click',event => { soundEnabled = !soundEnabled; event.currentTarget.setAttribute('aria-pressed',String(soundEnabled)); event.currentTarget.setAttribute('aria-label',soundEnabled?'关闭声音':'开启声音'); if (soundEnabled) chirp([523,659]); });
+    document.addEventListener('keydown',event => {
+      if (!document.getElementById('introOverlay').hidden) { if (event.key === 'Escape') closeIntro(false); return; }
+      if (!['INPUT','TEXTAREA'].includes(document.activeElement.tagName) && ['+','=','-','_','0'].includes(event.key)) {
+        event.preventDefault();
+        cameraTouched = true;
+        if (event.key === '0') zoomCamera(1);
+        else zoomCamera(cameraScale + (event.key === '+' || event.key === '=' ? ZOOM_STEP : -ZOOM_STEP));
         return;
       }
-      characters.forEach(char => {
-        const x = char.x * canvas.width;
-        const y = char.y * canvas.height;
-        const size = char.type === 'commander' ? 60 : 50;
-
-        // Draw connection lines between commander and champions
-        if (char.type !== 'commander') {
-          const link = characters.find(c => c.type === 'commander');
-          if (link && char.status === 'active') {
-            ctx.strokeStyle = char.color + '40';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(link.x * canvas.width, link.y * canvas.height);
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.setLineDash([]);
-          }
-        }
-
-        // Draw glow effect for active status
-        if (char.status === 'active') {
-          const gradient = ctx.createRadialGradient(x, y, 0, x, y, size);
-          gradient.addColorStop(0, char.color + '40');
-          gradient.addColorStop(1, 'transparent');
-          ctx.fillStyle = gradient;
-          ctx.beginPath();
-          ctx.arc(x, y, size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Draw character circle background
-        ctx.fillStyle = '#13131a';
-        ctx.strokeStyle = char.color;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(x, y, size / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // Draw avatar image or fallback to icon
-        if (imagesLoaded && avatarImages[char.id]) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(x, y, size / 2 - 3, 0, Math.PI * 2);
-          ctx.clip();
-          ctx.drawImage(avatarImages[char.id], x - size / 2 + 3, y - size / 2 + 3, size - 6, size - 6);
-          ctx.restore();
-        } else {
-          // Fallback to icon
-          ctx.fillStyle = char.color;
-          ctx.font = `${size * 0.5}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(char.icon, x, y);
-        }
-
-        // Draw name label
-        ctx.fillStyle = '#e0e0e0';
-        ctx.font = 'bold 12px "SF Mono", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText(char.name, x, y + size / 2 + 15);
-
-        // Draw role label
-        ctx.fillStyle = '#888';
-        ctx.font = '10px "SF Mono", monospace';
-        ctx.fillText(char.shortRole, x, y + size / 2 + 28);
-
-        // Draw state indicator
-        if (char.state === 'TYPE') {
-          const time = Date.now() / 200;
-          for (let i = 0; i < 3; i++) {
-            const dotY = y - size / 2 - 10 - Math.sin(time + i) * 3;
-            ctx.fillStyle = char.color;
-            ctx.beginPath();
-            ctx.arc(x - 8 + i * 8, dotY, 3, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      });
-    }
-
-    // ========== CHAMPION CARDS ==========
-    function renderChampionCards() {
-      const grid = document.getElementById('championGrid');
-      grid.innerHTML = characters.map(char => `
-        <div class="champion-card ${char.id}" onclick="selectChampion('${char.id}')" title="${char.description}">
-          <div class="champion-header">
-            <div class="champion-avatar ${char.id}">
-              <img src="${char.avatar}" alt="${char.name}" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\\'fallback-icon\\'>${char.icon}</span>';">
-            </div>
-            <div class="champion-info">
-              <h4>${char.name}</h4>
-              <div class="champion-role">${char.shortRole}</div>
-            </div>
-          </div>
-          <div class="champion-status">
-            <span class="status-dot ${char.status}"></span>
-            <span>${char.status.toUpperCase()}</span>
-            <span style="margin-left: auto; color: var(--text-muted);">${char.tasksDone}</span>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function selectChampion(id) {
-      document.querySelectorAll('.champion-card').forEach(card => {
-        card.classList.remove('active');
-      });
-      document.querySelector(`.champion-card.${id}`).classList.add('active');
-
-      const char = characters.find(c => c.id === id);
-      addLogEntry(id, `Selected: ${char.name}`);
-    }
-
-    // ========== ACTIVITY LOG ==========
-    function addLogEntry(championId, action) {
-      const time = new Date().toLocaleTimeString('en-US', { hour12: false });
-      const champion = CHAMPIONS[championId];
-
-      logEntries.unshift({ time, championId, champion: champion.name, action });
-      if (logEntries.length > 20) logEntries.pop();
-
-      renderLog();
-    }
-
-    function renderLog() {
-      const container = document.getElementById('logContent');
-      container.innerHTML = logEntries.map(entry => `
-        <div class="log-entry">
-          <span class="log-time">${entry.time}</span>
-          <span class="log-champion log-${entry.championId}">${entry.champion} ${CHAMPIONS[entry.championId].icon}</span>
-          <span class="log-action">${entry.action}</span>
-        </div>
-      `).join('');
-    }
-
-    function clearLog() {
-      logEntries = [];
-      renderLog();
-    }
-
-    // ========== QUICK ACTIONS ==========
-    function deployAll() {
-      playSimBlip();
-      characters.forEach(char => {
-        if (char.type !== 'commander') {
-          char.status = 'active';
-          char.state = 'WALK';
-          // Move towards center then back
-          char.targetX = 0.5 + (Math.random() - 0.5) * 0.3;
-          char.targetY = 0.5 + (Math.random() - 0.5) * 0.3;
-        }
-      });
-      renderChampionCards();
-      addLogEntry('link', 'Deploy All command issued');
-      updateStats();
-    }
-
-    function recallAll() {
-      playSimBlip();
-      characters.forEach(char => {
-        if (char.type !== 'commander') {
-          char.status = 'idle';
-          char.state = 'WALK';
-          // Return to original positions
-          const original = CHAMPIONS[char.id];
-          char.targetX = original.x;
-          char.targetY = original.y;
-        }
-      });
-      renderChampionCards();
-      addLogEntry('link', 'Recall All command issued');
-      updateStats();
-    }
-
-    function refreshStatus() {
-      playSimBlip();
-      characters.forEach(char => {
-        char.status = ['active', 'idle', 'busy'][Math.floor(Math.random() * 3)];
-      });
-      renderChampionCards();
-      addLogEntry('link', 'Status refreshed');
-      updateStats();
-    }
-
-    function toggleSimulation() {
-      isSimulating = !isSimulating;
-      const btn = document.querySelector('button[onclick="toggleSimulation()"]');
-      if (isSimulating) {
-        startSimHum();
-        if (btn) btn.textContent = 'Stop Sim';
-      } else {
-        stopSimHum();
-        if (btn) btn.textContent = 'Simulate';
+      const mapKeys = { ArrowLeft:[44,0], ArrowRight:[-44,0], ArrowUp:[0,44], ArrowDown:[0,-44], a:[44,0], d:[-44,0], w:[0,44], s:[0,-44] };
+      const mapMove = mapKeys[event.key.length === 1 ? event.key.toLowerCase() : event.key];
+      if (mapMove && !event.ctrlKey && !event.metaKey && !event.altKey && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+        event.preventDefault(); cameraTouched = true; panCamera(...mapMove); return;
       }
-      playSimBlip();
-      addLogEntry('link', `Simulation ${isSimulating ? 'started' : 'stopped'}`);
-
-      if (isSimulating) {
-        // Simulate random activities
-        simulateActivities();
-      }
-    }
-
-    function simulateActivities() {
-      if (!isSimulating) return;
-
-      // Randomly activate a developer
-      const subAgents = characters.filter(c => c.type !== 'commander');
-      const randomAgent = subAgents[Math.floor(Math.random() * subAgents.length)];
-
-      if (Math.random() > 0.6) {
-        playSimEvent();
-        // Development phase tasks
-        const tasks = {
-          revali: ['Analyzing requirements', 'Researching tech stack', 'Reviewing PRD', 'Estimating effort'],
-          mipha: ['Designing UI components', 'Implementing CSS', 'Adding animations', 'Responsive layout'],
-          urbosa: ['Building API endpoint', 'Database migration', 'Business logic', 'Performance tuning'],
-          daruk: ['Writing unit tests', 'Code review', 'Security audit', 'CI/CD pipeline']
-        };
-
-        const agentTasks = tasks[randomAgent.id];
-        const task = agentTasks[Math.floor(Math.random() * agentTasks.length)];
-        const target = generateRandomTarget();
-
-        randomAgent.state = 'TYPE';
-        randomAgent.status = 'busy';
-        addLogEntry(randomAgent.id, `${task}: ${target}`);
-
-        setTimeout(() => {
-          randomAgent.state = 'IDLE';
-          randomAgent.status = 'active';
-          renderChampionCards();
-        }, 2000);
-
-        renderChampionCards();
-        updateStats();
-      }
-
-      setTimeout(simulateActivities, 3000);
-    }
-
-    function generateRandomTarget() {
-      const targets = [
-        // Requirements
-        'user-authentication.md', 'api-specification.yml', 'database-schema.sql',
-        // Frontend
-        'LoginForm.tsx', 'Dashboard.css', 'Button component', 'UserProfile.jsx',
-        // Backend
-        'authController.py', 'userService.js', 'database.ts', 'redis-cache.go',
-        // QA
-        'auth.test.js', 'integration.spec.ts', 'Dockerfile', 'github-actions.yml'
-      ];
-      return targets[Math.floor(Math.random() * targets.length)];
-    }
-
-    function updateStats() {
-      const activeCount = characters.filter(c => c.status === 'active' || c.status === 'busy').length;
-      document.getElementById('activeAgents').textContent = activeCount;
-      document.getElementById('cpuLoad').textContent = Math.floor(20 + Math.random() * 40) + '%';
-    }
+      if (event.code === 'Space' && !['BUTTON','A','INPUT'].includes(document.activeElement.tagName)) { event.preventDefault(); advanceStory(); }
+      if (/^[1-5]$/.test(event.key)) selectAgent(AGENTS[Number(event.key)-1].id,true);
+      if (event.key.toLowerCase() === 'r') resetStory();
+    });
   </script>
 </body>
 </html>

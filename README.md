@@ -1,23 +1,59 @@
-# ClaudePad
+<h1 align="center">◈ ClaudePad</h1>
 
-Claude Code Session Monitor with xterm.js Web Terminal, Idea Capture and CC Tips.
+<p align="center">
+  A focused workspace for Claude Code sessions, terminals, ideas, tips, and multi-agent delivery.
+</p>
 
-## Update
+<p align="center">
+  <code>Sessions</code> · <code>Web Terminal</code> · <code>Ideas</code> · <code>Tips</code> · <code>Multi-Agent</code>
+</p>
 
-- **v0.3.26** - Redesigned symmetric sector-based layout with environment-aware config editing and independent version tracking for local/remote environments. Added custom Sheikah scrollbars and guided empty states.
+<p align="center">
+  <img src="./docs/assets/claudepad-hyrule-event.png" width="960" alt="ClaudePad Multi-Agent Hyrule workspace showing five agents responding to a software incident">
+</p>
 
-See [CHANGELOG.md](./CHANGELOG.md) for detailed release notes.
+ClaudePad turns local and remote Claude Code work into one visual control surface. Monitor sessions, open a real xterm.js terminal, capture ideas, browse practical tips, or follow a software-delivery incident across an interactive Hyrule-inspired map.
+
+## See it in action
+
+### One compact workspace switcher
+
+Sessions and Multi-Agent stay together as two workspace tabs, while Ideas and Tips remain available as lightweight utility actions.
+
+<p align="center">
+  <img src="./docs/assets/claudepad-workspaces.gif" width="800" alt="Animated demo switching between ClaudePad Sessions, Tips, and Multi-Agent workspaces">
+</p>
+
+### Explore the delivery map
+
+Zoom, pan, recenter on the Sheikah Tower, use the minimap, and trigger a simulated incident without modifying live sessions.
+
+<p align="center">
+  <img src="./docs/assets/claudepad-map-controls.gif" width="800" alt="Animated demo of ClaudePad Hyrule map zoom, drag, recenter, and incident controls">
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="./docs/assets/claudepad-sessions.png" alt="ClaudePad session monitor"></td>
+    <td width="50%"><img src="./docs/assets/claudepad-hyrule-map.png" alt="ClaudePad interactive Hyrule map centered on the Sheikah Tower"></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Session operations</strong><br>Local and remote environments in one monitor.</td>
+    <td align="center"><strong>Multi-agent expedition</strong><br>An open, draggable map with zoom and minimap navigation.</td>
+  </tr>
+</table>
 
 ## Features
 
-- **Session List** - View all Claude Code sessions from `~/.claude/`
-- **Web Terminal** - Interactive xterm.js terminal for each session
-- **Real-time I/O** - WebSocket-based terminal streaming via node-pty
-- **CC Ideas** - Capture and manage spontaneous inspiration with status tracking
-- **CC Tips** - Browse Claude Code tips with random display, search, and copy functionality
-- **Agent Playground** - Zelda-themed Agent activity dashboard with Link as Commander and four Champions (Mipha, Revali, Urbosa, Daruk) for real-time monitoring
+- **Session Monitor** — inspect Claude Code sessions from `~/.claude/` and see active state at a glance.
+- **Web Terminal** — interact with each session through xterm.js, WebSocket streaming, and node-pty.
+- **Local + Remote Environments** — keep environment-aware configuration and independent version status together.
+- **CC Ideas** — capture inspiration, search it, and track progress from new to archived.
+- **CC Tips** — browse, search, randomize, and copy practical Claude Code shortcuts.
+- **Multi-Agent Hyrule** — monitor Link and four specialist agents through a six-stage delivery pipeline: requirements baseline, incident triage, parallel implementation, integration regression, release gate, and hardening retrospective.
+- **Interactive World Map** — drag or use keyboard controls, zoom in and out, recenter, randomize the continent, and navigate through a minimap.
 
-## Quick Start
+## Quick start
 
 ```bash
 # Install globally
@@ -26,12 +62,11 @@ npm install -g @yangjingo/claudepad
 # Run
 claudepad
 
-# Update to latest version
-npm update -g @yangjingo/claudepad
-
-# Or run directly without installing
+# Or run without installing
 npx @yangjingo/claudepad
 ```
+
+Open [http://localhost:8080](http://localhost:8080).
 
 ### Development
 
@@ -42,14 +77,18 @@ npm install
 npm run dev
 ```
 
-Visit http://localhost:8080
-
 ## Navigation
 
-- **Sessions** (`/`) - View and manage Claude Code sessions
-- **Ideas** (`/idea.html`) - Capture and track inspiration
-- **Tips** (`/tips.html`) - Browse CC Tips
-- **Playground** (`/playground.html`) - Agent activity dashboard with Zelda theme
+| Area | Route | Purpose |
+| --- | --- | --- |
+| Sessions | `/` | View and manage local or remote Claude Code sessions |
+| Ideas | `/idea.html` | Capture and track inspiration |
+| Tips | `/tips.html` | Search and browse CC Tips |
+| Multi-Agent | `/playground.html` | Explore the Hyrule delivery dashboard |
+
+## Update
+
+**v0.3.26** introduces the symmetric sector layout, environment-aware configuration, independent local/remote version tracking, Sheikah scrollbars, and guided empty states. See [CHANGELOG.md](./CHANGELOG.md) for the full history.
 
 ## License
 
